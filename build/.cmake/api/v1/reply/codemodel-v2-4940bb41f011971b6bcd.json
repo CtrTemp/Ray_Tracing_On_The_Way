@@ -1,0 +1,59 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "renderingCore",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "simpleSceneGene_Cmake::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-simpleSceneGene_Cmake-8e3794a2f5c540984572.json",
+					"name" : "simpleSceneGene_Cmake",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build",
+		"source" : "/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 0
+	}
+}
