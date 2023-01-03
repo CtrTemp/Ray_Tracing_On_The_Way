@@ -153,7 +153,7 @@ hitable *test_triangleList()
 		1, 3, 0,
 		2, 4, 1,
 		5, 2, 0};
-	hit_list[i++] = new triangleList(testVertexList, testIndexList, 12);
+	hit_list[i++] = new triangleList(testVertexList, testIndexList, 12, red);
 
 	return new hitable_list(hit_list, i);
 }
@@ -275,6 +275,160 @@ hitable *test_Load_Models()
 	hit_list[i++] = new triangleList(module_path_list[3], red);
 	hit_list[i++] = new triangleList(module_path_list[4], white);
 	hit_list[i++] = new triangleList(module_path_list[5], light);
+
+	return new hitable_list(hit_list, i);
+}
+
+hitable *test_image_texture()
+{
+
+	hitable **hit_list = new hitable *[6];
+	int i = 0;
+
+	texture *pertext = new noise_texture(1.5);
+	material *yellow = new lambertian(new constant_texture(vec3(0.85, 0.55, 0.025)));
+	material *grass = new lambertian(new constant_texture(vec3(0.65, 0.75, 0.05)));
+	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+	material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
+	material *light_r = new diffuse_light(new constant_texture(vec3(15, 0, 0)));
+	material *light_g = new diffuse_light(new constant_texture(vec3(0, 15, 0)));
+	material *light_b = new diffuse_light(new constant_texture(vec3(0, 0, 10)));
+
+	// 为了方便，我们直接将其设置为光源
+	// 注意，以下对顶点索引的设置目前也不存在任何意义
+	hit_list[i++] = new sphere(vec3(0, 0, -1000), 1000, new lambertian(pertext)); // Ground
+	// hit_list[i++] = new sphere(vec3(0, 0, -1000), 1000, white); // Ground
+	hit_list[i++] = new sphere(vec3(0, 0, 0), 1, red);
+	hit_list[i++] = new sphere(vec3(10, 0, 0), 1, new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48()));
+	// hit_list[i++] = new sphere(vec3(10, 0, 0), 1, new dielectric(1.5));
+	hit_list[i++] = new sphere(vec3(0, 10, 0), 1, new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48()));
+	hit_list[i++] = new sphere(vec3(0, 0, 10), 1, new mental(vec3(0.65, 0.08, 0.08), 0.5 * drand48()));
+
+	// 以下通过顶点列表+索引缓冲区进行创建三角形列表
+
+	// vertex testVertexList[4] = {
+	// 	{vec3(4, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0)},
+	// 	{vec3(0.1, 4, 0.1), vec3(0, 0, 0), vec3(0, 0, 0)},
+	// 	{vec3(0.1, 4, 8), vec3(0, 0, 0), vec3(0, 0, 0)},
+	// 	{vec3(4, 0.1, 8), vec3(0, 0, 0), vec3(0, 0, 0)}};
+
+	// uint32_t testIndexList[6] = {
+	// 	0, 1, 2,
+	// 	2, 3, 0};
+
+	// hit_list[i++] = new triangleList(testVertexList, testIndexList, 6);
+
+	// 以下我们开始创建一个真正的有贴图的三角形
+	// std::string texture_path = "../Pic/cubemaps/sky4_cube.png";
+	std::string texture_path = "../Pic/textures/texture.png";
+	// std::string texture_path = "../Pic/textures/potato.png";
+
+	material *test_texture = new lambertian(new image_texture(texture_path));
+
+	vertex testVertexList[4] = {
+		{vec3(5.66, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{vec3(0.1, 5.66, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{vec3(0.1, 5.66, 8), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
+		{vec3(5.66, 0.1, 8), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)}};
+
+	uint32_t testIndexList[6] = {
+		0, 1, 2,
+		2, 3, 0};
+
+	hit_list[i++] = new triangleList(testVertexList, testIndexList, 6, test_texture);
+
+	return new hitable_list(hit_list, i);
+}
+
+hitable *test_sky_box()
+{
+
+	hitable **hit_list = new hitable *[7];
+	int i = 0;
+
+	// material *front = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front.png"));
+	// material *back = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back.png"));
+	// material *left = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left.png"));
+	// material *right = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right.png"));
+	// material *up = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up.png"));
+	// material *down = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down.png"));
+
+	material *front = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png"));
+	material *back = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png"));
+	material *left = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png"));
+	material *right = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png"));
+	material *up = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png"));
+	material *down = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"));
+
+	const float side_len = 200;
+
+	vec3 cubeVertexList[8] = {
+		vec3(side_len / 2, side_len / 2, side_len / 2),
+		vec3(side_len / 2, side_len / 2, -side_len / 2),
+		vec3(-side_len / 2, side_len / 2, -side_len / 2),
+		vec3(-side_len / 2, side_len / 2, side_len / 2),
+
+		vec3(side_len / 2, -side_len / 2, side_len / 2),
+		vec3(side_len / 2, -side_len / 2, -side_len / 2),
+		vec3(-side_len / 2, -side_len / 2, -side_len / 2),
+		vec3(-side_len / 2, -side_len / 2, side_len / 2)};
+
+	// nice
+	vertex frontVertexList[4] = {
+		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
+		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
+
+	// nice
+	vertex backVertexList[4] = {
+		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
+		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
+
+	vertex leftVertexList[4] = {
+		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
+		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
+
+	vertex rightVertexList[4] = {
+		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
+		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
+
+	vertex upVertexList[4] = {
+		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
+		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)}};
+
+	// nice
+	vertex downVertexList[4] = {
+		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
+		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
+		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
+
+	uint32_t rectangleIndexList[6] = {
+		0, 1, 2,
+		2, 3, 0};
+
+	hit_list[i++] = new triangleList(frontVertexList, rectangleIndexList, 6, front);
+	hit_list[i++] = new triangleList(backVertexList, rectangleIndexList, 6, back);
+	hit_list[i++] = new triangleList(leftVertexList, rectangleIndexList, 6, right);
+	hit_list[i++] = new triangleList(rightVertexList, rectangleIndexList, 6, left);
+	hit_list[i++] = new triangleList(upVertexList, rectangleIndexList, 6, up);
+	hit_list[i++] = new triangleList(downVertexList, rectangleIndexList, 6, down);
+
+
+	// 反光球体
+	hit_list[i++] = new sphere(vec3(0, -5, 0), 10, new mental(vec3(0.99, 0.99, 0.99), 0.01));
+
 
 	return new hitable_list(hit_list, i);
 }

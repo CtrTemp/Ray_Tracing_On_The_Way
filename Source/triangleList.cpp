@@ -62,9 +62,9 @@ bool triangleList::bounding_box(float t0, float t1, aabb &box) const
     （是不是需要预定义一个size？）
 
 */
-triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len)
+triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat)
 {
-    material *yellow = new lambertian(new constant_texture(vec3(0.85, 0.55, 0.025)));
+    // material *yellow = new lambertian(new constant_texture(vec3(0.85, 0.55, 0.025)));
 
     triangle **tri_list_temp = new triangle *[ind_len / 3];
     int tri_index = 0;
@@ -76,7 +76,7 @@ triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len
             indList[i + 0], indList[i + 1], indList[i + 2],
             vertList,
             // new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48())
-            yellow);
+            mat);
 
         // std::cout << "triangle index = "
         //           << indList[i + 0] << "; "
@@ -114,7 +114,7 @@ triangleList::triangleList(const std::string module_path, material *mat)
         throw std::runtime_error(warn + err);
     }
 
-    triangle **tri_list_temp = new triangle *[shapes[0].mesh.indices.size()/3];
+    triangle **tri_list_temp = new triangle *[shapes[0].mesh.indices.size() / 3];
     int tri_index = 0;
 
     // // std::cout << "vertices size = " << attrib.vertices.size() << std::endl;

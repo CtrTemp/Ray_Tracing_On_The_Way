@@ -36,6 +36,7 @@ add_executable(simpleSceneGene_Cmake #第一个是指定可执行文件的名字
 ./Source/triangle.cpp
 ./Source/triangleList.cpp
 ./Source/textures.cpp
+# ./Source/imageTexture.cpp
 )#指定生成可执行文件名称
 
 

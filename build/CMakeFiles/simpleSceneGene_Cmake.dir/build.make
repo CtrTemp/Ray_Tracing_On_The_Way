@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31
+CMAKE_SOURCE_DIR = /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build
+CMAKE_BINARY_DIR = /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/simpleSceneGene_Cmake.dir/depend.make
@@ -59,185 +59,185 @@ include CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 
 CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.o: ../main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/main.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/main.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/main.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/main.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/main.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/main.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.o: ../scene.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/scene.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/scene.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/scene.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/scene.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/scene.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/scene.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/scene.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.o: ../Source/box.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/box.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/box.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/box.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/box.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/box.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/box.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/box.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.o: ../Source/camera.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/camera.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/camera.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/camera.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/camera.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/camera.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/camera.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/camera.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.o: ../Source/diffuseLight.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/diffuseLight.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/diffuseLight.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/diffuseLight.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/diffuseLight.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/diffuseLight.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/diffuseLight.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/diffuseLight.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.o: ../Source/hitable.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/hitable.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/hitable.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/hitable.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/hitable.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/hitable.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/hitable.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitable.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.o: ../Source/hitableList.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/hitableList.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/hitableList.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/hitableList.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/hitableList.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/hitableList.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/hitableList.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/hitableList.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.o: ../Source/material.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/material.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/material.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/material.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/material.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/material.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/material.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/material.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.o: ../Source/perlin.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/perlin.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/perlin.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/perlin.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/perlin.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/perlin.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/perlin.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/perlin.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.o: ../Source/random.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/random.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/random.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/random.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/random.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/random.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/random.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/random.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.o: ../Source/sphere.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/sphere.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/sphere.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/sphere.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/sphere.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/sphere.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/sphere.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/sphere.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.o: ../Source/triangle.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/triangle.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/triangle.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/triangle.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/triangle.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/triangle.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/triangle.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangle.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.o: ../Source/triangleList.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/triangleList.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/triangleList.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/triangleList.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/triangleList.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/triangleList.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/triangleList.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.cpp.s
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o: CMakeFiles/simpleSceneGene_Cmake.dir/flags.make
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o: ../Source/textures.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/textures.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o -c /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/textures.cpp
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/textures.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/textures.cpp > CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.i
 
 CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/Source/textures.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/Source/textures.cpp -o CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.s
 
 # Object files for target simpleSceneGene_Cmake
 simpleSceneGene_Cmake_OBJECTS = \
@@ -275,7 +275,7 @@ simpleSceneGene_Cmake: CMakeFiles/simpleSceneGene_Cmake.dir/Source/triangleList.
 simpleSceneGene_Cmake: CMakeFiles/simpleSceneGene_Cmake.dir/Source/textures.cpp.o
 simpleSceneGene_Cmake: CMakeFiles/simpleSceneGene_Cmake.dir/build.make
 simpleSceneGene_Cmake: CMakeFiles/simpleSceneGene_Cmake.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Linking CXX executable simpleSceneGene_Cmake"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Linking CXX executable simpleSceneGene_Cmake"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/simpleSceneGene_Cmake.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -288,6 +288,6 @@ CMakeFiles/simpleSceneGene_Cmake.dir/clean:
 .PHONY : CMakeFiles/simpleSceneGene_Cmake.dir/clean
 
 CMakeFiles/simpleSceneGene_Cmake.dir/depend:
-	cd /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31 /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31 /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/22_12_31/build/CMakeFiles/simpleSceneGene_Cmake.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03 /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03 /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build /home/ctrtemp/Documents/VS_Code_Prj/RenderCoreRelated/RT_RT/04__23_01_03/build/CMakeFiles/simpleSceneGene_Cmake.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/simpleSceneGene_Cmake.dir/depend
 

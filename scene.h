@@ -35,5 +35,10 @@ hitable *test_multi_triangleList();
 
 // 对模型导入做测试
 hitable *test_Load_Models();
+hitable *test_image_texture();
+
+// 天空盒测试
+hitable *test_sky_box();
+
 
 #endif

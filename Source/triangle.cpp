@@ -1,5 +1,41 @@
 #include "../GlobalInclude/triangle.h"
 
+// #include <tuple>
+
+// // 质心计算
+// void getBarycentricCoord(vec3 p, vec3 v1, vec3 v2, vec3 v3, float *alpha, float *beta, float *gamma)
+// {
+//     // *beta = ((v1[0] - p[0]) * (v1[1] - v3[1]) - (v1[0] - v3[0]) * (v1[1] - p[1])) / ((v1[0] - v3[0]) * (v2[1] - v1[1]) - (v2[0] - v1[0]) * (v1[1] - v3[1]));
+//     // *gamma = ((v2[1] - v1[1]) * (p[0] - v1[0]) - (v2[0] - v1[0]) * (p[1] - v1[1])) / ((v1[1] - v3[1]) * (v2[0] - v1[0]) - (v1[0] - v3[0]) * (v2[1] - v1[1]));
+//     // *alpha = 1 - *beta - *gamma;
+
+// }
+
+// 质心计算 这次我们使用莱布尼茨公式进行求解
+void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float *alpha, float *beta, float *gamma)
+{
+    vec3 v0 = B - A;
+    vec3 v1 = C - A;
+    vec3 v2 = P - A;
+
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float d00 = dot(v0, v0);
+    float d11 = dot(v1, v1);
+    float d01 = dot(v0, v1);
+
+    float d = (d00 * d11 - d01 * d01);
+    *beta = (d20 * d11 - d21 * d01) / d;
+    *gamma = (d21 * d00 - d20 * d01) / d;
+    *alpha = 1 - *beta - *gamma;
+
+    // 打印输出验证
+    // std::cout << "alpha = " << *alpha << "; "
+    //           << "beta = " << *beta << "; "
+    //           << "gamma = " << *gamma << "; "
+    //           << std::endl;
+}
+
 // 针对三角形面元，重写相交测试函数
 bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 {
@@ -88,6 +124,32 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
         rec.p = current_point;
         rec.normal = normal;
         rec.mat_ptr = mat_ptr;
+        /*
+            这里要补充记录 uv 值，从三角形的三个顶点出发，获取三个顶点的uv值，最终插值得到当前点的uv值
+        */
+        float alpha, beta, gamma;
+        getBarycentricCoord(current_point, vertices[0].position, vertices[1].position, vertices[2].position, &alpha, &beta, &gamma);
+        // std::cout << "alpha = " << alpha << "; "
+        //           << "beta = " << beta << "; "
+        //           << "gamma = " << gamma << "; " << std::endl;
+        // std::cout << std::endl;
+
+        // 2023-01-01结果
+        // 这里暂时得出的是错误结果，但是我们先不管它，先写后面的逻辑
+        // 以下应该记录计算出的该点的uv值，使用以上计算出的的质心坐标系下的值进行变换
+        float u_temp = vertices[0].tex_coord[0] * alpha + vertices[1].tex_coord[0] * beta + vertices[2].tex_coord[0] * gamma;
+        float v_temp = vertices[0].tex_coord[1] * alpha + vertices[1].tex_coord[1] * beta + vertices[2].tex_coord[1] * gamma;
+        // float w = vertices[0].tex_coord[2] * alpha + vertices[1].tex_coord[2] * beta + vertices[2].tex_coord[2] * gamma;
+
+        rec.u = u_temp;
+        rec.v = v_temp;
+
+        // std::cout << "u_temp = " << u_temp << "; "
+        //           << "v_temp = " << v_temp << "; "
+        //           //   << "w_temp = " << w_temp << "; "
+        //           << std::endl;
+        // std::cout << std::endl;
+
         return true;
     }
 

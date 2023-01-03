@@ -58,6 +58,7 @@ struct hit_record
 	vec3 p;		 //用于记录击中点坐标
 	vec3 normal; //用于记录击中点处的法线（注意是单位向量）
 
+	// 这里是 uv 贴图坐标
 	float u;
 	float v; //最新引入，我还不清楚这个是干啥的
 

@@ -32,9 +32,14 @@ float schlick(float cosine, float ref_idx)
 
 bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const
 {
-	vec3 target = rec.p + rec.normal + random_in_unit_sphere(); //获得本次打击后得到的下一个目标点
-	scattered = ray(rec.p, target - rec.p, r_in.time());		//本次击中一个目标点后的下一个射线（获得散射光线）
-	attenuated = albedo->value(0, 0, rec.p);
+	// std::cout << "rec.u = " << rec.u << "; "
+	// 		  << "rec.v = " << rec.v << "; "
+	// 		  << std::endl;
+	vec3 target = rec.p + rec.normal + random_in_unit_sphere(); // 获得本次打击后得到的下一个目标点
+	scattered = ray(rec.p, target - rec.p, r_in.time());		// 本次击中一个目标点后的下一个射线（获得散射光线）
+	// std::cout << "this" << std::endl;
+	attenuated = albedo->value(rec.u, rec.v, rec.p);
+
 	return true;
 }
 

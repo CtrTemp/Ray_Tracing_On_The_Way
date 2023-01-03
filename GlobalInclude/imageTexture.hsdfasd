@@ -1,0 +1,22 @@
+
+#ifndef IMAGE_TEXTURE
+#define IMAGE_TEXTURE
+#include "../GlobalInclude/basic/vec3.h"
+#include "../GlobalInclude/textures.h"
+#include "string"
+
+
+
+class image_texture : public texture
+{
+public:
+	image_texture() = default;
+    // 这里必须声明为 inline么 ？！！！
+    // 但是为什么在triangleList中就不用声明为 inline
+	inline image_texture(std::string path);
+	virtual vec3 value(float u, float v, const vec3 &p) const;
+
+};
+
+
+#endif

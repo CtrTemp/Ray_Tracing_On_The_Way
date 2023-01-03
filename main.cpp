@@ -72,9 +72,9 @@ int main(void)
 
 	// vertex **vertList;
 
-	int nx = 250;
-	int ny = 250;
-	int ns = 50; // Grace Jannik Remix
+	int nx = 500;
+	int ny = 500;
+	int ns = 2; // Grace Jannik Remix
 
 	int unit_percent = ny / 100;
 
@@ -87,66 +87,84 @@ int main(void)
 	// hitable *world = sample_light();
 	// hitable *world = test_triangle();
 	// hitable *world = test_multi_triangleList();
-	hitable *world = test_Load_Models();
+	hitable *world = test_sky_box();
 
 	// vec3 lookfrom(30, 30, 25);
-	// vec3 lookfrom(25, 25, 15);
+	vec3 lookfrom(20, 0, -20);
+	vec3 lookat(0, 0, 0);
+
 	// only for cornell box
 
-	vec3 lookfrom(278, 278, -800);
-	vec3 lookat(278, 278, 0);
+	// vec3 lookfrom(278, 278, -800);
+	// vec3 lookat(278, 278, 0);
 
 	float dist_to_focus = 10.0;
 	float aperture = 0.0; // MotionBlur
+	// float vfov = 40.0;
 	float vfov = 40.0;
-	// camera cam(lookfrom, lookat, vec3(0, 0, 1), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
+	// camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
 	// only for cornell box
-	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
-
-	std::ofstream OutputImage;
-	// std::string Path = "/home/ctrtemp/Desktop/ss"+std::to_string(img_index)+".ppm";
-	std::string Path = "test_LoadModels_1231.ppm";
-	OutputImage.open(Path);
-	OutputImage << "P3\n"
-				<< nx << " " << ny << "\n255\n";
+	// camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
 
 	std::cout << "iNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
 
 	gettimeofday(&timeStart, NULL);
-	// 开始计时
-
-	for (int j = ny - 1; j >= 0; --j)
-	// for (int j = 0; j < ny; ++j)
+	int count = 100;
+	for (size_t frame = 0; frame < count; frame++)
 	{
-		for (int i = 0; i < nx; ++i)
-		// for (int i = nx-1; i >= 0; --i)
+
+		float look_frmo_x = 80 * cos(2 * M_PI / count * frame);
+		float look_frmo_z = 80 * sin(2 * M_PI / count * frame);
+		float look_frmo_y = 40 * sin(3 * 2 * M_PI / count * frame);
+
+		vec3 lookfrom(look_frmo_x, look_frmo_y, look_frmo_z);
+		vec3 lookat(0, 0, 0);
+		camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
+
+		/* code */
+		std::ofstream OutputImage;
+		// std::string Path = "/home/ctrtemp/Desktop/ss"+std::to_string(img_index)+".ppm";
+		std::string Path = "./pic_flow/skybox_frame" + std::to_string(frame) + ".ppm";
+		OutputImage.open(Path);
+		OutputImage << "P3\n"
+					<< nx << " " << ny << "\n255\n";
+		// 开始计时
+
+		for (int j = ny - 1; j >= 0; --j)
+		// for (int j = 0; j < ny; ++j)
 		{
-			vec3 col(0, 0, 0);
-			for (int s = 0; s < ns; ++s)
+			for (int i = 0; i < nx; ++i)
+			// for (int i = nx-1; i >= 0; --i)
 			{
+				vec3 col(0, 0, 0);
+				for (int s = 0; s < ns; ++s)
+				{
 
-				float u = float(i + rand() % 101 / float(101)) / float(nx);
-				float v = float(j + rand() % 101 / float(101)) / float(ny);
+					float u = float(i + rand() % 101 / float(101)) / float(nx);
+					float v = float(j + rand() % 101 / float(101)) / float(ny);
 
-				ray r = cam.get_ray(u, v);
+					ray r = cam.get_ray(u, v);
 
-				vec3 p = r.point_at_parameter(2.0);
+					vec3 p = r.point_at_parameter(2.0);
 
-				col += color(r, world, 0);
+					col += color(r, world, 0);
+				}
+
+				col /= float(ns);
+
+				col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
+
+				col = color_unit_normalization(col, 1); //色值
+
+				int ir = int(255.99 * col[0]);
+				int ig = int(255.99 * col[1]);
+				int ib = int(255.99 * col[2]);
+
+				OutputImage << ir << " " << ig << " " << ib << "\n";
 			}
-
-			col /= float(ns);
-
-			col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
-
-			col = color_unit_normalization(col, 1); //色值
-
-			int ir = int(255.99 * col[0]);
-			int ig = int(255.99 * col[1]);
-			int ib = int(255.99 * col[2]);
-
-			OutputImage << ir << " " << ig << " " << ib << "\n";
 		}
+
+		std::cout << "frame done = " << frame << std::endl;
 	}
 
 	gettimeofday(&timeEnd, NULL);
