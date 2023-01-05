@@ -48,12 +48,51 @@ My Own Render Program
 
 ## Gallery
 
+#### 2022/12/30
+
+Basic Scene with basic geometry.
+
+![SampleRGB](https://user-images.githubusercontent.com/89559223/210774486-e8228452-9658-4982-acff-a6ba477c5fd3.png)
+
+
+Single Triangle.
+
+![TestTriangle](https://user-images.githubusercontent.com/89559223/210774838-6456d714-fc19-4bf3-98b6-5f17a277b922.png)
+
+
 #### 2022/12/31
+
+Multi-Triangles.
+
+![TestTriangleList](https://user-images.githubusercontent.com/89559223/210775026-aa8aa0b0-a13a-4334-9c67-9079cb277ca6.png)
+
+
+Classic Cornell Box (Model imported √ not rendered by generating basic geometry)（uhhhhh~ So noisy so far~ but still cost few seconds）.
+
+![CornellBox](https://user-images.githubusercontent.com/89559223/210775353-964c1763-4c67-473a-9f6a-44d76692809b.png)
+
 
 
 #### 2023/01/03
-![image](https://github.com/CtrTemp/Ray_Tracing_On_The_Way/tree/master/Pic/gallery/ImageTexture.png)
+
+ImageTexture with noisy ground.
+
+![ImageTexture](https://user-images.githubusercontent.com/89559223/210772856-bf1198d4-cfc5-4d89-b158-1435f9c02836.png)
+
+Sky Box is added！And we put a pure mirror sphere in the middle of our view cone.
+
+![SkyBox](https://user-images.githubusercontent.com/89559223/210775943-c9920584-2fb9-4153-84d7-cffa81dc799e.png)
 
 #### 2023/01/05
+
+Firstly, we randomly generate multi-triangles（100 or so） and rendered them by brute-force traversal algorithm. Then test our bvh_tree accelerate constructure. (7.8seconds for the Former while less than a second after acceleration).
+
+![Multi_Tris](https://user-images.githubusercontent.com/89559223/210777354-a56dd5e6-fa51-4239-afdc-98092e9f2fb2.png)
+
+Then we try the bunny with lower resolution(1500 primitives or so).
+
+![MirrorBunny_1k_prims_400_400_50spp_95s](https://user-images.githubusercontent.com/89559223/210777662-feb22f13-dca0-4edd-a414-0d169c0814ad.png)
+![bunny_flow0](https://user-images.githubusercontent.com/89559223/210777678-4f07d7b7-f8fb-4180-ae91-3182f01c9826.png)
+
 
 
