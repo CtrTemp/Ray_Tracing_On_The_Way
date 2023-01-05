@@ -44,3 +44,16 @@ My Own Render Program
 5、UV贴图实现（**done**）
 
 6、较复杂模型，从模型读取材质特征
+
+
+## Gallery
+
+#### 2022/12/31
+
+
+#### 2023/01/03
+![image](https://github.com/CtrTemp/Ray_Tracing_On_The_Way/tree/master/Pic/gallery/ImageTexture.png)
+
+#### 2023/01/05
+
+
