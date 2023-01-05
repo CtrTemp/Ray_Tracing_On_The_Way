@@ -2,6 +2,8 @@
 // 为什么这个只能定义在cpp文件中？？是因为它的函数定义和声明都卸载.h文件中了么
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+
+// 获取单个三角形的包围盒
 aabb surronding_box_tri(aabb box0, aabb box1)
 {
     vec3 small(
@@ -22,14 +24,37 @@ bool triangleList::hit(const ray &r, float t_min, float t_max, hit_record &rec) 
     hit_record temp_rec;
     bool hit_anything = false;
     double closest_so_far = t_max;
-    for (int i = 0; i < list_size; i++)
+
+    switch (method)
     {
-        if (tri_list[i]->hit(r, t_min, closest_so_far, temp_rec))
+    // 朴素暴力遍历法求解交点
+    case HitMethod::NAIVE:
+        for (int i = 0; i < list_size; i++)
+        {
+            if (tri_list[i]->hit(r, t_min, closest_so_far, temp_rec))
+            {
+                hit_anything = true;
+                closest_so_far = temp_rec.t;
+                rec = temp_rec;
+            }
+        }
+        break;
+
+    // 使用树装加速结构求解交点
+    case HitMethod::BVH_TREE:
+        // std::cout << "tree hit" << std::endl;
+        temp_rec = tree->getHitpoint(tree->root, r);
+        if (temp_rec.happened)
         {
             hit_anything = true;
             closest_so_far = temp_rec.t;
             rec = temp_rec;
         }
+        break;
+
+    default:
+        throw std::runtime_error("invalid iteration ergodic methods");
+        break;
     }
 
     return hit_anything;
@@ -62,41 +87,29 @@ bool triangleList::bounding_box(float t0, float t1, aabb &box) const
     （是不是需要预定义一个size？）
 
 */
-triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat)
+triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m)
 {
-    // material *yellow = new lambertian(new constant_texture(vec3(0.85, 0.55, 0.025)));
-
-    triangle **tri_list_temp = new triangle *[ind_len / 3];
-    int tri_index = 0;
+    method = m;
     // 此时传入的顶点列表一定是3的倍数，按照每3个一组依次取就可以
     for (int i = 0; i < ind_len; i += 3)
     {
         // 这里我们暂时只选择一种材质（暂时选定金属材质）
-        tri_list_temp[tri_index++] = new triangle(
+        tri_list.push_back(new triangle(
             indList[i + 0], indList[i + 1], indList[i + 2],
             vertList,
-            // new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48())
-            mat);
-
-        // std::cout << "triangle index = "
-        //           << indList[i + 0] << "; "
-        //           << indList[i + 1] << "; "
-        //           << indList[i + 2] << "; "
-        //           << std::endl;
-
-        // std::cout << "triangle vertex = "
-        //           << vertList[indList[i + 0]].position[0] << "; "
-        //           << vertList[indList[i + 1]].position[0] << "; "
-        //           << vertList[indList[i + 2]].position[0] << "; "
-        //           << std::endl;
+            mat));
     }
-    tri_list = tri_list_temp;
-    // new triangleList(tri_list, tri_index);
-    list_size = tri_index;
+
+    list_size = tri_list.size();
+    // 以下测试使用，正常情况下不会为这种构造函数构建的三角形列表建立加速结构
+    tree = new bvh_tree(tri_list);
 }
 
-triangleList::triangleList(const std::string module_path, material *mat)
+// 仅在这种构建方式下，我们为其构建层级包围盒加速结构（BVH_Node_Tree）
+triangleList::triangleList(const std::string module_path, material *mat, HitMethod m)
 {
+
+    method = m;
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -114,8 +127,7 @@ triangleList::triangleList(const std::string module_path, material *mat)
         throw std::runtime_error(warn + err);
     }
 
-    triangle **tri_list_temp = new triangle *[shapes[0].mesh.indices.size() / 3];
-    int tri_index = 0;
+    int primitives_len = shapes[0].mesh.indices.size() / 3;
 
     // // std::cout << "vertices size = " << attrib.vertices.size() << std::endl;
     // std::cout << "shapes size = " << shapes.size() << std::endl;
@@ -131,26 +143,39 @@ triangleList::triangleList(const std::string module_path, material *mat)
     for (const auto &shape : shapes)
     {
         std::vector<vertex> vertList;
+
+        // 遍历整个三角形列表，为当前列表创建整体的包围盒，能够囊括其中所有的面元
+        vec3 min_vert = vec3{std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity()};
+        vec3 max_vert = vec3{-std::numeric_limits<float>::infinity(),
+                             -std::numeric_limits<float>::infinity(),
+                             -std::numeric_limits<float>::infinity()};
         for (const auto &index : shape.mesh.indices)
         {
-            // std::cout << "tri_index = " << tri_index << std::endl;
             vertex vert{};
             vert.position = {
                 attrib.vertices[3 * index.vertex_index + 0],
                 attrib.vertices[3 * index.vertex_index + 1],
                 attrib.vertices[3 * index.vertex_index + 2]};
             vertList.push_back(vert);
-            // std::cout << vert.position[0] << "; "
-            //           << vert.position[1] << "; "
-            //           << vert.position[2] << "; " << std::endl;
+
+            min_vert = vec3(std::min(min_vert[0], vert.position.x()),
+                            std::min(min_vert[1], vert.position.y()),
+                            std::min(min_vert[2], vert.position.z()));
+
+            max_vert = vec3(std::max(max_vert[0], vert.position.x()),
+                            std::max(max_vert[1], vert.position.y()),
+                            std::max(max_vert[2], vert.position.z()));
         }
         for (int i = 0; i < vertList.size(); i += 3)
         {
-            // std::cout << "i = " << i << std::endl;
-            tri_list_temp[tri_index++] = new triangle(vertList[i + 0], vertList[i + 1], vertList[i + 2], mat);
+            tri_list.push_back(new triangle(vertList[i + 0], vertList[i + 1], vertList[i + 2], mat));
         }
-        // tri_list_temp[tri_index++] = new triangle(vertList[0], vertList[1], vertList[2], mat);
+        // 创建包围盒
+        bounds = aabb(min_vert, max_vert);
     }
-    tri_list = tri_list_temp;
-    list_size = tri_index;
+
+    list_size = tri_list.size();
+    tree = new bvh_tree(tri_list);
 }

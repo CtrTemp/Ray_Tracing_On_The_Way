@@ -62,6 +62,7 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
     if (t > t_max || t < t_min)
     {
         // std::cout << "abandon 01" << std::endl;
+        rec.happened = false;
         return false;
     }
 
@@ -150,11 +151,13 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
         //           << std::endl;
         // std::cout << std::endl;
 
+        rec.happened = true;
         return true;
     }
 
     // std::cout << "any_ray_hit_triangle???" << std::endl;
 
+    rec.happened = false;
     return false;
 }
 

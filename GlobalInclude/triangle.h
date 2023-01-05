@@ -4,6 +4,8 @@
 
 #include "hitable.h"
 #include "vertex.h"
+#include "material.h"
+#include "bounds.h"
 
 // 对于 triangle 类型，重新定义关于 hitable 的派生类
 class triangle : public hitable
@@ -53,10 +55,21 @@ public:
         normal = normalized_vec(cross(edges[0], edges[1]));
 
         mat_ptr = mat;
+        // 获取当前三角形的包围盒，并将其传入成员变量
+        bounding_box(0, 0, bounds);
+
+        // std::cout << "triangle box bounds = "
+        //           << bounds.min()[0] << "; "
+        //           << bounds.min()[1] << "; "
+        //           << bounds.min()[2] << "; || "
+        //           << bounds.max()[0] << "; "
+        //           << bounds.max()[1] << "; "
+        //           << bounds.max()[2] << "; "
+        //           << std::endl;
     };
     // 第二种：传入顶点列表以及索引值
 
-    triangle(uint32_t i0, uint32_t i1, uint32_t i2, vertex * vertexList, material *mat)
+    triangle(uint32_t i0, uint32_t i1, uint32_t i2, vertex *vertexList, material *mat)
     {
         index[0] = i0;
         index[1] = i1;
@@ -73,6 +86,8 @@ public:
         normal = normalized_vec(cross(edges[0], edges[1]));
 
         mat_ptr = mat;
+        // 获取当前三角形的包围盒，并将其传入成员变量
+        bounding_box(0, 0, bounds);
     };
     /*
         判断三角形与射线是否相交，如果相交则返回true并要更新交点坐标，返回交点信息
@@ -96,6 +111,8 @@ public:
     vec3 normal;
 
     material *mat_ptr;
+
+    aabb bounds;
 };
 
 #endif

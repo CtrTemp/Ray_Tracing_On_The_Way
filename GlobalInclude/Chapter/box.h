@@ -1,7 +1,7 @@
 #pragma once
 #ifndef BOX_H
 #define BOX_H
-//µ±Ç°ÎÄ¼şÔÚGlobalInclude/Chapter/¶ş¼¶Ä¿Â¼ÏÂ
+//å½“å‰æ–‡ä»¶åœ¨GlobalInclude/Chapter/äºŒçº§ç›®å½•ä¸‹
 #include "../../GlobalInclude/hitable.h"
 #include "../../GlobalInclude/hitableList.h"
 #include "../../GlobalInclude/Chapter/diffuse_light.h"

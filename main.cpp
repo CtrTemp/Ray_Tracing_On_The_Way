@@ -60,10 +60,10 @@ vec3 color(const ray &r, hitable *world, int depth)
 	}
 	else
 	{
-		// vec3 unit_direction = unit_vector(r.direction());
-		// auto t = 0.5 * (unit_direction.y() + 1.0);
-		// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-		return vec3(0, 0, 0);
+		vec3 unit_direction = unit_vector(r.direction());
+		auto t = 0.5 * (unit_direction.y() + 1.0);
+		return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+		// return vec3(0, 0, 0);
 	}
 }
 
@@ -72,9 +72,9 @@ int main(void)
 
 	// vertex **vertList;
 
-	int nx = 500;
-	int ny = 500;
-	int ns = 2; // Grace Jannik Remix
+	int nx = 512;
+	int ny = 512;
+	int ns = 10; // Grace Jannik Remix
 
 	int unit_percent = ny / 100;
 
@@ -84,17 +84,21 @@ int main(void)
 	// Linux下计时器
 
 	// 首先构建世界场景
-	// hitable *world = sample_light();
+	// hitable *world = sample_light_RGB();
 	// hitable *world = test_triangle();
+	// hitable *world = test_triangleList();
+	// hitable *world = test_Load_Models();
+	// hitable *world = test_sky_box();
+	// hitable *world = test_image_texture();
+  
 	// hitable *world = test_multi_triangleList();
-	hitable *world = test_sky_box();
+	hitable *world = test_Load_complex_Models();
 
 	// vec3 lookfrom(30, 30, 25);
-	vec3 lookfrom(20, 0, -20);
+	vec3 lookfrom(2.5, 1.25, 2.5);
 	vec3 lookat(0, 0, 0);
 
 	// only for cornell box
-
 	// vec3 lookfrom(278, 278, -800);
 	// vec3 lookat(278, 278, 0);
 
@@ -110,12 +114,12 @@ int main(void)
 
 	gettimeofday(&timeStart, NULL);
 	int count = 100;
-	for (size_t frame = 0; frame < count; frame++)
+	for (size_t frame = 79; frame > 70; frame--)
 	{
 
-		float look_frmo_x = 80 * cos(2 * M_PI / count * frame);
-		float look_frmo_z = 80 * sin(2 * M_PI / count * frame);
-		float look_frmo_y = 40 * sin(3 * 2 * M_PI / count * frame);
+		float look_frmo_x = 2.5 * cos(2 * M_PI / count * frame);
+		float look_frmo_z = 2.5 * sin(2 * M_PI / count * frame);
+		float look_frmo_y = 1.5 * sin(3 * 2 * M_PI / count * frame);
 
 		vec3 lookfrom(look_frmo_x, look_frmo_y, look_frmo_z);
 		vec3 lookat(0, 0, 0);
@@ -124,7 +128,7 @@ int main(void)
 		/* code */
 		std::ofstream OutputImage;
 		// std::string Path = "/home/ctrtemp/Desktop/ss"+std::to_string(img_index)+".ppm";
-		std::string Path = "./pic_flow/skybox_frame" + std::to_string(frame) + ".ppm";
+		std::string Path = "./pic_flow/bunny_flow_" + std::to_string(frame) + ".ppm";
 		OutputImage.open(Path);
 		OutputImage << "P3\n"
 					<< nx << " " << ny << "\n255\n";

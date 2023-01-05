@@ -5,6 +5,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <cmath>
+#include <algorithm>
 
 /*
 	一个比较显而易见的问题就是：我们赋予了这个三维向量太多的含义：
@@ -57,6 +59,18 @@ public:
 	inline float squared_length() const
 	{
 		return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
+	}
+
+	static vec3 Min(const vec3 &p1, const vec3 &p2)
+	{
+		return vec3(fmin(p1.x(), p2.x()), fmin(p1.y(), p2.y()),
+					fmin(p1.z(), p2.z()));
+	}
+
+	static vec3 Max(const vec3 &p1, const vec3 &p2)
+	{
+		return vec3(fmax(p1.x(), p2.x()), fmax(p1.y(), p2.y()),
+					fmax(p1.z(), p2.z()));
 	}
 
 	inline void make_unit_vector();

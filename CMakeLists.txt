@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(renderingCore LANGUAGES CXX)#指定工程名，这个是随意取的
 
+# 注意这里要进行配置，从而生成可调试文件
+set(CMAKE_BUILD_TYPE DEBUG)
+
+
 include_directories(./GlobalInclude)#添加头文件引用路径
 #可以添加多个include_directories(xxx)，其中xxx是相对路径
 
@@ -24,6 +28,8 @@ add_executable(simpleSceneGene_Cmake #第一个是指定可执行文件的名字
 ./main.cpp
 ./scene.cpp
 ./Source/box.cpp
+./Source/bvh.cpp
+./Source/bounds.cpp
 ./Source/camera.cpp
 ./Source/diffuseLight.cpp
 ./Source/hitable.cpp

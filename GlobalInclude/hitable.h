@@ -3,52 +3,12 @@
 #define HITABLE_H
 //当前文件在GlobalInclude/一级目录下
 #include "../GlobalInclude/basic/ray.h"
+#include "bounds.h"
 
 inline float ffmin(float a, float b) { return a < b ? a : b; }
 inline float ffmax(float a, float b) { return a > b ? a : b; }
 
-// aabb是包围盒基类, 这里的包围盒用于之后的 BVH_node 加速算法
-// 基本算法不需要包围盒
-class aabb
-{
-public:
-	aabb() = default;
-
-	// 基本的构造函数是:通过包围盒对角线的两个顶点来确定一个立方体
-	aabb(const vec3 &a, const vec3 &b)
-	{
-		_min = a;
-		_max = b;
-	}
-
-	vec3 min() const { return _min; }
-	vec3 max() const { return _max; }
-
-	// 用于返回是否击中?
-	bool hit(const ray &r, float tmin, float tmax) const;
-	/*
-
-	{
-	for (int a = 0; a < 3; ++a)
-	{
-	float t0 = ffmin((_min[a] - r.origin()[a]) / r.direction()[a], (_max[a] - r.origin()[a]) / r.direction()[a]);
-	float t1 = ffmax((_min[a] - r.origin()[a]) / r.direction()[a], (_max[a] - r.origin()[a]) / r.direction()[a]);
-	tmin = ffmax(t0, tmin);
-	tmax = ffmin(t1, tmax);
-	if (tmax <= tmin)
-	return false;
-	}
-	return true;
-	}
-	*/
-
-	// 包围盒的两个顶点
-	vec3 _min;
-	vec3 _max;
-};
-
-//问题来了：如何通过调用区分这两个重载函数？！
-
+// 应该是超前引用相关
 class material; //这类为什么没有这个“声明”不可以
 
 //这个结构体用来记录那些与物体相交的射线的一些参数
@@ -63,6 +23,7 @@ struct hit_record
 	float v; //最新引入，我还不清楚这个是干啥的
 
 	material *mat_ptr; // 当前击中点的材质
+    bool happened;      // 是否发生打击
 };
 
 class hitable
