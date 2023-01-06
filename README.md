@@ -118,7 +118,7 @@ with acceleration(30s) & without acceleration(366s) but there is still something
 
 
 
-Then, we test multi-sphere in the scene and a triangle list with 500 primitives at the same time. Noted that the triangle list is regarded as a group, so it use inner-model-acceleration we've done last day. Besides, we use another much brighter skybox.
+Then, we test multi-sphere in the scene and a triangle list with 500 primitives at the same time. Noted that the triangle list is regarded as a group, so it use inner-model-acceleration we've done last day. Besides, we use another much brighter skybox. Although enforced by acceleration constructure, it still cost me 10mins to render.
 
 ![512_512_900sphere_500tris_10spp_593seconds](https://user-images.githubusercontent.com/89559223/211009864-b053d0fe-a51b-4235-a3f4-6f6b3dad996c.png)
 
