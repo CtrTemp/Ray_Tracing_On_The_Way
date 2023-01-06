@@ -21,6 +21,7 @@ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 			rec.p = r.point_at_parameter(rec.t);	//得到击中点的坐标 并储存人record
 			rec.normal = (rec.p - center) / radius; //得到击中点的单位法向向量
 			rec.mat_ptr = this->mat_ptr;
+			rec.happened = true;
 			return true;
 		}
 		temp = (-b + sqrt(discriminant)) / a / 2;
@@ -30,9 +31,11 @@ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 			rec.p = r.point_at_parameter(rec.t);
 			rec.normal = (rec.p - center) / radius;
 			rec.mat_ptr = this->mat_ptr;
+			rec.happened = true;
 			return true;
 		}
 	}
+	rec.happened = false;
 	return false;
 }
 

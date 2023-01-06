@@ -10,7 +10,10 @@ class sphere : public hitable
 { //是sphere类，构造函数返回hitable*类型
 public:
 	sphere() = default;
-	sphere(vec3 cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat){}; //创造一个球体，包括球心和半径参数
+	sphere(vec3 cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat)
+	{
+		bounding_box(0, 0, bounds);
+	}; //创造一个球体，包括球心和半径参数
 
 	// 重写的类中的 函数名/参数/返回类型都必须相同
 	virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
@@ -38,6 +41,7 @@ public:
 	float time0, time1;
 	float radius;
 	material *mat_ptr;
+	aabb bounds;
 };
 
 /*

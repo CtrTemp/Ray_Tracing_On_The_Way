@@ -39,6 +39,9 @@ public:
 	// 返回一个物体的包围盒, 显然这里是通过传入的 aabb 的指针来进行隐式的返回
 	// 同样,在基本算法中不适用BVH(层次包围盒)加速,不需要这个组件
 	virtual bool bounding_box(float t0, float t1, aabb &box) const = 0;
+
+	// 应该要在这里
+	aabb bounds;
 };
 
 #endif

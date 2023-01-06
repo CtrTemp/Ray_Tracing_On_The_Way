@@ -49,6 +49,7 @@ vec3 color(const ray &r, hitable *world, int depth)
 		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 		// 在判断语句中执行并更新散射射线, 并判断是否还有射线生成
 		// 同样根据材质给出衰减系数
+		// 射线会在场景中最多bounce50次
 		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
 		{
 			return emitted + attenuation * color(scattered, world, depth + 1);
@@ -92,10 +93,14 @@ int main(void)
 	// hitable *world = test_image_texture();
   
 	// hitable *world = test_multi_triangleList();
-	hitable *world = test_Load_complex_Models();
+	// hitable *world = test_Load_complex_Models();
+	// hitable *world = test_complex_scene();
+	hitable *world = test_complex_scene_with_complex_models();
 
 	// vec3 lookfrom(30, 30, 25);
-	vec3 lookfrom(2.5, 1.25, 2.5);
+	// vec3 lookfrom(20, 4, 6);
+	vec3 lookfrom(20, 4, 10);
+	// vec3 lookfrom(2.5, 1.25, 2.5);
 	vec3 lookat(0, 0, 0);
 
 	// only for cornell box
@@ -113,15 +118,15 @@ int main(void)
 	std::cout << "iNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
 
 	gettimeofday(&timeStart, NULL);
-	int count = 100;
-	for (size_t frame = 79; frame > 70; frame--)
+	int count = 1;
+	for (size_t frame = 0; frame < count; frame++)
 	{
 
-		float look_frmo_x = 2.5 * cos(2 * M_PI / count * frame);
-		float look_frmo_z = 2.5 * sin(2 * M_PI / count * frame);
-		float look_frmo_y = 1.5 * sin(3 * 2 * M_PI / count * frame);
+		// float look_frmo_x = 2.5 * cos(2 * M_PI / count * frame);
+		// float look_frmo_z = 2.5 * sin(2 * M_PI / count * frame);
+		// float look_frmo_y = 1.5 * sin(3 * 2 * M_PI / count * frame);
 
-		vec3 lookfrom(look_frmo_x, look_frmo_y, look_frmo_z);
+		// vec3 lookfrom(look_frmo_x, look_frmo_y, look_frmo_z);
 		vec3 lookat(0, 0, 0);
 		camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
 

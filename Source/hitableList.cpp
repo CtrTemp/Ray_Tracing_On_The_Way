@@ -19,21 +19,33 @@ bool hitable_list::hit(const ray &r, float tmin, float tmax, hit_record &rec) co
 	hit_record temp_rec;
 	bool hit_anything = false;
 	double closest_so_far = tmax;
-	for (int i = 0; i < list_size; ++i)
+
+	switch (method)
 	{
-		if (list[i]->hit(r, tmin, closest_so_far, temp_rec)) //这里是比较有意思的地方
-		//在列表中遍历，tmax参数设为上一个list元素中的t值，并与本元素进行比较，
-		//可见，只有当本元素中较小的t（也就是更近的击中点）才会被记录更新到temp_rec
+	case HitMethod::NAIVE:
+		for (int i = 0; i < list_size; ++i)
 		{
-			hit_anything = true;
-			closest_so_far = temp_rec.t;
-			rec = temp_rec;
-			// std::cout << "hitted = "
-			// 		  << temp_rec.p.x() << "; "
-			// 		  << temp_rec.p.y() << "; "
-			// 		  << temp_rec.p.z() << "; "
-			// 		  << std::endl;
+			if (list[i]->hit(r, tmin, closest_so_far, temp_rec))
+			{
+				hit_anything = true;
+				closest_so_far = temp_rec.t;
+				rec = temp_rec;
+			}
 		}
+		break;
+	case HitMethod::BVH_TREE:
+        // std::cout << "tree hit" << std::endl;
+        temp_rec = tree->getHitpoint(tree->root, r);
+        if (temp_rec.happened)
+        {
+            hit_anything = true;
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
+        }
+		break;
+	default:
+        throw std::runtime_error("invalid iteration ergodic methods--scene");
+		break;
 	}
 	return hit_anything;
 }

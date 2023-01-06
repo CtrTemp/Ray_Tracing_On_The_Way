@@ -19,12 +19,12 @@ public:
 
     triangleList() = default;
     // 第一种方式通过传入一个三角形列表来构建
-    triangleList(std::vector<triangle *> tri, int n, HitMethod m) : tri_list(tri), list_size(n), method(m)
-    {
-        // 以下测试使用，正常情况下不会为这种构造函数构建的三角形列表建立加速结构
-        tree = new bvh_tree(tri_list);
-        // throw std::runtime_error("break point construct BVH_TREE");
-    };
+    triangleList(std::vector<triangle *> tri, int n, HitMethod m);
+    // {
+    //     // 以下测试使用，正常情况下不会为这种构造函数构建的三角形列表建立加速结构
+    //     tree = new bvh_tree(tri_list);
+    //     // throw std::runtime_error("break point construct BVH_TREE");
+    // };
     // 第二种方式通过传入顶点数组以及索引数组来构建
     triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m);
     // 第三种方式直接从模型地址导入构建

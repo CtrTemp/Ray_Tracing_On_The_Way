@@ -21,7 +21,8 @@ public:
     aabb bounds;
     bvh_node *left;
     bvh_node *right;
-    triangle *object;
+    // node 节点的主体可以是多种多样的
+    hitable *object;
 };
 
 class bvh_tree
@@ -31,10 +32,28 @@ public:
     bvh_tree(std::vector<triangle *> tri_list, int maxPrimsInNode = 1);
     bvh_node *recursiveConstructTree(std::vector<triangle *> primitives);
     hit_record Intersect(const ray &ray) const;
-    hit_record getHitpoint(bvh_node* node, const ray& ray)const;
+    hit_record getHitpoint(bvh_node *node, const ray &ray) const;
 
     const int maxPrimsInNode; // 常量只初始化一次, 定义当前BVH节点所能容纳最大三角形面片数
-    std::vector<triangle *> primitives;    // 当前BVH加速结构所囊括的三角形面片组
+    // 当前BVH加速结构所囊括的三角形面片组
+    // 这里应该作出改变以适应不同的情况，首先应该适应传入 hitableList 的情况，为世界坐标系中的不同物体构建树状结构
+    std::vector<triangle *> primitives;
+    bvh_node *root;
+};
+
+class bvh_tree_scene
+{
+public:
+    bvh_tree_scene() = default;
+    bvh_tree_scene(std::vector<hitable *> tri_list, int maxPrimsInNode = 1);
+    bvh_node *recursiveConstructSceneTree(std::vector<hitable *> primitives);
+    hit_record Intersect(const ray &ray) const;
+    hit_record getHitpoint(bvh_node *node, const ray &ray) const;
+
+    const int maxPrimsInNode; // 常量只初始化一次, 定义当前BVH节点所能容纳最大三角形面片数
+    // 当前BVH加速结构所囊括的三角形面片组
+    // 这里应该作出改变以适应不同的情况，首先应该适应传入 hitableList 的情况，为世界坐标系中的不同物体构建树状结构
+    std::vector<hitable *> obj_list;
     bvh_node *root;
 };
 

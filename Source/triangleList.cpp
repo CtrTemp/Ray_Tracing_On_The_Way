@@ -53,7 +53,7 @@ bool triangleList::hit(const ray &r, float t_min, float t_max, hit_record &rec) 
         break;
 
     default:
-        throw std::runtime_error("invalid iteration ergodic methods");
+        throw std::runtime_error("invalid iteration ergodic methods--triangle list");
         break;
     }
 
@@ -83,9 +83,25 @@ bool triangleList::bounding_box(float t0, float t1, aabb &box) const
 // 12月30日截至点
 
 /*
-    通过传入顶点列表以及顶点索引列表来创建三角形列表，适用于之后的模型导入
-    （是不是需要预定义一个size？）
+    第一种构造函数：
+    通过传入三角形列表来构建
+*/
 
+triangleList::triangleList(std::vector<triangle *> tri, int n, HitMethod m)
+{
+    method = m;
+    list_size = n;
+    for (int i = 0; i < tri.size(); i++)
+    {
+        tri_list.push_back(tri[i]);
+    }
+    tree = new bvh_tree(tri_list);
+    bounding_box(0, 0, bounds);
+}
+
+/*
+    第二种构造函数：
+    通过传入顶点列表以及顶点索引列表来创建三角形列表
 */
 triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m)
 {
@@ -103,9 +119,14 @@ triangleList::triangleList(vertex *vertList, uint32_t *indList, uint32_t ind_len
     list_size = tri_list.size();
     // 以下测试使用，正常情况下不会为这种构造函数构建的三角形列表建立加速结构
     tree = new bvh_tree(tri_list);
+    bounding_box(0, 0, bounds);
 }
 
-// 仅在这种构建方式下，我们为其构建层级包围盒加速结构（BVH_Node_Tree）
+/*
+    第三种构造函数：
+    通过模型导入来获取三角形列表
+    仅在这种构建方式下，我们为其构建层级包围盒加速结构（BVH_Node_Tree）
+*/
 triangleList::triangleList(const std::string module_path, material *mat, HitMethod m)
 {
 
@@ -178,4 +199,5 @@ triangleList::triangleList(const std::string module_path, material *mat, HitMeth
 
     list_size = tri_list.size();
     tree = new bvh_tree(tri_list);
+    bounding_box(0, 0, bounds);
 }

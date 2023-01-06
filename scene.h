@@ -40,10 +40,17 @@ hitable *test_image_texture();
 // // 天空盒测试
 hitable *test_sky_box();
 
-std::vector<hitable *> gen_sky_box(std::vector<hitable *> hit_list, int how_far);
+std::vector<hitable *> gen_sky_box_heavy(std::vector<hitable *> hit_list, int how_far);
+std::vector<hitable *> gen_sky_box_fire(std::vector<hitable *> hit_list, int how_far);
+std::vector<hitable *> gen_sky_box_high(std::vector<hitable *> hit_list, int how_far);
 
 // 具有加速结构后，可以尝试复杂模型的导入并渲染
 hitable *test_Load_complex_Models();
 
+// 全局加速结构
+hitable *test_complex_scene();
+
+// 同时测试全局加速结构与模型内加速结构
+hitable *test_complex_scene_with_complex_models();
 
 #endif
