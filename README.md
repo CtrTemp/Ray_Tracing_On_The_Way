@@ -10,14 +10,17 @@ My Own Render Program
 4、基本的表面材质硬编码定义：基本镜面、透明表面、漫反射表面
 5、基本模型内加速结构
 6、简单模型导入渲染（<=3000k）
+7、实现全局bvh加速结构
 
 ## 最近更新：
 
+### 1、全局加速结构实现与测试（23/01/06）
 
-### 1 引入了对单一模型的加速结构，使用层级包围盒结构构建树，但当前不支持对场景内多个单独物体的加速结构构建（23/01/06）
-### 2 支持对较为复杂模型的渲染，当前可渲染的模型面片数在1000～2000数量级（23/01/06）
-### 3 引入gdb辅助调试工具，现在支持调试（23/01/06）
+引入了对单一模型的加速结构，使用层级包围盒结构构建树，但当前不支持对场景内多个单独物体的加速结构构建（23/01/05）
 
+支持对较为复杂模型的渲染，当前可渲染的模型面片数在1000～2000数量级（23/01/05）
+
+引入gdb辅助调试工具，现在支持调试（23/01/05）
 
 渲染了天空盒，并得到了基本验证（23/01/03）
 
@@ -94,5 +97,21 @@ Then we try the bunny with lower resolution(1500 primitives or so).
 ![MirrorBunny_1k_prims_400_400_50spp_95s](https://user-images.githubusercontent.com/89559223/210777662-feb22f13-dca0-4edd-a414-0d169c0814ad.png)
 ![bunny_flow0](https://user-images.githubusercontent.com/89559223/210777678-4f07d7b7-f8fb-4180-ae91-3182f01c9826.png)
 
+
+#### 2023/01/06
+
+We got global acceleration this time and firstly we can test a typical scene in the e-book <Ray tracing in one weekend>.
+
+with acceleration(30s) & without acceleration(366s) but there is still something wrong in the rendered result(I doubt why the same scene can have that much differences in illumination, so there must be some bugs). 
+
+![3200balls_512_512_5spp_30seconds](https://user-images.githubusercontent.com/89559223/211009785-19de6d16-c687-4284-b757-bc05efa56f81.png)
+
+![3200balls_without_accel_512_512_5spp_366seconds](https://user-images.githubusercontent.com/89559223/211009840-7e6f7dee-6870-4a50-95ac-06e239655ada.png)
+
+
+
+Then, we test multi-sphere in the scene and a triangle list with 500 primitives at the same time. Noted that the triangle list is regarded as a group, so it use inner-model-acceleration we've done last day. Besides, we use another much brighter skybox.
+
+![512_512_900sphere_500tris_10spp_593seconds](https://user-images.githubusercontent.com/89559223/211009864-b053d0fe-a51b-4235-a3f4-6f6b3dad996c.png)
 
 
