@@ -1,41 +1,6 @@
 
-
-//#include "GlobalInclude/ray.h"
-//#include "GlobalInclude/vec3.h"
-//当前.cpp文件应该和GlobalInclude文件夹在同一个目录下
-#include "GlobalInclude/camera.h"
-#include "GlobalInclude/hitable.h"
-#include "GlobalInclude/hitableList.h"
-#include "GlobalInclude/material.h"
-#include "GlobalInclude/textures.h"
-#include "GlobalInclude/random.h"
-#include "GlobalInclude/sphere.h"
-
-// 以下对新加入的 triangle 类进行测试
-#include "GlobalInclude/triangle.h"
-
-#include <string>
-
-#include <iostream>
-#include <fstream>
-#include <random>
-#include <sys/time.h>
-
-#include "GlobalInclude/Chapter/diffuse_light.h"
-
 #include "scene.h"
 
-//关于文件包含关系的总结：
-/*
-	对于当前文件所在的目录，可以直接include当期目录下的所有头文件，无论当前文件是头文件还是源文件
-对于当前文件下属目录下的需要加目录名再引用下属目录下的头文件；如果想包含当前目录上级目录中的文件，则需要、
-使用../来引导到上级目录进行引用。
-
-	另外，所有引用文件均可使用绝对路径来指定位置。
-
-	默认情况下，c_cpp_properties.json文件会将根目录引导到当前工程一级目录下。
-
-*/
 
 vec3 color(const ray &r, hitable *world, int depth)
 {
@@ -73,9 +38,9 @@ int main(void)
 
 	// vertex **vertList;
 
-	int nx = 512;
-	int ny = 512;
-	int ns = 10; // Grace Jannik Remix
+	int nx = 200;
+	int ny = 200;
+	int ns = 1; // Grace Jannik Remix
 
 	int unit_percent = ny / 100;
 
@@ -89,8 +54,8 @@ int main(void)
 	// hitable *world = test_triangle();
 	// hitable *world = test_triangleList();
 	// hitable *world = test_Load_Models();
-	// hitable *world = test_sky_box();
 	// hitable *world = test_image_texture();
+	// hitable *world = test_sky_box();
   
 	// hitable *world = test_multi_triangleList();
 	// hitable *world = test_Load_complex_Models();
@@ -98,8 +63,8 @@ int main(void)
 	hitable *world = test_complex_scene_with_complex_models();
 
 	// vec3 lookfrom(30, 30, 25);
-	// vec3 lookfrom(20, 4, 6);
-	vec3 lookfrom(20, 4, 10);
+	vec3 lookfrom(20, 4, 6);
+	// vec3 lookfrom(50, 30, 50);
 	// vec3 lookfrom(2.5, 1.25, 2.5);
 	vec3 lookat(0, 0, 0);
 
@@ -127,7 +92,7 @@ int main(void)
 		// float look_frmo_y = 1.5 * sin(3 * 2 * M_PI / count * frame);
 
 		// vec3 lookfrom(look_frmo_x, look_frmo_y, look_frmo_z);
-		vec3 lookat(0, 0, 0);
+		// vec3 lookat(0, 0, 0);
 		camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
 
 		/* code */

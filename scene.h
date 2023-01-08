@@ -2,27 +2,30 @@
 #ifndef SCENE
 #define SCENE
 
-#include "GlobalInclude/camera.h"
-#include "GlobalInclude/hitable.h"
-#include "GlobalInclude/hitableList.h"
-#include "GlobalInclude/material.h"
-#include "GlobalInclude/Chapter/Perlin.h"
-#include "GlobalInclude/textures.h"
-#include "GlobalInclude/random.h"
-#include "GlobalInclude/sphere.h"
-// 新加入的 triangle 类
-#include "GlobalInclude/triangle.h"
-#include "GlobalInclude/triangleList.h"
 
 #include <string>
-
 #include <iostream>
 #include <fstream>
 #include <random>
 #include <sys/time.h>
 
-#include "GlobalInclude/Chapter/diffuse_light.h"
-#include "GlobalInclude/Chapter/box.h"
+
+
+
+#include "camera/camera.h"
+#include "object/hitable.h"
+#include "object/group/hitableList.h"
+#include "object/geometry/sphere.h"
+#include "object/geometry/box.h"
+#include "object/primitive/triangle.h"
+#include "object/primitive/primitive.h"
+#include "object/model/models.h"
+#include "material/material.h"
+#include "texture/textures.h"
+#include "texture/perlin.h"
+#include "material/diffuse_light.h"
+#include "math/random.h"
+
 
 hitable *sample_light();
 hitable *cornell_box();
@@ -40,9 +43,7 @@ hitable *test_image_texture();
 // // 天空盒测试
 hitable *test_sky_box();
 
-std::vector<hitable *> gen_sky_box_heavy(std::vector<hitable *> hit_list, int how_far);
-std::vector<hitable *> gen_sky_box_fire(std::vector<hitable *> hit_list, int how_far);
-std::vector<hitable *> gen_sky_box_high(std::vector<hitable *> hit_list, int how_far);
+std::vector<hitable *> gen_sky_box(std::vector<std::string> textures_path,std::vector<hitable *> hit_list, int how_far);
 
 // 具有加速结构后，可以尝试复杂模型的导入并渲染
 hitable *test_Load_complex_Models();

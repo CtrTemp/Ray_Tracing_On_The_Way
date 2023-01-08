@@ -10,7 +10,7 @@ project(renderingCore LANGUAGES CXX)#指定工程名，这个是随意取的
 set(CMAKE_BUILD_TYPE DEBUG)
 
 
-include_directories(./GlobalInclude)#添加头文件引用路径
+include_directories(./include)#添加头文件引用路径
 #可以添加多个include_directories(xxx)，其中xxx是相对路径
 
 
@@ -27,22 +27,21 @@ xxx
 add_executable(simpleSceneGene_Cmake #第一个是指定可执行文件的名字 之后参数用分号或者空格进行间隔
 ./main.cpp
 ./scene.cpp
-./Source/box.cpp
-./Source/bvh.cpp
-./Source/bounds.cpp
-./Source/camera.cpp
-./Source/diffuseLight.cpp
-./Source/hitable.cpp
-./Source/hitableList.cpp
-./Source/material.cpp
-./Source/perlin.cpp
-./Source/random.cpp
-./Source/sphere.cpp
-# 一定注意新加入的源文件要在这里进行说明
-./Source/triangle.cpp
-./Source/triangleList.cpp
-./Source/textures.cpp
-# ./Source/imageTexture.cpp
+./src/math/random.cpp
+./src/camera/camera.cpp
+./src/object/hitable.cpp
+./src/object/geometry/box.cpp
+./src/object/geometry/sphere.cpp
+./src/object/primitive/primitive.cpp
+./src/object/primitive/triangle.cpp
+./src/object/model/models.cpp
+./src/object/group/hitableList.cpp
+./src/material/material.cpp
+./src/material/diffuseLight.cpp
+./src/texture/textures.cpp
+./src/texture/perlin.cpp
+./src/accel/bvh.cpp
+./src/accel/bounds.cpp
 )#指定生成可执行文件名称
 
 

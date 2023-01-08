@@ -1,7 +1,0 @@
-#include "imageTexture.h"
-
-
-image_texture::image_texture(std::string path){
-    
-}
-

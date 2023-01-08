@@ -1,5 +1,27 @@
 #include "scene.h"
 
+std::vector<std::string> skybox_textures_heavy = {
+	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
+	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
+	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png",
+	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png",
+	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png",
+	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"};
+std::vector<std::string> skybox_textures_fire = {
+	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png",
+	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png",
+	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png",
+	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png",
+	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png",
+	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png"};
+std::vector<std::string> skybox_textures_high = {
+	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_0_Front+Z.png",
+	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_1_Back-Z.png",
+	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_2_Left+X.png",
+	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_3_Right-X.png",
+	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
+	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
+
 hitable *sample_light_RGB()
 {
 
@@ -77,7 +99,11 @@ hitable *test_triangle()
 	hit_list.push_back(new sphere(vec3(10, 0, 0), 1, new dielectric(1.5)));
 	hit_list.push_back(new sphere(vec3(0, 10, 0), 1, new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48())));
 	hit_list.push_back(new sphere(vec3(0, 0, 10), 1, grass));
-	hit_list.push_back(new triangle(vert0, vert1, vert2, white));
+	// 跨两级派生类也可以被视为为最基础的基类，从而直接传入
+	// hit_list.push_back(new triangle(vert0, vert1, vert2, white));
+	// 当然你也可以选择如下的方式进行传入
+	primitive *prim_triangle = new triangle(vert0, vert1, vert2, red);
+	hit_list.push_back(prim_triangle);
 
 	return new hitable_list(hit_list);
 }
@@ -121,7 +147,7 @@ hitable *test_triangleList()
 		1, 3, 0,
 		2, 4, 1,
 		5, 2, 0};
-	hit_list.push_back(new triangleList(testVertexList, testIndexList, 12, red, triangleList::HitMethod::NAIVE));
+	hit_list.push_back(new models(testVertexList, testIndexList, 12, red, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
 	return new hitable_list(hit_list);
 }
@@ -132,7 +158,7 @@ vec3 gen_random_dir(void)
 	return normalized_vec(vec3(drand48(), drand48(), drand48()));
 }
 
-std::vector<triangle *> gen_random_triangleList(std::vector<triangle *> triangles, int size)
+std::vector<primitive *> gen_random_triangleList(std::vector<primitive *> triangles, int size, int side_len)
 {
 	// 预定义单一颜色
 	material *grass = new lambertian(new constant_texture(vec3(0.65, 0.75, 0.05)));
@@ -142,7 +168,7 @@ std::vector<triangle *> gen_random_triangleList(std::vector<triangle *> triangle
 	int z_range[2] = {-15, 15};
 
 	// 三角形边长
-	float side_len = 1;
+	// float side_len = 1;
 
 	for (size_t i = 0; i < size; i++)
 	{
@@ -191,17 +217,15 @@ hitable *test_multi_triangleList()
 	hit_list.push_back(new sphere(vec3(x_range[1], y_range[1], z_range[1]), 1, new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48())));
 
 	// 经过测试，10万面的三角形列表使用不到3s完成加速树结构的构建，所以bvh_tree的构建速度还是比较快的
-	uint32_t triangles_num = 1000;
-	std::vector<triangle *> tri_list;
-	tri_list = gen_random_triangleList(tri_list, triangles_num);
+	uint32_t triangles_num = 100;
+	std::vector<primitive *> tri_list;
+	float side_len = 2;
+	tri_list = gen_random_triangleList(tri_list, triangles_num, side_len);
 
-	// hit_list.push_back(new triangleList(tri_list, triangles_num, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(tri_list, triangles_num, triangleList::HitMethod::BVH_TREE));
+	// hit_list.push_back(new models(tri_list, triangles_num, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(tri_list, triangles_num, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
-	// // 这里应该清除缓存？
-	// tri_list.clear();
-
-	hit_list = gen_sky_box_heavy(hit_list, 200);
+	hit_list = gen_sky_box(skybox_textures_heavy, hit_list, 200);
 
 	return new hitable_list(hit_list);
 }
@@ -221,16 +245,6 @@ hitable *test_Load_Models()
 	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
 	material *blue = new lambertian(new constant_texture(vec3(0.12, 0.15, 0.85)));
 
-	// hit_list.push_back(new sphere(vec3(0, 0, -1000), 1000, new lambertian(pertext)); // Ground
-
-	// hit_list.push_back(new sphere(vec3(0, 0, 0), 50, new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48()));
-	// hit_list.push_back(new sphere(vec3(0, 0, 250), 50, blue);
-
-	// hit_list.push_back(new sphere(vec3(0, 250, 0), 50, grass);
-	// hit_list.push_back(new sphere(vec3(250, 0, 0), 50, red);
-
-	// std::string module_path = "../models/cornellbox/tallbox.obj";
-	// std::string module_path = "../models/viking/viking_room.obj";
 	std::vector<std::string> module_path_list = {
 		"../models/cornellbox/tallbox.obj",
 		"../models/cornellbox/shortbox.obj",
@@ -240,12 +254,12 @@ hitable *test_Load_Models()
 		"../models/cornellbox/light.obj",
 	};
 
-	hit_list.push_back(new triangleList(module_path_list[0], new mental(vec3(0.9, 0.9, 0.9), 0.5 * drand48()), triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(module_path_list[1], gray, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(module_path_list[2], green, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(module_path_list[3], red, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(module_path_list[4], white, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(module_path_list[5], light, triangleList::HitMethod::NAIVE));
+	hit_list.push_back(new models(module_path_list[0], new mental(vec3(0.9, 0.9, 0.9), 0.5 * drand48()), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[1], gray, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[2], green, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[3], red, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[4], white, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[5], light, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
 	return new hitable_list(hit_list);
 }
@@ -288,7 +302,7 @@ hitable *test_image_texture()
 	// 	0, 1, 2,
 	// 	2, 3, 0};
 
-	// hit_list.push_back(new triangleList(testVertexList, testIndexList, 6);
+	// hit_list.push_back(new models(testVertexList, testIndexList, 6);
 
 	// 以下我们开始创建一个真正的有贴图的三角形
 	// std::string texture_path = "../Pic/cubemaps/sky4_cube.png";
@@ -307,7 +321,7 @@ hitable *test_image_texture()
 		0, 1, 2,
 		2, 3, 0};
 
-	hit_list.push_back(new triangleList(testVertexList, testIndexList, 6, test_texture, triangleList::HitMethod::NAIVE));
+	hit_list.push_back(new models(testVertexList, testIndexList, 6, test_texture, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
 	return new hitable_list(hit_list);
 }
@@ -317,7 +331,7 @@ hitable *test_sky_box()
 
 	std::vector<hitable *> hit_list;
 
-	hit_list = gen_sky_box_heavy(hit_list, 200);
+	hit_list = gen_sky_box(skybox_textures_fire, hit_list, 200);
 	// 反光球体
 	hit_list.push_back(new sphere(vec3(0, -5, 0), 10, new mental(vec3(0.99, 0.99, 0.99), 0.01)));
 
@@ -326,14 +340,14 @@ hitable *test_sky_box()
 	return new hitable_list(hit_list);
 }
 
-std::vector<hitable *> gen_sky_box_heavy(std::vector<hitable *> hit_list, int how_far)
+std::vector<hitable *> gen_sky_box(std::vector<std::string> textures_path, std::vector<hitable *> hit_list, int how_far)
 {
-	material *front = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png"));
-	material *back = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png"));
-	material *left = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png"));
-	material *right = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png"));
-	material *up = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png"));
-	material *down = new diffuse_light(new image_texture("../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"));
+	material *front = new diffuse_light(new image_texture(textures_path[0]));
+	material *back = new diffuse_light(new image_texture(textures_path[1]));
+	material *left = new diffuse_light(new image_texture(textures_path[2]));
+	material *right = new diffuse_light(new image_texture(textures_path[3]));
+	material *up = new diffuse_light(new image_texture(textures_path[4]));
+	material *down = new diffuse_light(new image_texture(textures_path[5]));
 
 	const float side_len = how_far;
 
@@ -391,166 +405,15 @@ std::vector<hitable *> gen_sky_box_heavy(std::vector<hitable *> hit_list, int ho
 		0, 1, 2,
 		2, 3, 0};
 
-	hit_list.push_back(new triangleList(frontVertexList, rectangleIndexList, 6, front, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(backVertexList, rectangleIndexList, 6, back, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(leftVertexList, rectangleIndexList, 6, right, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(rightVertexList, rectangleIndexList, 6, left, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(upVertexList, rectangleIndexList, 6, up, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(downVertexList, rectangleIndexList, 6, down, triangleList::HitMethod::NAIVE));
+	hit_list.push_back(new models(frontVertexList, rectangleIndexList, 6, front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(backVertexList, rectangleIndexList, 6, back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(leftVertexList, rectangleIndexList, 6, right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(rightVertexList, rectangleIndexList, 6, left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(upVertexList, rectangleIndexList, 6, up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(downVertexList, rectangleIndexList, 6, down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
 	return hit_list;
 }
-
-std::vector<hitable *> gen_sky_box_fire(std::vector<hitable *> hit_list, int how_far)
-{
-	material *front = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png"));
-	material *back = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png"));
-	material *left = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png"));
-	material *right = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png"));
-	material *up = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png"));
-	material *down = new diffuse_light(new image_texture("../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png"));
-
-	const float side_len = how_far;
-
-	vec3 cubeVertexList[8] = {
-		vec3(side_len / 2, side_len / 2, side_len / 2),
-		vec3(side_len / 2, side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, side_len / 2, side_len / 2),
-
-		vec3(side_len / 2, -side_len / 2, side_len / 2),
-		vec3(side_len / 2, -side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, -side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, -side_len / 2, side_len / 2)};
-
-	// nice
-	vertex frontVertexList[4] = {
-		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	// nice
-	vertex backVertexList[4] = {
-		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	vertex leftVertexList[4] = {
-		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	vertex rightVertexList[4] = {
-		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	vertex upVertexList[4] = {
-		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
-		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)}};
-
-	// nice
-	vertex downVertexList[4] = {
-		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	uint32_t rectangleIndexList[6] = {
-		0, 1, 2,
-		2, 3, 0};
-
-	hit_list.push_back(new triangleList(frontVertexList, rectangleIndexList, 6, front, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(backVertexList, rectangleIndexList, 6, back, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(leftVertexList, rectangleIndexList, 6, right, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(rightVertexList, rectangleIndexList, 6, left, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(upVertexList, rectangleIndexList, 6, up, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(downVertexList, rectangleIndexList, 6, down, triangleList::HitMethod::NAIVE));
-
-	return hit_list;
-}
-
-std::vector<hitable *> gen_sky_box_high(std::vector<hitable *> hit_list, int how_far)
-{
-	material *front = new diffuse_light(new image_texture("../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_0_Front+Z.png"));
-	material *back = new diffuse_light(new image_texture("../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_1_Back-Z.png"));
-	material *left = new diffuse_light(new image_texture("../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_2_Left+X.png"));
-	material *right = new diffuse_light(new image_texture("../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_3_Right-X.png"));
-	material *up = new diffuse_light(new image_texture("../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png"));
-	material *down = new diffuse_light(new image_texture("../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"));
-
-	const float side_len = how_far;
-
-	vec3 cubeVertexList[8] = {
-		vec3(side_len / 2, side_len / 2, side_len / 2),
-		vec3(side_len / 2, side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, side_len / 2, side_len / 2),
-
-		vec3(side_len / 2, -side_len / 2, side_len / 2),
-		vec3(side_len / 2, -side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, -side_len / 2, -side_len / 2),
-		vec3(-side_len / 2, -side_len / 2, side_len / 2)};
-
-	// nice
-	vertex frontVertexList[4] = {
-		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	// nice
-	vertex backVertexList[4] = {
-		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	vertex leftVertexList[4] = {
-		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	vertex rightVertexList[4] = {
-		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	vertex upVertexList[4] = {
-		{cubeVertexList[0], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[3], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[2], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
-		{cubeVertexList[1], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)}};
-
-	// nice
-	vertex downVertexList[4] = {
-		{cubeVertexList[4], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-		{cubeVertexList[5], vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-		{cubeVertexList[6], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-		{cubeVertexList[7], vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)}};
-
-	uint32_t rectangleIndexList[6] = {
-		0, 1, 2,
-		2, 3, 0};
-
-	hit_list.push_back(new triangleList(frontVertexList, rectangleIndexList, 6, front, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(backVertexList, rectangleIndexList, 6, back, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(leftVertexList, rectangleIndexList, 6, right, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(rightVertexList, rectangleIndexList, 6, left, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(upVertexList, rectangleIndexList, 6, up, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(downVertexList, rectangleIndexList, 6, down, triangleList::HitMethod::NAIVE));
-
-	return hit_list;
-}
-
 
 hitable *test_Load_complex_Models()
 {
@@ -582,11 +445,11 @@ hitable *test_Load_complex_Models()
 		"../models/basic_geo/dodecahedron.obj",
 		"../models/bunny/bunny_low_resolution.obj"};
 
-	// hit_list.push_back(new triangleList(module_path_list[2], grass, triangleList::HitMethod::BVH_TREE));
-	hit_list.push_back(new triangleList(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.99), triangleList::HitMethod::BVH_TREE));
-	// hit_list.push_back(new triangleList(module_path_list[0], new mental(vec3(0.9, 0.9, 0.9), 0.5 * drand48()), triangleList::HitMethod::NAIVE));
+	// 这里渲染1000面的兔子模型
+	hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.99), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.99), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
-	hit_list = gen_sky_box_heavy(hit_list, 5);
+	hit_list = gen_sky_box(skybox_textures_high, hit_list, 200);
 
 	return new hitable_list(hit_list);
 }
@@ -657,9 +520,9 @@ hitable *test_complex_scene()
 
 	hit_list = gen_multi_sphere(hit_list);
 
+	// return new hitable_list(hit_list, hitable_list::HitMethod::NAIVE);
 	return new hitable_list(hit_list, hitable_list::HitMethod::BVH_TREE);
 }
-
 
 hitable *test_complex_scene_with_complex_models()
 {
@@ -667,15 +530,14 @@ hitable *test_complex_scene_with_complex_models()
 	std::vector<hitable *> hit_list;
 
 	hit_list = gen_multi_sphere(hit_list);
-	hit_list = gen_sky_box_high(hit_list, 100);
+	hit_list = gen_sky_box(skybox_textures_high, hit_list, 100);
 
+	uint32_t triangles_num = 100;
+	std::vector<primitive *> prim_list;
+	prim_list = gen_random_triangleList(prim_list, triangles_num, 1);
 
-	uint32_t triangles_num = 500;
-	std::vector<triangle *> tri_list;
-	tri_list = gen_random_triangleList(tri_list, triangles_num);
+	hit_list.push_back(new models(prim_list, triangles_num, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	// hit_list.push_back(new models(prim_list, triangles_num, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
-	// hit_list.push_back(new triangleList(tri_list, triangles_num, triangleList::HitMethod::NAIVE));
-	hit_list.push_back(new triangleList(tri_list, triangles_num, triangleList::HitMethod::BVH_TREE));
-
-	return new hitable_list(hit_list);
+	return new hitable_list(hit_list, hitable_list::HitMethod::BVH_TREE);
 }
