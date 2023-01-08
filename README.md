@@ -20,7 +20,13 @@ My Own Render Program
 
 ## 最近更新：
 
-### 1、全局加速结构实现与测试（23/01/06）
+### 1、优化了类的层级结构，hitable下属四类：geometry基本几何、primitive基本面元、models面元几何（面元列表）、group组（对象列表）。（23/01/08）
+#### 1.1 原sphere类以及box类被归入基本几何geometry类，并成为其派生类，后期将添加用于描述空间曲线/曲面的curve_function/surface_function类；（23/01/08）
+#### 1.2 原triangle类被归为primitive的派生类，后期会添加四边形面元quadrangle类；（23/01/08）
+#### 1.3 triangleList被归为models，现在models类具有抽象primitive列表取代单一的三角形列表类；（23/01/08）
+#### 1.4 bvh加速结构也因此进行了重写。（23/01/08）
+
+  * 全局加速结构实现与测试（23/01/06）
 
   * 引入了对单一模型的加速结构，使用层级包围盒结构构建树，但当前不支持对场景内多个单独物体的加速结构构建（23/01/05）
 
@@ -122,4 +128,18 @@ Then, we test multi-sphere in the scene and a triangle list with 500 primitives 
 
 ![512_512_900sphere_500tris_10spp_593seconds](https://user-images.githubusercontent.com/89559223/211009864-b053d0fe-a51b-4235-a3f4-6f6b3dad996c.png)
 
+
+#### 2023/01/08
+
+We optimized the class hierarchy as mentioned before. However, after I added the middle abstract level class "primitive" between class "hitable" and class "triangle", strange things happened: although I've changed the bvh constructure at the same time, the accelerate efficiency seems slow down apparently, even much slower than the brute-force method! Besides, still have different visual effect although I'm using the same shading method. Apparently, there is some bugs which slow down the program I've not found. The rendering result as follows: 
+
+Right one using burte force method using 15 seconds. Left one with bvh constructure cost 24 seconds. (200*200 resolution; 1spp; 1500 primitives). The bvh tree is constructed inside the model, but much slower when rendering.
+
+![bvh_bunny_200_200_1spp_1500prims_24s](https://user-images.githubusercontent.com/89559223/211190277-c81d9548-cf27-4a27-a7e2-b28d0e47d0f7.png)
+![naive_bunny_200_200_1spp_1500prims_15s](https://user-images.githubusercontent.com/89559223/211190280-2d08d399-b6fb-4502-8a8c-a1c12f0a9c8f.png)
+
+Bottom: burte force; Top: bvh. However, this bvh tree is constructed on the scene but not inner models which means each sphere is regarded as a single object(model). Under this circumstance, bvh acceleration behaves its advantage.
+
+![bvh_scene_512_512_1spp_900spheres_7s](https://user-images.githubusercontent.com/89559223/211190412-55104476-fb24-4d79-899e-a46cbe633ee0.png)
+![naive_scene_512_512_1spp_900spheres_20s](https://user-images.githubusercontent.com/89559223/211190417-c9c46d6e-b7a0-4c61-8ec8-fe30c7b62de8.png)
 
