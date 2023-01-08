@@ -138,7 +138,7 @@ Right one using burte force method using 15 seconds. Left one with bvh construct
 ![bvh_bunny_200_200_1spp_1500prims_24s](https://user-images.githubusercontent.com/89559223/211190277-c81d9548-cf27-4a27-a7e2-b28d0e47d0f7.png)
 ![naive_bunny_200_200_1spp_1500prims_15s](https://user-images.githubusercontent.com/89559223/211190280-2d08d399-b6fb-4502-8a8c-a1c12f0a9c8f.png)
 
-Bottom: burte force; Top: bvh. However, this bvh tree is constructed on the scene but not inner models which means each sphere is regarded as a single object(model). Under this circumstance, bvh acceleration behaves its advantage.
+Bottom: burte force(20 seconds); Top: bvh(7 seconds).(512*512 resolution; 1spp; 900 spheres) However, this bvh tree is constructed on the scene but not inner models which means each sphere is regarded as a single object(model). Under this circumstance, bvh acceleration behaves its advantage.
 
 ![bvh_scene_512_512_1spp_900spheres_7s](https://user-images.githubusercontent.com/89559223/211190412-55104476-fb24-4d79-899e-a46cbe633ee0.png)
 ![naive_scene_512_512_1spp_900spheres_20s](https://user-images.githubusercontent.com/89559223/211190417-c9c46d6e-b7a0-4c61-8ec8-fe30c7b62de8.png)
