@@ -1,6 +1,23 @@
 
 #include "scene.h"
 
+camera createCamera(void);
+
+unsigned int frame_width = 512;
+unsigned int frame_height = 512;
+
+// 世界场景选型
+hitable *sample_light_RGB_world = sample_light_RGB();
+hitable *test_triangle_world = test_triangle();
+// hitable *test_triangleList_world = test_triangleList();
+// hitable *test_Load_Models_world = test_Load_Models();
+// hitable *test_image_texture_world = test_image_texture();
+// hitable *test_sky_box_world = test_sky_box();
+
+// hitable *test_multi_triangleList_world = test_multi_triangleList();
+// hitable *test_Load_complex_Models_world = test_Load_complex_Models();
+// hitable *test_complex_scene_world = test_complex_scene();
+// hitable *test_complex_scene_with_complex_models_world = test_complex_scene_with_complex_models();
 
 vec3 color(const ray &r, hitable *world, int depth)
 {
@@ -26,10 +43,10 @@ vec3 color(const ray &r, hitable *world, int depth)
 	}
 	else
 	{
-		vec3 unit_direction = unit_vector(r.direction());
-		auto t = 0.5 * (unit_direction.y() + 1.0);
-		return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-		// return vec3(0, 0, 0);
+		// vec3 unit_direction = unit_vector(r.direction());
+		// auto t = 0.5 * (unit_direction.y() + 1.0);
+		// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+		return vec3(0, 0, 0);
 	}
 }
 
@@ -38,8 +55,8 @@ int main(void)
 
 	// vertex **vertList;
 
-	int nx = 200;
-	int ny = 200;
+	int nx = 512;
+	int ny = 512;
 	int ns = 1; // Grace Jannik Remix
 
 	int unit_percent = ny / 100;
@@ -49,97 +66,13 @@ int main(void)
 	gettimeofday(&timeSystemStart, NULL);
 	// Linux下计时器
 
-	// 首先构建世界场景
-	// hitable *world = sample_light_RGB();
-	// hitable *world = test_triangle();
-	// hitable *world = test_triangleList();
-	// hitable *world = test_Load_Models();
-	// hitable *world = test_image_texture();
-	// hitable *world = test_sky_box();
-  
-	// hitable *world = test_multi_triangleList();
-	// hitable *world = test_Load_complex_Models();
-	// hitable *world = test_complex_scene();
-	hitable *world = test_complex_scene_with_complex_models();
-
-	// vec3 lookfrom(30, 30, 25);
-	vec3 lookfrom(20, 4, 6);
-	// vec3 lookfrom(50, 30, 50);
-	// vec3 lookfrom(2.5, 1.25, 2.5);
-	vec3 lookat(0, 0, 0);
-
-	// only for cornell box
-	// vec3 lookfrom(278, 278, -800);
-	// vec3 lookat(278, 278, 0);
-
-	float dist_to_focus = 10.0;
-	float aperture = 0.0; // MotionBlur
-	// float vfov = 40.0;
-	float vfov = 40.0;
-	// camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
-	// only for cornell box
-	// camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
+	camera cam = createCamera();
 
 	std::cout << "iNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
 
 	gettimeofday(&timeStart, NULL);
-	int count = 1;
-	for (size_t frame = 0; frame < count; frame++)
-	{
-
-		// float look_frmo_x = 2.5 * cos(2 * M_PI / count * frame);
-		// float look_frmo_z = 2.5 * sin(2 * M_PI / count * frame);
-		// float look_frmo_y = 1.5 * sin(3 * 2 * M_PI / count * frame);
-
-		// vec3 lookfrom(look_frmo_x, look_frmo_y, look_frmo_z);
-		// vec3 lookat(0, 0, 0);
-		camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
-
-		/* code */
-		std::ofstream OutputImage;
-		// std::string Path = "/home/ctrtemp/Desktop/ss"+std::to_string(img_index)+".ppm";
-		std::string Path = "./pic_flow/bunny_flow_" + std::to_string(frame) + ".ppm";
-		OutputImage.open(Path);
-		OutputImage << "P3\n"
-					<< nx << " " << ny << "\n255\n";
-		// 开始计时
-
-		for (int j = ny - 1; j >= 0; --j)
-		// for (int j = 0; j < ny; ++j)
-		{
-			for (int i = 0; i < nx; ++i)
-			// for (int i = nx-1; i >= 0; --i)
-			{
-				vec3 col(0, 0, 0);
-				for (int s = 0; s < ns; ++s)
-				{
-
-					float u = float(i + rand() % 101 / float(101)) / float(nx);
-					float v = float(j + rand() % 101 / float(101)) / float(ny);
-
-					ray r = cam.get_ray(u, v);
-
-					vec3 p = r.point_at_parameter(2.0);
-
-					col += color(r, world, 0);
-				}
-
-				col /= float(ns);
-
-				col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
-
-				col = color_unit_normalization(col, 1); //色值
-
-				int ir = int(255.99 * col[0]);
-				int ig = int(255.99 * col[1]);
-				int ib = int(255.99 * col[2]);
-
-				OutputImage << ir << " " << ig << " " << ib << "\n";
-			}
-		}
-
-		std::cout << "frame done = " << frame << std::endl;
-	}
+	std::string path = "./pic_flow/any.ppm";
+	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);
 	//停止计时
@@ -148,4 +81,36 @@ int main(void)
 
 	std::cout << "ALL DONE" << std::endl;
 	return 0;
+}
+
+camera createCamera(void)
+{
+	cameraCreateInfo createCamera{};
+
+	createCamera.lookfrom = vec3(20, 15, 20);
+	createCamera.lookat = vec3(0, 0, 0);
+
+	// vec3 lookfrom(20, 4, 6);
+	// vec3 lookfrom(40, 30, 40);
+	// vec3 lookfrom(2.5, 1.25, 2.5);
+
+	// only for cornell box
+	// vec3 lookfrom(278, 278, -800);
+	// vec3 lookat(278, 278, 0);
+
+	createCamera.up_dir = vec3(0, 1, 0);
+	createCamera.fov = 40;
+	createCamera.aspect = float(frame_width) / float(frame_height);
+	createCamera.focus_dist = 10.0;
+	createCamera.t0 = 0.0;
+	createCamera.t1 = 1.0;
+	createCamera.frame_width = frame_width;
+	createCamera.frame_height = frame_height;
+	createCamera.world = sample_light_RGB_world;
+	// createCamera.world = test_triangle_world;
+	// createCamera.world = test_Load_complex_Models_world;
+
+	// 考虑frame和这个camera的创建如何结合？
+	// 学会像vulkan那样构建！！！
+	return camera(createCamera);
 }

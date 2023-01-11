@@ -25,6 +25,8 @@ std::vector<std::string> skybox_textures_high = {
 hitable *sample_light_RGB()
 {
 
+	texture *pertext = new noise_texture(1.5);
+	material *noise = new lambertian(pertext);
 	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
 	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
 	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
@@ -32,19 +34,23 @@ hitable *sample_light_RGB()
 
 	std::vector<hitable *> hit_list;
 
-	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, white)); // Ground
-	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, white));
+	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, noise)); // Ground
+	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, noise));
 	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
 
-	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.5 * drand48())));
+	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.05)));
 
-	hit_list.push_back(new sphere(vec3(0, 20, 0), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+	hit_list.push_back(new sphere(vec3(10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+	hit_list.push_back(new sphere(vec3(-10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
 
 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 0, new diffuse_light(new constant_texture(vec3(20, 0, 0)))));
 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 3, new diffuse_light(new constant_texture(vec3(0, 20, 0)))));
 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 6, new diffuse_light(new constant_texture(vec3(0, 0, 20)))));
 
-	hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
+	// hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
 
 	return new hitable_list(hit_list);
 }
