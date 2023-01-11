@@ -20,11 +20,14 @@ My Own Render Program
 
 ## 最近更新：
 
-### 1、优化了类的层级结构，hitable下属四类：geometry基本几何、primitive基本面元、models面元几何（面元列表）、group组（对象列表）。（23/01/08）
-#### 1.1 原sphere类以及box类被归入基本几何geometry类，并成为其派生类，后期将添加用于描述空间曲线/曲面的curve_function/surface_function类；（23/01/08）
-#### 1.2 原triangle类被归为primitive的派生类，后期会添加四边形面元quadrangle类；（23/01/08）
-#### 1.3 triangleList被归为models，现在models类具有抽象primitive列表取代单一的三角形列表类；（23/01/08）
-#### 1.4 bvh加速结构也因此进行了重写。（23/01/08）
+#### 1、整个渲染函数，射线投射循环等现已全部被融入到camera类中，成为其成员函数，main函数被大幅简化。（23/01/11）
+#### 2、对于组件的创建与拼接，参考Vulkan中的方式，通过配置特殊的创建结构体，对camera、framebuffer、renderpass等组件进行创建，后期会逐步统一（23/01/11）
+
+  * 优化了类的层级结构，hitable下属四类：geometry基本几何、primitive基本面元、models面元几何（面元列表）、group组（对象列表）。（23/01/08）
+    * 原sphere类以及box类被归入基本几何geometry类，并成为其派生类，后期将添加用于描述空间曲线/曲面的curve_function/surface_function类；（23/01/08）
+    * 原triangle类被归为primitive的派生类，后期会添加四边形面元quadrangle类；（23/01/08）
+    * triangleList被归为models，现在models类具有抽象primitive列表取代单一的三角形列表类；（23/01/08）
+    * bvh加速结构也因此进行了重写。（23/01/08）
 
   * 全局加速结构实现与测试（23/01/06）
 
