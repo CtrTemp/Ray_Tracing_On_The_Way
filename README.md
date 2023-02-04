@@ -157,14 +157,23 @@ Currently, this bug has been solved. Let's look some of the comparation result.
 
 
 ![bvh_tree_result_mental](https://user-images.githubusercontent.com/89559223/216764760-7fb679f1-c168-4d0f-9531-e9d6e654ed84.png)
+ 
 This is the uncorrect result rendered by original bvh accel constructure.
 
+ 
+ 
 ![correct_naive_result_mental](https://user-images.githubusercontent.com/89559223/216764807-fd24fed6-49c6-4db7-a39f-22b1dceaa851.png)
+ 
 "Ground truth~! with naive render method"
 
+ 
+ 
 ![bvh_changed_1spp_mental](https://user-images.githubusercontent.com/89559223/216764872-9ae99108-4b48-46ab-9778-0d71eb9dc7bc.png)
+ 
 After fixing the bug, using bvh accel constructure, minimum transformation time is limited by 0.001, you can compare this with the upper pic.
 
 
+ 
 ![bvh](https://user-images.githubusercontent.com/89559223/216764972-2fbcb8be-7e09-44c1-ab9f-333c8250feaf.png)
+ 
 Also, complex scene is rendered correctlly and you can still compare this pic with the 2023/01/08 version.
