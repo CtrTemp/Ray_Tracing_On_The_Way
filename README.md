@@ -176,4 +176,4 @@ After fixing the bug, using bvh accel constructure, minimum transformation time 
  
 ![bvh](https://user-images.githubusercontent.com/89559223/216764972-2fbcb8be-7e09-44c1-ab9f-333c8250feaf.png)
  
-Also, complex scene is rendered correctlly and you can still compare this pic with the 2023/01/08 version.
+Also, complex scene is rendered correctlly and you can still compare this pic with the 2023/01/08 version. No much black noisy shading point exist.
