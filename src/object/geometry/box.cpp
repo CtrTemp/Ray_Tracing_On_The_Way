@@ -27,6 +27,11 @@ bool box::bounding_box(float t0, float t1, aabb &box) const
 	return true;
 }
 
+aabb box::getBound(void) const
+{
+	return aabb(pmin, pmax);
+}
+
 bool translate::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 {
 	ray move_r(r.origin() - offset, r.direction(), r.time());
@@ -48,6 +53,12 @@ bool translate::bounding_box(float t0, float t1, aabb &box) const
 	}
 	else
 		return false;
+}
+
+aabb translate::getBound(void) const
+{
+	aabb box = ptr->getBound();
+	return aabb(box.min() + offset, box.max() + offset);
 }
 
 rotate_y::rotate_y(hitable *p, float angle) : ptr(p)
@@ -125,4 +136,9 @@ bool rotate_y::bounding_box(float t0, float t1, aabb &box) const
 {
 	box = bbox;
 	return hasbox;
+}
+
+aabb rotate_y::getBound(void) const
+{
+	return bbox;
 }

@@ -12,14 +12,17 @@ public:
 	sphere() = default;
 	sphere(vec3 cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat)
 	{
-		bounding_box(0, 0, bounds);
+		bounding_box(0, 0, bound);
 	}; //创造一个球体，包括球心和半径参数
 
 	// 重写的类中的 函数名/参数/返回类型都必须相同
 	virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
 	//判断参数：给定一条射线
 	virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return mat_ptr->hasEmission(); };
 
+	aabb bound;
 	// 球体作为可打击继承类的其他三个额外参数
 	vec3 center;
 	float radius;
@@ -34,6 +37,7 @@ public:
 
 	virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const { return false; }
+	virtual aabb getBound(void) const;
 
 	vec3 center(float time) const;
 
@@ -44,26 +48,5 @@ public:
 	aabb bounds;
 };
 
-/*
-
-
-aabb surronding_box(aabb box0, aabb box1)
-{
-vec3 small(
-fmin(box0.min().x(), box1.min().x()),
-fmin(box0.min().y(), box1.min().y()),
-fmin(box0.min().z(), box1.min().z())
-);
-
-vec3 big(
-fmax(box0.max().x(), box1.max().x()),
-fmax(box0.max().y(), box1.max().y()),
-fmax(box0.max().z(), box1.max().z())
-);
-return aabb(small, big);
-}
-
-
-*/
 
 #endif

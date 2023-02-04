@@ -46,41 +46,16 @@ bvh_node *bvh_tree::recursiveConstructTree(std::vector<primitive *> primitives)
 
     // 通过归并, 将得到一个包围住当前多边形片元列表的一个大包围盒
     // aabb bounds; // 这种创建方式绝对有问题！你默认构建了一个无穷大的包围盒，于是以下做merge一直是无穷大
-    aabb bounds = primitives[0]->bounds; // 正确做法是传入一个当前第一个三角形的bounds
-
-    // for (int i = 0; i < primitives.size(); i++)
-    // {
-    //     std::cout << "primitives[i]  bounds = "
-    //               << primitives[i]->bounds.min()[0] << "; "
-    //               << primitives[i]->bounds.min()[1] << "; "
-    //               << primitives[i]->bounds.min()[2] << "; || "
-    //               << primitives[i]->bounds.max()[0] << "; "
-    //               << primitives[i]->bounds.max()[1] << "; "
-    //               << primitives[i]->bounds.max()[2] << "; "
-    //               << std::endl;
-    // }
-
-    // throw std::runtime_error("break point check primitives bounds");
+    aabb global_bound = primitives[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
 
     for (int i = 0; i < primitives.size(); ++i)
-        bounds = Union(bounds, primitives[i]->bounds);
-
-    // std::cout << "sss" << std::endl;
-    // std::cout << "global big bounds = "
-    //           << bounds.min()[0] << "; "
-    //           << bounds.min()[1] << "; "
-    //           << bounds.min()[2] << "; || "
-    //           << bounds.max()[0] << "; "
-    //           << bounds.max()[1] << "; "
-    //           << bounds.max()[2] << "; "
-    //           << std::endl;
-    // throw std::runtime_error("break point check global bounds");
+        global_bound = Union(global_bound, primitives[i]->getBound());
 
     // 最终递归返回情况01: 我们已经递归到了树的叶子节点,当前列表中只有一个元素了
     if (primitives.size() == 1)
     {
         // 那么我们创建这个叶子节点, 并将其左右子树指针置为空
-        node->bounds = primitives[0]->bounds;
+        node->bound = primitives[0]->getBound();
         node->object = primitives[0];
         node->left = nullptr;
         node->right = nullptr;
@@ -94,7 +69,7 @@ bvh_node *bvh_tree::recursiveConstructTree(std::vector<primitive *> primitives)
         node->left = recursiveConstructTree(std::vector{primitives[0]});
         node->right = recursiveConstructTree(std::vector{primitives[1]});
         // 当前节点的包围盒为下属两个叶子节点的包围盒的并集
-        node->bounds = Union(node->left->bounds, node->right->bounds);
+        node->bound = Union(node->left->bound, node->right->bound);
         return node;
     }
 
@@ -106,7 +81,7 @@ bvh_node *bvh_tree::recursiveConstructTree(std::vector<primitive *> primitives)
 
         // 首先 for 循环得到当前节点的整体包围盒
         for (int i = 0; i < primitives.size(); ++i)
-            centroidBounds = Union(centroidBounds, primitives[i]->bounds.center());
+            centroidBounds = Union(centroidBounds, primitives[i]->getBound().center());
 
         // 得到当前最大跨幅的坐标轴(包围盒哪个维度横跨尺度最大)
         int dim = centroidBounds.maxExtent();
@@ -117,18 +92,18 @@ bvh_node *bvh_tree::recursiveConstructTree(std::vector<primitive *> primitives)
         case 0:
             // f 是 fragment 的简称 (残片/碎片)
             std::sort(primitives.begin(), primitives.end(), [](auto f1, auto f2)
-                      { return f1->bounds.center().x() <
-                               f2->bounds.center().x(); });
+                      { return f1->getBound().center().x() <
+                               f2->getBound().center().x(); });
             break;
         case 1:
             std::sort(primitives.begin(), primitives.end(), [](auto f1, auto f2)
-                      { return f1->bounds.center().y() <
-                               f2->bounds.center().y(); });
+                      { return f1->getBound().center().y() <
+                               f2->getBound().center().y(); });
             break;
         case 2:
             std::sort(primitives.begin(), primitives.end(), [](auto f1, auto f2)
-                      { return f1->bounds.center().z() <
-                               f2->bounds.center().z(); });
+                      { return f1->getBound().center().z() <
+                               f2->getBound().center().z(); });
             break;
         }
 
@@ -150,7 +125,7 @@ bvh_node *bvh_tree::recursiveConstructTree(std::vector<primitive *> primitives)
         node->right = recursiveConstructTree(rightshapes);
 
         // 当前节点的包围盒是左右子树包围盒的并集
-        node->bounds = Union(node->left->bounds, node->right->bounds);
+        node->bound = Union(node->left->bound, node->right->bound);
     }
 
     // 最终返回 bvh_node_tree 的根节点
@@ -167,7 +142,7 @@ hit_record bvh_tree::getHitpoint(bvh_node *node, const ray &ray) const
     intersectionRecord.happened = false;
 
     // 需要对 bvh_node_tree 进行深度优先遍历
-    aabb current_bound = node->bounds;
+    aabb current_bound = node->bound;
     std::array<int, 3> dirIsNeg = {
         int(ray.direction().x() < 0),
         int(ray.direction().y() < 0),
@@ -192,9 +167,21 @@ hit_record bvh_tree::getHitpoint(bvh_node *node, const ray &ray) const
         if (node->left == nullptr && node->right == nullptr)
         {
             // 这里是与特定多边形面元求交的基本测试, 好在程序框架帮我们集成了这个函数
-            node->object->hit(ray, std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), intersectionRecord);
+            // node->object->hit(ray, std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), intersectionRecord);
+            
+            // vital problem !!! do not ! use std::numeric_limits<float>::min()
+            /*
+                cause the secondary scattered ray may intersect to the surface who generate it,
+            that is to say intersect to itself, which can make the rec.t parameter extremely 
+            small but still larger than "std::numeric_limits<float>::max()", which makes the 
+            ray iteratively bounce and intersect to itself and return an vec(0,0,0) as black 
+            shading point.
+            */ 
+            node->object->hit(ray, 0.01, std::numeric_limits<float>::max(), intersectionRecord);
             // 第一次这里逻辑错误, 少了一个return!!!?
             // std::cout << "hit something: " << intersectionRecord.happened << std::endl;
+            // std::cout << "hitrec.t = " << intersectionRecord.t << std::endl;
+            // std::cout << "happened ?? = " << intersectionRecord.happened << std::endl;
             return intersectionRecord;
         }
         else
@@ -209,6 +196,7 @@ hit_record bvh_tree::getHitpoint(bvh_node *node, const ray &ray) const
                 // std::cout << "both hitted" << std::endl;
                 // 如果两者都有交点,那么我们应该取更近的一个交点
                 intersectionRecord = intersectionRecordLeft.t > intersectionRecordRight.t ? intersectionRecordRight : intersectionRecordLeft;
+                // std::cout << "compared little t = " << intersectionRecord.t << std::endl;
                 return intersectionRecord;
             }
             // 这里在最开始少考虑了一个条件: 当左右叶子节点二者有其一发生相交事件后,也要择机返回一个值
@@ -236,6 +224,10 @@ hit_record bvh_tree::getHitpoint(bvh_node *node, const ray &ray) const
         intersectionRecord.happened = false;
         // 其实这步没什么必要, 初始化默认为false
     }
+
+    // std::cout << "final ret hit rec.t = " << intersectionRecord.t << std::endl;
+    // std::cout << std::endl;
+    // std::cout << std::endl;
 
     return intersectionRecord;
 }
@@ -268,7 +260,7 @@ hit_record bvh_tree_scene::getHitpoint(bvh_node_scene *node, const ray &ray) con
     intersectionRecord.happened = false;
 
     // 需要对 bvh_node_tree 进行深度优先遍历
-    aabb current_bound = node->bounds;
+    aabb current_bound = node->bound;
     std::array<int, 3> dirIsNeg = {
         int(ray.direction().x() < 0),
         int(ray.direction().y() < 0),
@@ -293,7 +285,8 @@ hit_record bvh_tree_scene::getHitpoint(bvh_node_scene *node, const ray &ray) con
         if (node->left == nullptr && node->right == nullptr)
         {
             // 这里是与特定多边形面元求交的基本测试, 好在程序框架帮我们集成了这个函数
-            node->object->hit(ray, std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), intersectionRecord);
+            node->object->hit(ray, 0.01, std::numeric_limits<float>::max(), intersectionRecord);
+            // node->object->hit(ray, std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), intersectionRecord);
             // 第一次这里逻辑错误, 少了一个return!!!?
             // std::cout << "hit something: " << intersectionRecord.happened << std::endl;
             // std::cout << "current bound = "
@@ -356,7 +349,7 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
 
     // 通过归并, 将得到一个包围住当前多边形片元列表的一个大包围盒
     // aabb bounds; // 这种创建方式绝对有问题！你默认构建了一个无穷大的包围盒，于是以下做merge一直是无穷大
-    aabb bounds = objs[0]->bounds; // 正确做法是传入一个当前第一个三角形的bounds
+    aabb global_bound = objs[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
 
     // for (int i = 0; i < objs.size(); i++)
     // {
@@ -373,7 +366,7 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
     // throw std::runtime_error("break point check objs bounds");
 
     for (int i = 0; i < objs.size(); ++i)
-        bounds = Union(bounds, objs[i]->bounds);
+        global_bound = Union(global_bound, objs[i]->getBound());
 
     // std::cout << "sss" << std::endl;
     // std::cout << "global big bounds = "
@@ -390,7 +383,7 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
     if (objs.size() == 1)
     {
         // 那么我们创建这个叶子节点, 并将其左右子树指针置为空
-        node->bounds = objs[0]->bounds;
+        node->bound = objs[0]->getBound();
         node->object = objs[0];
         node->left = nullptr;
         node->right = nullptr;
@@ -404,7 +397,7 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
         node->left = recursiveConstructSceneTree(std::vector{objs[0]});
         node->right = recursiveConstructSceneTree(std::vector{objs[1]});
         // 当前节点的包围盒为下属两个叶子节点的包围盒的并集
-        node->bounds = Union(node->left->bounds, node->right->bounds);
+        node->bound = Union(node->left->bound, node->right->bound);
         return node;
     }
 
@@ -416,7 +409,7 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
 
         // 首先 for 循环得到当前节点的整体包围盒
         for (int i = 0; i < objs.size(); ++i)
-            centroidBounds = Union(centroidBounds, objs[i]->bounds.center());
+            centroidBounds = Union(centroidBounds, objs[i]->getBound().center());
 
         // 得到当前最大跨幅的坐标轴(包围盒哪个维度横跨尺度最大)
         int dim = centroidBounds.maxExtent();
@@ -427,18 +420,18 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
         case 0:
             // f 是 fragment 的简称 (残片/碎片)
             std::sort(objs.begin(), objs.end(), [](auto f1, auto f2)
-                      { return f1->bounds.center().x() <
-                               f2->bounds.center().x(); });
+                      { return f1->getBound().center().x() <
+                               f2->getBound().center().x(); });
             break;
         case 1:
             std::sort(objs.begin(), objs.end(), [](auto f1, auto f2)
-                      { return f1->bounds.center().y() <
-                               f2->bounds.center().y(); });
+                      { return f1->getBound().center().y() <
+                               f2->getBound().center().y(); });
             break;
         case 2:
             std::sort(objs.begin(), objs.end(), [](auto f1, auto f2)
-                      { return f1->bounds.center().z() <
-                               f2->bounds.center().z(); });
+                      { return f1->getBound().center().z() <
+                               f2->getBound().center().z(); });
             break;
         }
 
@@ -459,7 +452,7 @@ bvh_node_scene *bvh_tree_scene::recursiveConstructSceneTree(std::vector<hitable 
         node->right = recursiveConstructSceneTree(rightshapes);
 
         // 当前节点的包围盒是左右子树包围盒的并集
-        node->bounds = Union(node->left->bounds, node->right->bounds);
+        node->bound = Union(node->left->bound, node->right->bound);
     }
 
     // 最终返回 bvh_node_tree 的根节点

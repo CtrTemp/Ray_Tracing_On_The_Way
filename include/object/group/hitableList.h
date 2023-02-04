@@ -2,7 +2,6 @@
 #ifndef HITABLELIST_H
 #define HITABLELIST_H
 
-
 #include "object/hitable.h"
 #include "accel/bvh.h"
 
@@ -25,6 +24,7 @@ public:
 	{
 		list = l;
 		list_size = l.size();
+		// default construct tree in sence
 		tree = new bvh_tree_scene(l);
 		method = HitMethod::NAIVE;
 		// method = HitMethod::BVH_TREE;
@@ -42,6 +42,9 @@ public:
 
 	virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	// 暂定这种类型没有 光线 emission
+	virtual bool hasEmission(void) const { return false; };
 
 	std::vector<hitable *> list;
 	int list_size;

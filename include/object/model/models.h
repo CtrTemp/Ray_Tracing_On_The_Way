@@ -39,6 +39,8 @@ public:
 
     virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
     virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return false; };
 
     std::vector<primitive *> prim_list;
     int list_size;

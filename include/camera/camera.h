@@ -4,6 +4,7 @@
 #include "utils/ray.h"
 #include "object/hitable.h"
 #include "material/material.h"
+#include "object/group/hitableList.h"
 
 #include <math.h>
 #include <vector>
@@ -28,7 +29,7 @@ typedef struct
 	float t1;
 	uint16_t frame_width;
 	uint16_t frame_height;
-	hitable *world;
+	hitable_list world;
 
 } cameraCreateInfo;
 
@@ -83,7 +84,8 @@ public:
 	std::vector<vec3> frame_buffer;
 	uint16_t frame_width;
 	uint16_t frame_height;
-	hitable *world;
+	hitable_list world;
+	
 };
 
 #endif // !1

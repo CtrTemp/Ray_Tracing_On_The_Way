@@ -8,14 +8,17 @@
 
 class diffuse_light : public material {
 public:
-	diffuse_light() = default;
 	diffuse_light(texture *a) :emit(a) {}
 	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuated, ray& scattered) const;
-
 	virtual vec3 emitted(float u, float v, const vec3 &p)const;
+	virtual bool hasEmission(void) const { return true; };
+	
+    virtual vec3 computeBRDF(ray r_in, ray r_out, vec3 normal) { return vec3(0, 0, 0); };
+
 	
 
 	texture *emit;
+    vec3 BRDF;
 };
 
 
@@ -28,6 +31,8 @@ public:
 
 	virtual bool hit(const ray& r, float t0, float t1, hit_record &rec)const;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return mp->hasEmission(); };
 
 	material *mp;
 	float x0, y0, x1, y1, k;
@@ -42,6 +47,8 @@ public:
 
 	virtual bool hit(const ray& r, float t0, float t1, hit_record &rec)const;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return mp->hasEmission(); };
 
 	material *mp;
 	float x0, z0, x1, z1, k;
@@ -56,6 +63,8 @@ public:
 
 	virtual bool hit(const ray& r, float t0, float t1, hit_record &rec)const;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return mp->hasEmission(); };
 
 	material *mp;
 	float y0, z0, y1, z1, k;
@@ -70,6 +79,8 @@ public:
 	flip_normals(hitable *p) :ptr(p) {}
 	virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return ptr->hasEmission(); };
 
 	hitable *ptr;
 };

@@ -28,6 +28,8 @@ public:
     primitive() = default;
 	virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const = 0;
 	virtual bool bounding_box(float t0, float t1, aabb &box) const = 0;
+    // 这里是一个bug区，暂时这样写，之后要修改
+	virtual aabb getBound(void) const {return aabb();};
 
     // std::vector<vertex> vertices;
     // std::vector<uint32_t> indexes;
@@ -35,7 +37,7 @@ public:
     // vec3 normal;
     // material *mat_ptr;
     // primitive * prim_ptr;
-    aabb bound;
+    // aabb bound;
 };
 
 #endif

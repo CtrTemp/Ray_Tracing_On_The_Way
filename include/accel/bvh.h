@@ -12,14 +12,14 @@ class bvh_node
 public:
     bvh_node()
     {
-        bounds = aabb(); // 包围盒初始化为无限大
+        bound = aabb(); // 包围盒初始化为无限大
         left = nullptr;  // 左右子节点均初始化指向空
         right = nullptr;
         object = nullptr;
     }
 
     // int splitAxis = 0, firstPrimOffset = 0, nPrimitives = 0;
-    aabb bounds;
+    aabb bound;
     bvh_node *left;
     bvh_node *right;
     // node 节点的主体可以是多种多样的
@@ -48,14 +48,14 @@ class bvh_node_scene
 public:
     bvh_node_scene()
     {
-        bounds = aabb(); // 包围盒初始化为无限大
+        bound = aabb(); // 包围盒初始化为无限大
         left = nullptr;  // 左右子节点均初始化指向空
         right = nullptr;
         object = nullptr;
     }
 
     // int splitAxis = 0, firstPrimOffset = 0, nPrimitives = 0;
-    aabb bounds;
+    aabb bound;
     bvh_node_scene *left;
     bvh_node_scene *right;
     // node 节点的主体可以是多种多样的

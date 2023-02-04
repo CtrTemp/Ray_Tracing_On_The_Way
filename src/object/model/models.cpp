@@ -80,6 +80,22 @@ bool models::bounding_box(float t0, float t1, aabb &box) const
     }
     return true;
 }
+
+aabb models::getBound(void) const
+{
+    // 列表中没有单元，则返回一个无穷大的包围盒
+    if (list_size < 1)
+        return aabb();
+
+    aabb bound_temp = prim_list[0]->getBound();
+
+    for (int i = 0; i < list_size; i++)
+    {
+        bound_temp = Union(bound_temp, prim_list[i]->getBound());
+    }
+
+    return bound_temp;
+}
 // 12月30日截至点
 
 /*
@@ -211,7 +227,8 @@ models::models(const std::string module_path, material *mat, HitMethod m, PrimTy
             bounds = aabb(min_vert, max_vert);
         }
     }
-    else if(p==PrimType::QUADRANGLE){
+    else if (p == PrimType::QUADRANGLE)
+    {
         throw std::runtime_error("still not support QUADRANGLE primitives");
     }
 

@@ -4,12 +4,10 @@
 
 #include "utils/ray.h"
 #include "accel/bounds.h"
+#include "material/material.h"
 
 inline float ffmin(float a, float b) { return a < b ? a : b; }
 inline float ffmax(float a, float b) { return a > b ? a : b; }
-
-// 应该是超前引用相关
-class material; //这类为什么没有这个“声明”不可以
 
 //这个结构体用来记录那些与物体相交的射线的一些参数
 struct hit_record
@@ -23,7 +21,7 @@ struct hit_record
 	float v; //最新引入，我还不清楚这个是干啥的
 
 	material *mat_ptr; // 当前击中点的材质
-    bool happened;      // 是否发生打击
+	bool happened;	   // 是否发生打击
 };
 
 class hitable
@@ -32,7 +30,7 @@ public:
 	/**
 	 * 默认构造函数，不需要实例，因为这是一个抽象类，抽象类只需要指明其派生类应该具有的基本操作
 	 * 而不需要为其创建实例，所以构造函数也无需实体，而是全部会被映射到具体的派生类中
-	 **/ 
+	 **/
 	hitable() = default;
 
 	// hitable 为基类, 以下以 virtual 关键字定义虚函数, 后由其继承的子类来重写虚函数进行覆盖
@@ -43,8 +41,13 @@ public:
 	// 同样,在基本算法中不适用BVH(层次包围盒)加速,不需要这个组件
 	virtual bool bounding_box(float t0, float t1, aabb &box) const = 0;
 
-	// 应该要在这里
-	aabb bounds;
+	virtual aabb getBound(void) const = 0;
+
+	virtual bool hasEmission(void) const = 0;
+
+	// // 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
+	// virtual void Sample(hit_record &pos, float probability);
+
 };
 
 #endif

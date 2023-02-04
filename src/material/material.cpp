@@ -30,76 +30,7 @@ float schlick(float cosine, float ref_idx)
 	return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
 
-bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const
-{
-	// std::cout << "rec.u = " << rec.u << "; "
-	// 		  << "rec.v = " << rec.v << "; "
-	// 		  << std::endl;
-	vec3 target = rec.p + rec.normal + random_in_unit_sphere(); // 获得本次打击后得到的下一个目标点
-	scattered = ray(rec.p, target - rec.p, r_in.time());		// 本次击中一个目标点后的下一个射线（获得散射光线）
-	// std::cout << "this" << std::endl;
-	attenuated = albedo->value(rec.u, rec.v, rec.p);
 
-	return true;
-}
 
-bool mental::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const
-{
-	vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal); //获得反射方向向量
-	scattered = ray(rec.p, reflected + fuzz * random_in_unit_sphere());	 //获得散射方向向量
-	// fuzz参数代表金属表面的“哑光”程度，即我们使用scattered散射参数来间接的代表reflect参数，
-	//可见fuzz参数越大，scattered偏离reflect光线的程度，或者说不确定度就越大，也就表现出一种
-	//光线“随机反射”的哑光、漫反射特性
-	//注意这里scattered的计算方法与lambertian的不同，这里使用reflect为基，加上一个随机方向的向量得到散射方向
-	//而之前lambertian的scattered的计算是使用normal为基进行计算
-	//故在函数末端返回时，这个scattered与normal所成角度是有一定几率为钝角的，此时我们返回false
-	attenuated = albedo;
-	return (dot(scattered.direction(), rec.normal) > 0);
-	//返回false说明散射光线与原法线成钝角，直观上理解：此时散射光线射入了object内部，即为光线被吸收
-}
-
-bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered) const
-{
-	vec3 outward_normal;
-	vec3 reflected = reflect(r_in.direction(), rec.normal);
-	float ni_over_nt;
-	attenuation = vec3(1.0, 1.0, 1.0);
-	vec3 refracted;
-
-	float reflect_prob;
-	float cosine;
-
-	if (dot(r_in.direction(), rec.normal) > 0) //如果是从晶体内部射向空气
-	{
-		outward_normal = -rec.normal; //我们将法线方向定义为由外部指向内部
-		ni_over_nt = ref_idx;		  // ref_idx是大于1的相对折射率，ni_over_nt是入射端折射率除以出射端折射率
-		cosine = ref_idx * dot(r_in.direction(), rec.normal / r_in.direction().length());
-	}
-	else //如果是从空气射向晶体球内部
-	{
-		outward_normal = rec.normal; //我们将法线方向定义为由内部指向外部
-		ni_over_nt = 1.0 / ref_idx;
-		cosine = -dot(r_in.direction(), rec.normal / r_in.direction().length());
-	}
-	if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted)) //如果发生折射（无全反射）
-	{
-		reflect_prob = schlick(cosine, ref_idx); //应该是由菲涅尔公式近似计算出的反射光线强度
-	}											 //其实是（转化成）反射光占总光线之比，在抗锯齿章节我们将一个像素点由多（100）条射线表示
-	else
-	{
-		reflect_prob = 1.0; //如果全反射，则反射光占比为100%
-	}
-
-	if (drand48() < reflect_prob)
-	{
-		scattered = ray(rec.p, reflected);
-	} //明白
-	else
-	{
-		scattered = ray(rec.p, refracted);
-	} //明白
-
-	return true;
-}
 
 //虚函数不能在类外定义？！

@@ -37,6 +37,9 @@ add_executable(simpleSceneGene_Cmake #第一个是指定可执行文件的名字
 ./src/object/model/models.cpp
 ./src/object/group/hitableList.cpp
 ./src/material/material.cpp
+./src/material/mental.cpp
+./src/material/lambertian.cpp
+./src/material/dielectric.cpp
 ./src/material/diffuseLight.cpp
 ./src/texture/textures.cpp
 ./src/texture/perlin.cpp

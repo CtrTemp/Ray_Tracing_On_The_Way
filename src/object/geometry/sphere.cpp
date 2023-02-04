@@ -45,6 +45,11 @@ bool sphere::bounding_box(float t0, float t1, aabb &box) const
 	return true;
 }
 
+aabb sphere::getBound(void) const
+{
+	return aabb(center - vec3(radius, radius, radius), center + vec3(radius, radius, radius));
+}
+
 vec3 moving_sphere::center(float time) const
 {
 	return center0 + ((time - time0) / (time1 - time0) * (center1 - center0));
@@ -83,4 +88,11 @@ bool moving_sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec)
 		}
 	}
 	return false;
+}
+
+aabb moving_sphere::getBound(void) const
+{
+	// 默认返回无穷大包围盒
+	// 无穷大包围盒应该是永远不会和射线判定为相交的！
+	return aabb();
 }

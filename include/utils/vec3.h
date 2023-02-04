@@ -42,7 +42,8 @@ public:
 	inline const vec3 &operator+() const { return *this; }
 	inline const vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
 	inline float operator[](int i) const { return e[i]; }
-	inline float &operator[](int i) { return e[i]; } //为什么要定义两个这个？！和上面那个有什么区分
+	inline float &operator[](int i) { return e[i]; } // 为什么要定义两个这个？！和上面那个有什么区分
+	
 
 	inline vec3 &operator+=(const vec3 &v);
 	inline vec3 &operator-=(const vec3 &v);
@@ -50,6 +51,8 @@ public:
 	inline vec3 &operator/=(const vec3 &v);
 	inline vec3 &operator*=(const float t);
 	inline vec3 &operator/=(const float t);
+	inline bool operator==(const vec3 v);
+
 
 	inline float length() const
 	{
@@ -75,8 +78,8 @@ public:
 
 	inline void make_unit_vector();
 
-	float e[3]; //这个类只有这一个数据值
-				//这个类的其他部分都是关于这个数据的构造以及操作
+	float e[3]; // 这个类只有这一个数据值
+				// 这个类的其他部分都是关于这个数据的构造以及操作
 };
 
 inline std::istream &operator>>(std::istream &is, vec3 &t)
@@ -195,6 +198,14 @@ inline vec3 &vec3::operator/=(float t)
 	return *this;
 }
 
+inline bool vec3::operator==(const vec3 v)
+{
+	if(e[0]==v.e[0]&&e[1]==v.e[1]&&e[2]==v.e[2])
+		return true;
+	else
+		return false;
+}
+
 inline vec3 unit_vector(vec3 v)
 {
 	return v / v.length();
@@ -210,10 +221,10 @@ inline vec3 unit_vector(vec3 v)
 */
 inline vec3 color_unit_normalization(vec3 v, float zone)
 {
-	float para = 0; //比例因子
+	float para = 0; // 比例因子
 	vec3 return_vec;
 	if (v[0] > zone)
-		para = zone / v[0]; //得到一个小于1的值
+		para = zone / v[0]; // 得到一个小于1的值
 	else if (v[1] > zone)
 		para = zone / v[1];
 	else if (v[2] > zone)

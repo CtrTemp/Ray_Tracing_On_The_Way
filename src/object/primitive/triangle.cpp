@@ -191,3 +191,24 @@ bool triangle::bounding_box(float t0, float t1, aabb &box) const
 
     return true;
 }
+
+aabb triangle::getBound(void) const
+{
+
+    vec3 v0 = vertices[0].position;
+    vec3 v1 = vertices[1].position;
+    vec3 v2 = vertices[2].position;
+
+    float max_x = get_max_float_val(get_max_float_val(v0[0], v1[0]), v2[0]);
+    float max_y = get_max_float_val(get_max_float_val(v0[1], v1[1]), v2[1]);
+    float max_z = get_max_float_val(get_max_float_val(v0[2], v1[2]), v2[2]);
+
+    float min_x = get_min_float_val(get_min_float_val(v0[0], v1[0]), v2[0]);
+    float min_y = get_min_float_val(get_min_float_val(v0[1], v1[1]), v2[1]);
+    float min_z = get_min_float_val(get_min_float_val(v0[2], v1[2]), v2[2]);
+
+    vec3 min_point(min_x, min_y, min_z);
+    vec3 max_point(max_x, max_y, max_z);
+
+    return aabb(min_point, max_point);
+}

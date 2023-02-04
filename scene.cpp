@@ -1,5 +1,8 @@
 #include "scene.h"
 
+
+
+
 std::vector<std::string> skybox_textures_heavy = {
 	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
 	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
@@ -22,7 +25,24 @@ std::vector<std::string> skybox_textures_high = {
 	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
 	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
 
-hitable *sample_light_RGB()
+
+
+
+// 世界场景选型
+hitable_list sample_light_RGB_world = sample_light_RGB();
+hitable_list test_triangle_world = test_triangle();
+hitable_list test_triangleList_world = test_triangleList();
+hitable_list test_Load_Models_world = test_Load_Models();
+hitable_list test_image_texture_world = test_image_texture();
+hitable_list test_sky_box_world = test_sky_box();
+
+hitable_list test_multi_triangleList_world = test_multi_triangleList();
+hitable_list test_Load_complex_Models_world = test_Load_complex_Models();
+hitable_list test_complex_scene_world = test_complex_scene();
+hitable_list test_complex_scene_with_complex_models_world = test_complex_scene_with_complex_models();
+
+
+hitable_list sample_light_RGB()
 {
 
 	texture *pertext = new noise_texture(1.5);
@@ -52,10 +72,10 @@ hitable *sample_light_RGB()
 
 	// hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
-hitable *cornell_box()
+hitable_list cornell_box()
 {
 	std::vector<hitable *> hit_list;
 
@@ -73,10 +93,10 @@ hitable *cornell_box()
 	hit_list.push_back(new xz_rect(0, 555, 0, 555, 0, white));
 	hit_list.push_back(new flip_normals(new xy_rect(0, 555, 0, 555, 555, white)));
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
-hitable *test_triangle()
+hitable_list test_triangle()
 {
 	std::vector<hitable *> hit_list;
 
@@ -111,10 +131,10 @@ hitable *test_triangle()
 	primitive *prim_triangle = new triangle(vert0, vert1, vert2, red);
 	hit_list.push_back(prim_triangle);
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
-hitable *test_triangleList()
+hitable_list test_triangleList()
 {
 	std::vector<hitable *> hit_list;
 
@@ -155,7 +175,7 @@ hitable *test_triangleList()
 		5, 2, 0};
 	hit_list.push_back(new models(testVertexList, testIndexList, 12, red, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
 vec3 gen_random_dir(void)
@@ -196,7 +216,7 @@ std::vector<primitive *> gen_random_triangleList(std::vector<primitive *> triang
 	return triangles;
 }
 
-hitable *test_multi_triangleList()
+hitable_list test_multi_triangleList()
 {
 	std::vector<hitable *> hit_list;
 
@@ -233,10 +253,10 @@ hitable *test_multi_triangleList()
 
 	hit_list = gen_sky_box(skybox_textures_heavy, hit_list, 200);
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
-hitable *test_Load_Models()
+hitable_list test_Load_Models()
 {
 
 	std::vector<hitable *> hit_list;
@@ -267,10 +287,10 @@ hitable *test_Load_Models()
 	hit_list.push_back(new models(module_path_list[4], white, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	hit_list.push_back(new models(module_path_list[5], light, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
-hitable *test_image_texture()
+hitable_list test_image_texture()
 {
 
 	std::vector<hitable *> hit_list;
@@ -329,25 +349,23 @@ hitable *test_image_texture()
 
 	hit_list.push_back(new models(testVertexList, testIndexList, 6, test_texture, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
-hitable *test_sky_box()
+hitable_list test_sky_box()
 {
-
 	std::vector<hitable *> hit_list;
 
 	hit_list = gen_sky_box(skybox_textures_fire, hit_list, 200);
 	// 反光球体
 	hit_list.push_back(new sphere(vec3(0, -5, 0), 10, new mental(vec3(0.99, 0.99, 0.99), 0.01)));
 
-	std::cout << "list size = " << hit_list.size() << std::endl;
-
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
 std::vector<hitable *> gen_sky_box(std::vector<std::string> textures_path, std::vector<hitable *> hit_list, int how_far)
 {
+	const texture *temp_tex = new image_texture(textures_path[0]);
 	material *front = new diffuse_light(new image_texture(textures_path[0]));
 	material *back = new diffuse_light(new image_texture(textures_path[1]));
 	material *left = new diffuse_light(new image_texture(textures_path[2]));
@@ -421,7 +439,7 @@ std::vector<hitable *> gen_sky_box(std::vector<std::string> textures_path, std::
 	return hit_list;
 }
 
-hitable *test_Load_complex_Models()
+hitable_list test_Load_complex_Models()
 {
 
 	std::vector<hitable *> hit_list;
@@ -452,12 +470,19 @@ hitable *test_Load_complex_Models()
 		"../models/bunny/bunny_low_resolution.obj"};
 
 	// 这里渲染1000面的兔子模型
-	hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.99), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
-	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.99), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
+	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.01), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.01), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
+	
+	// hit_list.push_back(new models(module_path_list[2], grass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[2], grass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
+
+	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
+
 
 	hit_list = gen_sky_box(skybox_textures_high, hit_list, 200);
 
-	return new hitable_list(hit_list);
+	return hitable_list(hit_list);
 }
 
 std::vector<hitable *> gen_multi_sphere(std::vector<hitable *> hit_list)
@@ -519,18 +544,18 @@ std::vector<hitable *> gen_multi_sphere(std::vector<hitable *> hit_list)
 	return hit_list;
 }
 
-hitable *test_complex_scene()
+hitable_list test_complex_scene()
 {
 
 	std::vector<hitable *> hit_list;
 
 	hit_list = gen_multi_sphere(hit_list);
 
-	// return new hitable_list(hit_list, hitable_list::HitMethod::NAIVE);
-	return new hitable_list(hit_list, hitable_list::HitMethod::BVH_TREE);
+	return hitable_list(hit_list, hitable_list::HitMethod::NAIVE);
+	// return hitable_list(hit_list, hitable_list::HitMethod::BVH_TREE);
 }
 
-hitable *test_complex_scene_with_complex_models()
+hitable_list test_complex_scene_with_complex_models()
 {
 
 	std::vector<hitable *> hit_list;
@@ -545,5 +570,6 @@ hitable *test_complex_scene_with_complex_models()
 	hit_list.push_back(new models(prim_list, triangles_num, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	// hit_list.push_back(new models(prim_list, triangles_num, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
-	return new hitable_list(hit_list, hitable_list::HitMethod::BVH_TREE);
+	return hitable_list(hit_list, hitable_list::HitMethod::NAIVE);
+	// return hitable_list(hit_list, hitable_list::HitMethod::BVH_TREE);
 }

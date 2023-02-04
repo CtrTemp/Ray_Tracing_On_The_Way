@@ -6,18 +6,8 @@ camera createCamera(void);
 unsigned int frame_width = 512;
 unsigned int frame_height = 512;
 
-// 世界场景选型
-hitable *sample_light_RGB_world = sample_light_RGB();
-hitable *test_triangle_world = test_triangle();
-// hitable *test_triangleList_world = test_triangleList();
-// hitable *test_Load_Models_world = test_Load_Models();
-// hitable *test_image_texture_world = test_image_texture();
-// hitable *test_sky_box_world = test_sky_box();
 
-// hitable *test_multi_triangleList_world = test_multi_triangleList();
-// hitable *test_Load_complex_Models_world = test_Load_complex_Models();
-// hitable *test_complex_scene_world = test_complex_scene();
-// hitable *test_complex_scene_with_complex_models_world = test_complex_scene_with_complex_models();
+
 
 vec3 color(const ray &r, hitable *world, int depth)
 {
@@ -53,14 +43,6 @@ vec3 color(const ray &r, hitable *world, int depth)
 int main(void)
 {
 
-	// vertex **vertList;
-
-	int nx = 512;
-	int ny = 512;
-	int ns = 1; // Grace Jannik Remix
-
-	int unit_percent = ny / 100;
-
 	struct timeval timeStart, timeEnd, timeSystemStart;
 	double runTime = 0, systemRunTime;
 	gettimeofday(&timeSystemStart, NULL);
@@ -71,7 +53,7 @@ int main(void)
 	std::cout << "iNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
 
 	gettimeofday(&timeStart, NULL);
-	std::string path = "./pic_flow/any.ppm";
+	std::string path = "../gen_pic/any.ppm";
 	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);
@@ -87,16 +69,21 @@ camera createCamera(void)
 {
 	cameraCreateInfo createCamera{};
 
-	createCamera.lookfrom = vec3(20, 15, 20);
-	createCamera.lookat = vec3(0, 0, 0);
+	// // general
+	// vec3 lookfrom(20, 15, 20);
+	// vec3 lookat(0, 0, 0);
 
-	// vec3 lookfrom(20, 4, 6);
-	// vec3 lookfrom(40, 30, 40);
-	// vec3 lookfrom(2.5, 1.25, 2.5);
-
-	// only for cornell box
+	// // only for cornell box
 	// vec3 lookfrom(278, 278, -800);
 	// vec3 lookat(278, 278, 0);
+
+	// // only for bunny
+	// vec3 lookfrom(2, 1, 2);
+	// vec3 lookat(0, 0, 0);
+
+
+	createCamera.lookfrom = vec3(2, 1, 2);
+	createCamera.lookat = vec3(0, 0, 0);
 
 	createCamera.up_dir = vec3(0, 1, 0);
 	createCamera.fov = 40;
@@ -106,9 +93,17 @@ camera createCamera(void)
 	createCamera.t1 = 1.0;
 	createCamera.frame_width = frame_width;
 	createCamera.frame_height = frame_height;
-	createCamera.world = sample_light_RGB_world;
+	// createCamera.world = sample_light_RGB_world;
 	// createCamera.world = test_triangle_world;
-	// createCamera.world = test_Load_complex_Models_world;
+	// createCamera.world = test_triangleList_world;
+	// createCamera.world = test_Load_Models_world;
+	// createCamera.world = test_image_texture_world;
+	// createCamera.world = test_sky_box_world;
+
+	// createCamera.world = test_multi_triangleList_world;
+	createCamera.world = test_Load_complex_Models_world;
+	// createCamera.world = test_complex_scene_world;
+	// createCamera.world = test_complex_scene_with_complex_models_world;
 
 	// 考虑frame和这个camera的创建如何结合？
 	// 学会像vulkan那样构建！！！

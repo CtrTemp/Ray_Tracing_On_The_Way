@@ -13,6 +13,8 @@ public:
 
 	virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec)const;
 	virtual bool bounding_box(float t0, float t1, aabb &box)const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return false; };
 
 	vec3 pmin, pmax;
 	hitable *list_ptr;
@@ -27,6 +29,8 @@ public:
 
 	virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec)const;
 	virtual bool bounding_box(float t0, float t1, aabb &box)const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return false; };
 
 	hitable *ptr;
 	vec3 offset;
@@ -42,6 +46,8 @@ public:
 
 	virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec)const;
 	virtual bool bounding_box(float t0, float t1, aabb &box)const;
+	virtual aabb getBound(void) const;
+	virtual bool hasEmission(void) const { return false; };
 
 	hitable *ptr;
 	float sin_theta;
