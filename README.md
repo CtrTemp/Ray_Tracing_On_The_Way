@@ -146,3 +146,25 @@ Bottom: burte force(20 seconds); Top: bvh(7 seconds).(512*512 resolution; 1spp; 
 ![bvh_scene_512_512_1spp_900spheres_7s](https://user-images.githubusercontent.com/89559223/211190412-55104476-fb24-4d79-899e-a46cbe633ee0.png)
 ![naive_scene_512_512_1spp_900spheres_20s](https://user-images.githubusercontent.com/89559223/211190417-c9c46d6e-b7a0-4c61-8ec8-fe30c7b62de8.png)
 
+
+#### 2023/02/04
+
+Actually, we have indicated that there is something wrong when we use bvh accel constructure to render a frame, you may have already found that there is "black noisy point" in the object. However, it does not appear when we use naive render method. Today, we've found that is caused by a little bug: I've always been using "std::numeric_limits<float>::min()" as the ray transformation time's minimum limit. 
+
+However, it's not true, cause the secondary scattered ray may intersect to the surface who generateit, that is to say, ray's hit point is the ray's origin position... In that case, the rec.t parameter can be extremely small but still larger than "std::numeric_limits<float>::min()", which makes the ray iteratively bounce and intersect to itself and retrun an vec(0,0,0) as a black noisy shading point.
+
+Currently, this bug has been solved. Let's look some of the comparation result.
+
+
+![bvh_tree_result_mental](https://user-images.githubusercontent.com/89559223/216764760-7fb679f1-c168-4d0f-9531-e9d6e654ed84.png)
+This is the uncorrect result rendered by original bvh accel constructure.
+
+![correct_naive_result_mental](https://user-images.githubusercontent.com/89559223/216764807-fd24fed6-49c6-4db7-a39f-22b1dceaa851.png)
+"Ground truth~! with naive render method"
+
+![bvh_changed_1spp_mental](https://user-images.githubusercontent.com/89559223/216764872-9ae99108-4b48-46ab-9778-0d71eb9dc7bc.png)
+After fixing the bug, using bvh accel constructure, minimum transformation time is limited by 0.001, you can compare this with the upper pic.
+
+
+![bvh](https://user-images.githubusercontent.com/89559223/216764972-2fbcb8be-7e09-44c1-ab9f-333c8250feaf.png)
+Also, complex scene is rendered correctlly and you can still compare this pic with the 2023/01/08 version.
