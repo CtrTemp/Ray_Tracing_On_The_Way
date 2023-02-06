@@ -73,6 +73,19 @@ My Own Render Program
 
 
 ## Gallery
+I tried directly sampling from light source instead of scattering light all randomly. However, currently the render result is not correct. The incorrect shading point is marked with green color. I thought the wrong result may caused by too less "spp" but it turn worse when I add more rays cast into single pixel.
+
+
+Here's the result of 1spp, green point marks the wrong shading result.
+
+![sampleLight1spp](https://user-images.githubusercontent.com/89559223/216896083-fd1a70cf-90ca-43ec-938e-114b8dcabe91.png)
+
+Clearer when using 5spp:
+
+![sampleLight5spp](https://user-images.githubusercontent.com/89559223/216896160-26d42695-96ef-4880-a872-403ac65fb496.png)
+
+
+#### 2023/02/06
 
 
 
