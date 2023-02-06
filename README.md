@@ -79,6 +79,7 @@ My Own Render Program
 
 I tried directly sampling from light source instead of scattering light all randomly. However, currently the render result is not correct. The incorrect shading point is marked with green color. I thought the wrong result may caused by too less "spp" but it turn worse when I add more rays cast into single pixel.
 
+By the way, the correct color of this bunny should be yellow(Actually, you can still find some correctly rendered point in it)!
 
 Here's the result of 1spp, green point marks the wrong shading result.
 
