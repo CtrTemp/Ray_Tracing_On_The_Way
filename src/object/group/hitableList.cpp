@@ -87,3 +87,16 @@ aabb hitable_list::getBound(void) const
 
 	return bound_temp;
 }
+
+void hitable_list::Sample(hit_record &pos, float &probability)
+{
+    std::cout << "目前一般情况下不会执行到这个函数，看到我说明你的程序出错了" << std::endl;
+    std::cout << "目前执行的是 hitable_list 的采样函数" << std::endl;
+}
+
+float hitable_list::getArea()
+{
+    std::cout << "目前一般情况下不会执行到这个函数，看到我说明你的程序出错了" << std::endl;
+    std::cout << "目前执行的是 hitable_list 的面积获取函数" << std::endl;
+    return 0.0;
+}

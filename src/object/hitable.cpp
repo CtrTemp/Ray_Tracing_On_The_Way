@@ -18,3 +18,5 @@ bool aabb::hit(const ray& r, float tmin, float tmax) const {
 	return true;
 
 }
+
+

@@ -45,8 +45,10 @@ public:
 
 	virtual bool hasEmission(void) const = 0;
 
-	// // 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
-	// virtual void Sample(hit_record &pos, float probability);
+	// 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
+	virtual void Sample(hit_record &pos, float &probability) = 0;
+	// 得到目标物体的总面积
+	virtual float getArea() = 0;
 
 };
 

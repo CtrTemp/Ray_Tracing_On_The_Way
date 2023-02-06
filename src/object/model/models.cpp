@@ -104,12 +104,22 @@ aabb models::getBound(void) const
 
 models::models(std::vector<primitive *> prims, int n, HitMethod m, PrimType p)
 {
+    model_eimssion = false;
     list_size = n;
     method = m;
     type = p;
     for (int i = 0; i < prims.size(); i++)
     {
         prim_list.push_back(prims[i]);
+        // 如果是自发光基元，则应该将其倒入发光基元列表
+        if (prims[i]->hasEmission())
+        {
+            emit_prim_list.push_back(prims[i]);
+        }
+    }
+    if (emit_prim_list.size() >= 1)
+    {
+        model_eimssion = true;
     }
     if (m == HitMethod::BVH_TREE)
     {
@@ -127,16 +137,22 @@ models::models(std::vector<primitive *> prims, int n, HitMethod m, PrimType p)
 */
 models::models(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m, PrimType p)
 {
+    model_eimssion = mat->hasEmission();
     method = m;
     type = p;
     if (p == PrimType::TRIANGLE)
     {
         for (int i = 0; i < ind_len; i += 3)
         {
-            prim_list.push_back(new triangle(
+            primitive *prim_unit = new triangle(
                 indList[i + 0], indList[i + 1], indList[i + 2],
                 vertList,
-                mat));
+                mat);
+            prim_list.push_back(prim_unit);
+            if (model_eimssion)
+            {
+                emit_prim_list.push_back(prim_unit);
+            }
         }
     }
     else if (p == PrimType::QUADRANGLE)
@@ -168,6 +184,8 @@ models::models(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *
 */
 models::models(const std::string module_path, material *mat, HitMethod m, PrimType p)
 {
+
+    model_eimssion = mat->hasEmission();
 
     method = m;
 
@@ -221,7 +239,12 @@ models::models(const std::string module_path, material *mat, HitMethod m, PrimTy
             }
             for (int i = 0; i < vertList.size(); i += 3)
             {
-                prim_list.push_back(new triangle(vertList[i + 0], vertList[i + 1], vertList[i + 2], mat));
+                primitive *prim_unit = new triangle(vertList[i + 0], vertList[i + 1], vertList[i + 2], mat);
+                prim_list.push_back(prim_unit);
+                if (model_eimssion)
+                {
+                    emit_prim_list.push_back(prim_unit);
+                }
             }
             // 创建包围盒
             bounds = aabb(min_vert, max_vert);
@@ -244,4 +267,26 @@ models::models(const std::string module_path, material *mat, HitMethod m, PrimTy
     }
 
     bounding_box(0, 0, bounds);
+}
+
+void models::Sample(hit_record &pos, float &probability)
+{
+    // std::cout << "目前一般情况下不会执行到这个函数，看到我说明你的程序出错了" << std::endl;
+    // std::cout << "目前执行的是 model 的采样函数" << std::endl;
+    const int rand_index = static_cast<int>(get_random_float() * emit_prim_list.size());
+
+    emit_prim_list[rand_index]->Sample(pos, probability);
+}
+
+float models::getArea()
+{
+    // std::cout << "目前一般情况下不会执行到这个函数，看到我说明你的程序出错了" << std::endl;
+    // std::cout << "目前执行的是 model 的面积获取函数" << std::endl;
+    float ret_area = 0.0f;
+    for (size_t i = 0; i < emit_prim_list.size(); i++)
+    {
+        ret_area += emit_prim_list[i]->getArea();
+    }
+
+    return ret_area;
 }

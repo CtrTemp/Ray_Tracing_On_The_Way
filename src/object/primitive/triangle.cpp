@@ -212,3 +212,36 @@ aabb triangle::getBound(void) const
 
     return aabb(min_point, max_point);
 }
+
+// 在三角形上任意采样一点，并且给出采样到这一点的概率（使用均匀采样的方法）
+void triangle::Sample(hit_record &pos, float &probability)
+{
+    float x = std::sqrt(get_random_float());
+    float y = get_random_float();
+    pos.p = vertices[0].position * (1.0f - x) +
+            vertices[1].position * (x * (1.0f - y)) +
+            vertices[2].position * (x * y);
+    pos.normal = this->normal;
+    probability = 1.0f / area;
+
+    pos.mat_ptr = this->mat_ptr;
+
+    /*
+        这里要补充记录 uv 值，从三角形的三个顶点出发，获取三个顶点的uv值，最终插值得到当前点的uv值
+    */
+    float alpha, beta, gamma;
+    getBarycentricCoord(pos.p, vertices[0].position, vertices[1].position, vertices[2].position, &alpha, &beta, &gamma);
+
+    float u_temp = vertices[0].tex_coord[0] * alpha + vertices[1].tex_coord[0] * beta + vertices[2].tex_coord[0] * gamma;
+    float v_temp = vertices[0].tex_coord[1] * alpha + vertices[1].tex_coord[1] * beta + vertices[2].tex_coord[1] * gamma;
+
+    pos.u = u_temp;
+    pos.v = v_temp;
+
+    pos.happened = true;
+}
+
+float triangle::getArea()
+{
+    return area;
+}

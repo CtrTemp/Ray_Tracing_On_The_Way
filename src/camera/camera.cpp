@@ -51,6 +51,40 @@ ray camera::get_ray(float s, float t)
 	return ray(origin + offset, upper_left_conner + s * horizontal + t * vertical - origin - offset, time);
 }
 
+void camera::sampleLight(hit_record &pos, float &pdf)
+{
+	float emit_area_sum = 0;
+	for (uint32_t k = 0; k < world.list_size; k++)
+	{
+		if (world.list[k]->hasEmission())
+		{
+			emit_area_sum += world.list[k]->getArea();
+			// std::cout << "get an emission" << std::endl;
+		}
+		// std::cout << "k = " << k << std::endl;
+	}
+
+
+	// std::cout << "total area = " << emit_area_sum << std::endl;
+
+	float p = get_random_float() * emit_area_sum;
+	// std::cout << "p = " << p << std::endl;
+	emit_area_sum = 0;
+	for (uint32_t k = 0; k < world.list_size; k++)
+	{
+		if (world.list[k]->hasEmission())
+		{
+			emit_area_sum += world.list[k]->getArea();
+			if (p <= emit_area_sum)
+			{
+				// std::cout << "current kk = " << k << std::endl;
+				world.list[k]->Sample(pos, pdf);
+				break;
+			}
+		}
+	}
+}
+
 // 规定从左上角遍历到右下角，行优先遍历
 void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 {
@@ -79,7 +113,7 @@ void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 				ray r = get_ray(u, v);
 				// !!@!!changing depth!!
 				uint8_t max_bounce_depth = 50;
-				pixel += shading(max_bounce_depth, false, r);
+				pixel += shading(max_bounce_depth, r);
 			}
 			pixel /= spp;
 			pixel = vec3(sqrt(pixel[0]), sqrt(pixel[1]), sqrt(pixel[2]));
@@ -89,65 +123,67 @@ void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 	}
 }
 
-vec3 camera::shading(uint16_t depth, bool RussianRoulette, const ray &r)
+vec3 camera::shading(uint16_t depth, const ray &r)
 {
 	// // 暂时考虑只返回单一颜色
 	// return vec3(1, 10, 10);
 	hit_record rec;
 
-	if (world.hit(r, 0.001, 999999, rec)) // FLT_MAX
-	{
-		ray scattered;
-		vec3 attenuation;
-		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-		// 在判断语句中执行并更新散射射线, 并判断是否还有射线生成
-		// 同样根据材质给出衰减系数
-		if (depth > 0 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-		{
-			return emitted + attenuation * shading(depth - 1, false, scattered);
-		}
-		else
-		{
-			// if (emitted[0] == 0 && emitted[1] == 0 && emitted[2] == 0)
-			// {
-			// 	// // std::cout << depth << std::endl;
-			// 	// std::cout << "origin point = "
-			// 	// 		  << r.origin()[0] << ", "
-			// 	// 		  << r.origin()[1] << ", "
-			// 	// 		  << r.origin()[2] << std::endl;
-			// 	// std::cout << "hit point = "
-			// 	// 		  << rec.p[0] << ", "
-			// 	// 		  << rec.p[1] << ", "
-			// 	// 		  << rec.p[2] << std::endl;
-			// 	// // std::cout << "surface normal = "
-			// 	// // 		  << rec.normal[0] << ", "
-			// 	// // 		  << rec.normal[1] << ", "
-			// 	// // 		  << rec.normal[2] << std::endl;
-			// 	// // std::cout << "scattered = "
-			// 	// // 		  << scattered.direction()[0] << ", "
-			// 	// // 		  << scattered.direction()[0] << ", "
-			// 	// // 		  << scattered.direction()[0] << std::endl;
+	// if (world.hit(r, 0.001, 999999, rec)) // FLT_MAX
+	// {
+	// 	ray scattered;
+	// 	vec3 attenuation;
+	// 	vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+	// 	// 在判断语句中执行并更新散射射线, 并判断是否还有射线生成
+	// 	// 同样根据材质给出衰减系数
+	// 	if (depth > 0 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+	// 	{
+	// 		return emitted + attenuation * shading(depth - 1, scattered);
+	// 	}
+	// 	else
+	// 	{
+	// 		// if (emitted[0] == 0 && emitted[1] == 0 && emitted[2] == 0)
+	// 		// {
+	// 		// 	// // std::cout << depth << std::endl;
+	// 		// 	// std::cout << "origin point = "
+	// 		// 	// 		  << r.origin()[0] << ", "
+	// 		// 	// 		  << r.origin()[1] << ", "
+	// 		// 	// 		  << r.origin()[2] << std::endl;
+	// 		// 	// std::cout << "hit point = "
+	// 		// 	// 		  << rec.p[0] << ", "
+	// 		// 	// 		  << rec.p[1] << ", "
+	// 		// 	// 		  << rec.p[2] << std::endl;
+	// 		// 	// // std::cout << "surface normal = "
+	// 		// 	// // 		  << rec.normal[0] << ", "
+	// 		// 	// // 		  << rec.normal[1] << ", "
+	// 		// 	// // 		  << rec.normal[2] << std::endl;
+	// 		// 	// // std::cout << "scattered = "
+	// 		// 	// // 		  << scattered.direction()[0] << ", "
+	// 		// 	// // 		  << scattered.direction()[0] << ", "
+	// 		// 	// // 		  << scattered.direction()[0] << std::endl;
 
-			// 	// std::cout << "t = " << rec.t << std::endl;
+	// 		// 	// std::cout << "t = " << rec.t << std::endl;
 
-			// 	// std::cout << std::endl;
-			// 	// return emitted;
-			// 	// return vec3(0.1, 0.1, 0.8);
-			// }
-			return emitted;
-		}
-	}
-	else
-	{
-		vec3 unit_direction = unit_vector(r.direction());
-		auto t = 0.5 * (unit_direction.y() + 1.0);
-		return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-	}
+	// 		// 	// std::cout << std::endl;
+	// 		// 	// return emitted;
+	// 		// 	// return vec3(0.1, 0.1, 0.8);
+	// 		// }
+	// 		return emitted;
+	// 	}
+	// }
+	// else
+	// {
+	// 	vec3 unit_direction = unit_vector(r.direction());
+	// 	auto t = 0.5 * (unit_direction.y() + 1.0);
+	// 	return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+	// }
 
 	// 2023/01/12
 	// 这次我们换一种方式，放弃之前漫无目的的随机scatter，转而对光源进行采样
 	// 这个scatter的计算感觉应该被集成在material的scatter函数中
 	// 通过不同的表面材质对场景中的光源进行采样
+
+	// 2023/02/05 continue
 
 	// 如果击中了场景中的某个物体
 	if (world.hit(r, 0.001, 999999, rec))
@@ -161,27 +197,85 @@ vec3 camera::shading(uint16_t depth, bool RussianRoulette, const ray &r)
 		// 如果不发光则应该向整个场景的光源进行采样
 		else
 		{
-			vec3 I;	 // 光源发光强度 Radiant Intensity
-			vec3 E;	 // 着色点辐照度 Irradiance 从可见光源吸收的光强
-			vec3 Fi; // 反照率：当前着色点向特定方向射出的能量 用 Radiance 表示
 
-			// 第一步应该是获取所有光源辐射到当前着色点的光强
-			for (int i = 0; i < world.list_size; i++)
+			vec3 shade_point_coord = rec.p;
+			vec3 shade_point_normal = rec.normal;
+			double shade_point_distance = rec.t;
+			// vec3 I;	 // 光源发光强度 Radiant Intensity
+			// vec3 E;	 // 着色点辐照度 Irradiance 从可见光源吸收的光强
+			// vec3 Fi; // 反照率：当前着色点向特定方向射出的能量 用 Radiance 表示
+
+			// // 第一步应该是获取所有光源辐射到当前着色点的光强
+			// for (int i = 0; i < world.list_size; i++)
+			// {
+			// 	hitable *current_obj = world.list[i];
+			// 	// 检测当前物体是不是光源
+			// 	if (current_obj->hasEmission())
+			// 	{
+			// 		// ray
+			// 	}
+			// }
+			vec3 L_dir(0, 0, 0);
+			float light_pdf = 0.0;
+			hit_record light_point;
+			sampleLight(light_point, light_pdf);
+
+			vec3 light_point_coord = light_point.p;
+			vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
+			vec3 light_point_normal = light_point.normal;
+
+			double light_point_distance = (light_point_coord - shade_point_coord).length();
+
+			vec3 wo = r.direction();
+			vec3 wii = (light_point_coord - shade_point_coord);
+			wii.make_unit_vector();
+
+			hit_record first_block_point;
+			world.hit(ray(shade_point_coord, wii), 0.001, 999999, first_block_point);
+
+			const float cos_theta_shadePoint = dot(shade_point_normal, wii);
+			const float cos_theta_lightPoint = dot(light_point_normal, -wii);
+
+			vec3 BRDF = rec.mat_ptr->computeBRDF(wo, wii, rec);
+
+			if (first_block_point.t - light_point_distance > -0.05)
 			{
-				hitable *current_obj = world.list[i];
-				// 检测当前物体是不是光源
-				if (current_obj->hasEmission())
-				{
-					// ray
-				}
+				L_dir = light_point_emit * BRDF * cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
 			}
+
+			// Then, secondary ray
+			vec3 L_indir(0, 0, 0);
+			if (RussianRoulette)
+			{
+				return L_dir;
+			}
+			ray scattered;
+			vec3 attenuation;
+			rec.mat_ptr->scatter(r, rec, attenuation, scattered);
+			vec3 w0 = scattered.direction();
+			w0.make_unit_vector();
+			ray r_deeper(shade_point_coord, w0);
+			hit_record no_emit_obj;
+			bool hitted = world.hit(r_deeper, 0.0001, 999999, no_emit_obj);
+			if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
+			{
+				const float global_pdf = rec.mat_ptr->pdf(wo, w0, shade_point_normal);
+				BRDF = rec.mat_ptr->computeBRDF(wo, w0, rec);
+				L_indir = shading(depth - 1, r_deeper) * BRDF * dot(w0, shade_point_normal) / RussianRoulette / global_pdf;
+			}
+
+			return L_dir + L_indir;
 		}
+	}
+	else
+	{
+		return vec3(0, 0, 0);
 	}
 }
 
 void camera::renderFrame(PresentMethod present, std::string file_path)
 {
-	uint8_t spp = 1;
+	uint8_t spp = 5;
 	cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
 	switch (present)
@@ -194,12 +288,11 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 					<< frame_width << " " << frame_height << "\n255\n";
 		for (auto pixelVal : frame_buffer)
 		{
-
 			int ir = int(255.99 * pixelVal[0]);
 			int ig = int(255.99 * pixelVal[1]);
 			int ib = int(255.99 * pixelVal[2]);
 
-			OutputImage << ir << " " << ig << " " << ib << "\n";
+			OutputImage << (ir<0?0:ir) << " " << (ig<0?255:ig) << " " << (ib<0?0:ib) << "\n";
 		}
 	}
 	break;
@@ -211,6 +304,3 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 		break;
 	}
 }
-
-
-

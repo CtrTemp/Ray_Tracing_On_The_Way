@@ -47,3 +47,8 @@ bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuati
 
 	return true;
 }
+
+vec3 dielectric::computeBRDF(const vec3 wi, const vec3 wo, const hit_record p)
+{
+	return vec3(0,0,0);
+}

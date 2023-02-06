@@ -27,7 +27,19 @@ public:
 	// 计算BRDF是重中之重，这是主要的添加改进，每个不同的material根据不同的光照情况计算BRDF
 	// BRDF是反照率/反射系数/吸收系数的综合考量
 	// 2023/01/13 加入 BRDF 应有的参数
-	virtual vec3 computeBRDF(ray r_in, ray r_out, vec3 normal) = 0;
+	virtual vec3 computeBRDF(const vec3 wi, const vec3 wo, const hit_record p) = 0;
+
+	virtual float pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal)
+	{
+		if (dot(r_out_dir, normal) > 0.0f)
+		{
+			return 0.5f / M_PI;
+		}
+		else
+		{
+			return 0.0f;
+		}
+	}
 };
 
 #endif

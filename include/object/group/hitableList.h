@@ -46,6 +46,9 @@ public:
 	// 暂定这种类型没有 光线 emission
 	virtual bool hasEmission(void) const { return false; };
 
+    void Sample(hit_record &pos, float &probability);
+    float getArea();
+
 	std::vector<hitable *> list;
 	int list_size;
 

@@ -32,7 +32,7 @@ extern std::vector<std::string> skybox_textures_heavy;
 extern std::vector<std::string> skybox_textures_fire;
 extern std::vector<std::string> skybox_textures_high;
 
-extern hitable_list sample_light_RGB_world;
+// extern hitable_list sample_light_RGB_world;
 extern hitable_list test_triangle_world;
 extern hitable_list test_triangleList_world;
 extern hitable_list test_Load_Models_world;

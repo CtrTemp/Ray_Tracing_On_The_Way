@@ -11,9 +11,9 @@
 #include <string>
 #include <fstream>
 
-//#define M_PI	acos(-1)
+// #define M_PI	acos(-1)
 
-//用于在圆盘光孔平面中模拟射入光孔的光线
+// 用于在圆盘光孔平面中模拟射入光孔的光线
 vec3 random_in_unit_disk();
 
 typedef struct
@@ -30,6 +30,7 @@ typedef struct
 	uint16_t frame_width;
 	uint16_t frame_height;
 	hitable_list world;
+	float RussianRoulette;
 
 } cameraCreateInfo;
 
@@ -66,11 +67,13 @@ public:
 		RayDistribution distribute // 光线投射在像素中的分布函数
 	);
 	// 单一光线射出，在场景中bounce后返回着色结果
-	vec3 shading(uint16_t depth,	   // 最大bounce递归深度
-				 bool RussianRoulette, // 是否采用俄罗斯轮盘赌的方式终止光线bounce，为false时当达到最大递归深度则终止
+	vec3 shading(uint16_t depth, // 最大bounce递归深度
+								 //  bool RussianRoulette, // 是否采用俄罗斯轮盘赌的方式终止光线bounce，为false时当达到最大递归深度则终止
 				 const ray &r);
 
 	void renderFrame(PresentMethod present, std::string file_path);
+
+	void sampleLight(hit_record &pos, float &pdf);
 
 	vec3 upper_left_conner;
 	vec3 horizontal;
@@ -85,7 +88,7 @@ public:
 	uint16_t frame_width;
 	uint16_t frame_height;
 	hitable_list world;
-	
+	float RussianRoulette = 0;
 };
 
 #endif // !1

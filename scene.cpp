@@ -29,7 +29,7 @@ std::vector<std::string> skybox_textures_high = {
 
 
 // 世界场景选型
-hitable_list sample_light_RGB_world = sample_light_RGB();
+// hitable_list sample_light_RGB_world = sample_light_RGB();
 hitable_list test_triangle_world = test_triangle();
 hitable_list test_triangleList_world = test_triangleList();
 hitable_list test_Load_Models_world = test_Load_Models();
@@ -42,59 +42,59 @@ hitable_list test_complex_scene_world = test_complex_scene();
 hitable_list test_complex_scene_with_complex_models_world = test_complex_scene_with_complex_models();
 
 
-hitable_list sample_light_RGB()
-{
+// hitable_list sample_light_RGB()
+// {
 
-	texture *pertext = new noise_texture(1.5);
-	material *noise = new lambertian(pertext);
-	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
-	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
-	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
-	material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
+// 	texture *pertext = new noise_texture(1.5);
+// 	material *noise = new lambertian(pertext);
+// 	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+// 	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+// 	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+// 	material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
 
-	std::vector<hitable *> hit_list;
+// 	std::vector<hitable *> hit_list;
 
-	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, noise)); // Ground
-	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, noise));
-	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
+// 	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, noise)); // Ground
+// 	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, noise));
+// 	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
 
-	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.05)));
+// 	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.05)));
 
-	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-	hit_list.push_back(new sphere(vec3(10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-	hit_list.push_back(new sphere(vec3(-10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+// 	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+// 	hit_list.push_back(new sphere(vec3(10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+// 	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+// 	hit_list.push_back(new sphere(vec3(-10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+// 	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
 
-	hit_list.push_back(new xy_rect(5, 7, 1, 3, 0, new diffuse_light(new constant_texture(vec3(20, 0, 0)))));
-	hit_list.push_back(new xy_rect(5, 7, 1, 3, 3, new diffuse_light(new constant_texture(vec3(0, 20, 0)))));
-	hit_list.push_back(new xy_rect(5, 7, 1, 3, 6, new diffuse_light(new constant_texture(vec3(0, 0, 20)))));
+// 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 0, new diffuse_light(new constant_texture(vec3(20, 0, 0)))));
+// 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 3, new diffuse_light(new constant_texture(vec3(0, 20, 0)))));
+// 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 6, new diffuse_light(new constant_texture(vec3(0, 0, 20)))));
 
-	// hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
+// 	// hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
 
-	return hitable_list(hit_list);
-}
+// 	return hitable_list(hit_list);
+// }
 
-hitable_list cornell_box()
-{
-	std::vector<hitable *> hit_list;
+// hitable_list cornell_box()
+// {
+// 	std::vector<hitable *> hit_list;
 
-	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
-	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
-	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
-	material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
+// 	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+// 	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+// 	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+// 	material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
 
-	hit_list.push_back(new flip_normals(new yz_rect(0, 555, 0, 555, 555, green)));
+// 	hit_list.push_back(new flip_normals(new yz_rect(0, 555, 0, 555, 555, green)));
 
-	hit_list.push_back(new yz_rect(0, 555, 0, 555, 0, red));
-	hit_list.push_back(new xz_rect(213, 343, 227, 332, 554, light));
+// 	hit_list.push_back(new yz_rect(0, 555, 0, 555, 0, red));
+// 	hit_list.push_back(new xz_rect(213, 343, 227, 332, 554, light));
 
-	hit_list.push_back(new flip_normals(new xz_rect(0, 555, 0, 555, 555, white)));
-	hit_list.push_back(new xz_rect(0, 555, 0, 555, 0, white));
-	hit_list.push_back(new flip_normals(new xy_rect(0, 555, 0, 555, 555, white)));
+// 	hit_list.push_back(new flip_normals(new xz_rect(0, 555, 0, 555, 555, white)));
+// 	hit_list.push_back(new xz_rect(0, 555, 0, 555, 0, white));
+// 	hit_list.push_back(new flip_normals(new xy_rect(0, 555, 0, 555, 555, white)));
 
-	return hitable_list(hit_list);
-}
+// 	return hitable_list(hit_list);
+// }
 
 hitable_list test_triangle()
 {
@@ -480,7 +480,7 @@ hitable_list test_Load_complex_Models()
 	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
 
-	hit_list = gen_sky_box(skybox_textures_high, hit_list, 200);
+	hit_list = gen_sky_box(skybox_textures_high, hit_list, 10);
 
 	return hitable_list(hit_list);
 }

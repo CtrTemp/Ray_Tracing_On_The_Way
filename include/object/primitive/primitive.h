@@ -31,13 +31,10 @@ public:
     // 这里是一个bug区，暂时这样写，之后要修改
 	virtual aabb getBound(void) const {return aabb();};
 
-    // std::vector<vertex> vertices;
-    // std::vector<uint32_t> indexes;
-    // std::vector<vec3> edges;
-    // vec3 normal;
-    // material *mat_ptr;
-    // primitive * prim_ptr;
-    // aabb bound;
+    virtual void Sample(hit_record &pos, float &probability) = 0;
+    virtual float getArea() = 0;
+
+    // 以上进一步写作纯虚函数，由其派生类 triangle 和 quadrangle 进行具体实现
 };
 
 #endif

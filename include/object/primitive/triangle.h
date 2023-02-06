@@ -40,14 +40,17 @@ public:
         // 获取当前三角形的包围盒，并将其传入成员变量
         bounding_box(0, 0, bounds);
 
-        // std::cout << "triangle box bounds = "
-        //           << bounds.min()[0] << "; "
-        //           << bounds.min()[1] << "; "
-        //           << bounds.min()[2] << "; || "
-        //           << bounds.max()[0] << "; "
-        //           << bounds.max()[1] << "; "
-        //           << bounds.max()[2] << "; "
-        //           << std::endl;
+
+
+        // 在这里计算一下三角形面积
+        float a = edges[0].length();
+        float b = edges[1].length();
+        float c = edges[2].length();
+
+        float p = (a + b + c) / 2;
+
+        area = sqrt(p * (p - a) * (p - b) * (p - c));
+        
     };
     // 第二种：传入顶点列表以及索引值
 
@@ -70,6 +73,16 @@ public:
         mat_ptr = mat;
         // 获取当前三角形的包围盒，并将其传入成员变量
         bounding_box(0, 0, bounds);
+
+
+        // 在这里计算一下三角形面积
+        float a = edges[0].length();
+        float b = edges[1].length();
+        float c = edges[2].length();
+
+        float p = (a + b + c) / 2;
+
+        area = sqrt(p * (p - a) * (p - b) * (p - c));
     };
     /*
         判断三角形与射线是否相交，如果相交则返回true并要更新交点坐标，返回交点信息
@@ -82,11 +95,17 @@ public:
 	virtual aabb getBound(void) const;
 	virtual bool hasEmission(void) const { return mat_ptr->hasEmission(); };
 
+    void Sample(hit_record &pos, float &probability);
+    float getArea();
+
 
     // 三角形索引缓冲区
     uint8_t index[3];
     // 三角形顶点缓冲区
     vertex vertices[3];
+
+    // 三角形面积，用于光源采样，初始化为0，每当有光线击中时，再根据顶点位置进行计算
+    float area;
 
     // 规定第一条边是第0个顶点指向第1个顶点
     // 规定第二条边是第1个顶点指向第2个顶点

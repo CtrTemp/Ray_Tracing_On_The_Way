@@ -15,7 +15,30 @@ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuate
 	return (dot(scattered.direction(), rec.normal) > 0);
 }
 
-vec3 lambertian::computeBRDF(ray r_in, ray r_out, vec3 normal)
+// Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
+//     switch(m_type){
+//         case DIFFUSE:
+//         {
+//             // calculate the contribution of diffuse   model
+//             float cosalpha = dotProduct(N, wo);
+//             if (cosalpha > 0.0f) {
+//                 Vector3f diffuse = Kd / M_PI;
+//                 return diffuse;
+//             }
+//             else
+//                 return Vector3f(0.0f);
+//             break;
+//         }
+//     }
+// }
+
+vec3 lambertian::computeBRDF(const vec3 wi, const vec3 wo, const hit_record p)
 {
-	return vec3(0,0,0);
+	float cosalpha = dot(p.normal, wo);
+	if (cosalpha > 0.0f)
+	{
+		vec3 diffuse = this->albedo->value(p.u, p.v, p.p) / M_PI;
+		return diffuse;
+	}
+	return vec3(0, 0, 0);
 }

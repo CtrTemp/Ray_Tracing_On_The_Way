@@ -39,10 +39,18 @@ public:
 
     virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
     virtual bool bounding_box(float t0, float t1, aabb &box) const;
-	virtual aabb getBound(void) const;
-	virtual bool hasEmission(void) const { return false; };
+    virtual aabb getBound(void) const;
+
+    // // 这里我们将模型视为一个整体，要么整体发光，要么都不发光，不存在内嵌有部分发光的情况
+    // virtual bool hasEmission(void) const { return false; };
+    virtual bool hasEmission(void) const { return model_eimssion; };
+
+    void Sample(hit_record &pos, float &probability);
+    float getArea();
 
     std::vector<primitive *> prim_list;
+    std::vector<primitive *> emit_prim_list;
+    bool model_eimssion;
     int list_size;
     aabb bounds;
     bvh_tree *tree;
