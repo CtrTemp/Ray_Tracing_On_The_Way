@@ -69,6 +69,8 @@ My Own Render Program
 
 8、模型在场景中的变换（包括缩放以及平移等）
 
+9、引入并使用标准矩阵运算库
+
 
 ## Gallery
 
