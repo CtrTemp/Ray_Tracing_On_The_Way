@@ -18,11 +18,12 @@ My Own Render Program
 
 7、实现全局bvh加速结构
 
+8、直接向光源采样，正确实现基本的渲染方程
+
 ## 最近更新：
-
-#### 1、修复了加速渲染结构的bug，之前很多的黑色噪点现在已经得到了优化（23/02/04）
-#### 2、加速渲染结构的渲染速度已经回归正常，不会再出现比一般暴力遍历算法更慢的情况（23/02/04）
-
+#### 1、直接向光源采样，正确应用rendering equation，抛弃Whitted styled Ray-Tracing（23/03/07）
+  * 修复了加速渲染结构的bug，之前很多的黑色噪点现在已经得到了优化（23/02/04）
+  * 加速渲染结构的渲染速度已经回归正常，不会再出现比一般暴力遍历算法更慢的情况（23/02/04）
   * 整个渲染函数，射线投射循环等现已全部被融入到camera类中，成为其成员函数，main函数被大幅简化。（23/01/11）
   * 对于组件的创建与拼接，参考Vulkan中的方式，通过配置特殊的创建结构体，对camera、framebuffer、renderpass等组件进行创建，后期会逐步统一（23/01/11）
   * 优化了类的层级结构，hitable下属四类：geometry基本几何、primitive基本面元、models面元几何（面元列表）、group组（对象列表）。（23/01/08）
@@ -71,6 +72,8 @@ My Own Render Program
 
 9、引入并使用标准矩阵运算库
 
+10、正确应用渲染方程，向光源采样（**Done**）
+
 
 ## Gallery
 
@@ -108,7 +111,7 @@ Comparing with Whitted styled rendering result.
 
 
 
-512*512 100spp using 26.6seconds(same light source power) In this pic, we can see that Whitted styled ray tracing result is WRONG! It cannot present the true light transform law. What is correct? Rendering Equation of course.
+512*512 20spp using 5.2seconds(same light source power) In this pic, we can see that Whitted styled ray tracing result is WRONG! It cannot present the true light transform law. What is correct? Rendering Equation of course.
 
 ![incorrect_whitted_styled_20spp_5 2s](https://user-images.githubusercontent.com/89559223/217294363-c7028d59-c409-4ad9-ae4a-866ca5e6f901.png)
 
