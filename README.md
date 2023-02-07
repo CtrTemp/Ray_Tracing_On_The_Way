@@ -100,6 +100,7 @@ A Little bit noisy. More spp always works.
 Wait, what's going on?! It supposed to be much more lighter in the conner of those spheres, however, it becomes dimmer! After checking the code, I've found tha I've fogot to initialize the **RussianRoulette** value, cause **L_indir** use it as a divisor, it always gets a "Nan" value. After fix this bug, I got the follow pic:
 
 512*512 20spp using 8.9seconds
+
 ![direct_cast_ray_20spp_8 9s](https://user-images.githubusercontent.com/89559223/217293623-95b2fc5c-1cdd-418a-ad38-bfdd354575e5.png)
 
 
