@@ -75,6 +75,33 @@ My Own Render Program
 ## Gallery
 
 
+#### 2023/02/07
+
+Finally, the program can correctlly sample the light soure instead of randomly scatter rays into the world space. Here's some problems that I've met.
+
+Firstly, I turn to test simpler sphere geometry rather than confused "complex" bunnny object. And I got that(wrong pixel is still marked with color green)
+
+
+
+Debugged with GDB, I've found that when the radiance value is too small, converting it from float to int(32 bit signed) may got wrong result: it turn to be the minimum value of 32 bit int, -2147483648 that is. After I've solved this, I got this pic as follow:
+
+
+A Little bit noisy. More spp always works.  
+
+
+Wait, what's going on?! It supposed to be much more lighter in the conner of those spheres, however, it becomes dimmer! After checking the code, I've found tha I've fogot to initialize the **RussianRoulette** value, cause **L_indir** use it as a divisor, it always gets a "Nan" value. After fix this bug, I got the follow pic:
+
+512*512 20spp using 8.9seconds
+
+Comparing with Whitted styled rendering result.
+
+512*512 100spp using 26.6seconds(same rendering quality)
+
+
+512*512 100spp using 26.6seconds(same light source power) In this pic, we can see that Whitted styled ray tracing result is WRONG! It cannot present the true light transform law. What is correct? Rendering Equation of course.
+
+
+
 #### 2023/02/06
 
 I tried directly sampling from light source instead of scattering light all randomly. However, currently the render result is not correct. The incorrect shading point is marked with green color. I thought the wrong result may caused by too less "spp" but it turn worse when I add more rays cast into single pixel.

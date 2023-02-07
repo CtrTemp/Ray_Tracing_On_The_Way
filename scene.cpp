@@ -1,8 +1,5 @@
 #include "scene.h"
 
-
-
-
 std::vector<std::string> skybox_textures_heavy = {
 	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
 	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
@@ -25,11 +22,8 @@ std::vector<std::string> skybox_textures_high = {
 	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
 	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
 
-
-
-
 // 世界场景选型
-// hitable_list sample_light_RGB_world = sample_light_RGB();
+hitable_list sample_light_RGB_world = sample_light_RGB();
 hitable_list test_triangle_world = test_triangle();
 hitable_list test_triangleList_world = test_triangleList();
 hitable_list test_Load_Models_world = test_Load_Models();
@@ -41,39 +35,40 @@ hitable_list test_Load_complex_Models_world = test_Load_complex_Models();
 hitable_list test_complex_scene_world = test_complex_scene();
 hitable_list test_complex_scene_with_complex_models_world = test_complex_scene_with_complex_models();
 
+hitable_list sample_light_RGB()
+{
 
-// hitable_list sample_light_RGB()
-// {
+	texture *pertext = new noise_texture(1.5);
+	material *noise = new lambertian(pertext);
+	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+	material *light = new diffuse_light(new constant_texture(vec3(70, 70, 70)));
 
-// 	texture *pertext = new noise_texture(1.5);
-// 	material *noise = new lambertian(pertext);
-// 	material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
-// 	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
-// 	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
-// 	material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
+	std::vector<hitable *> hit_list;
 
-// 	std::vector<hitable *> hit_list;
+	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, noise)); // Ground
+	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, noise));
+	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, noise));
+	// hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
 
-// 	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, noise)); // Ground
-// 	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, noise));
-// 	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
+	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, noise));
+	// hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.05)));
 
-// 	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.05)));
+	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, light));
+	hit_list.push_back(new sphere(vec3(10, 15, 10), 2, light));
+	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, light));
+	hit_list.push_back(new sphere(vec3(-10, 15, -10), 2, light));
+	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, light));
 
-// 	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-// 	hit_list.push_back(new sphere(vec3(10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-// 	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-// 	hit_list.push_back(new sphere(vec3(-10, 15, -10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
-// 	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, new diffuse_light(new constant_texture(vec3(10, 10, 10)))));
+	// hit_list.push_back(new xy_rect(5, 7, 1, 3, 0, new diffuse_light(new constant_texture(vec3(20, 0, 0)))));
+	// hit_list.push_back(new xy_rect(5, 7, 1, 3, 3, new diffuse_light(new constant_texture(vec3(0, 20, 0)))));
+	// hit_list.push_back(new xy_rect(5, 7, 1, 3, 6, new diffuse_light(new constant_texture(vec3(0, 0, 20)))));
 
-// 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 0, new diffuse_light(new constant_texture(vec3(20, 0, 0)))));
-// 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 3, new diffuse_light(new constant_texture(vec3(0, 20, 0)))));
-// 	hit_list.push_back(new xy_rect(5, 7, 1, 3, 6, new diffuse_light(new constant_texture(vec3(0, 0, 20)))));
+	// hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
 
-// 	// hit_list.push_back(new box(vec3(-2, 5, -2), vec3(2, 6, 2), green));
-
-// 	return hitable_list(hit_list);
-// }
+	return hitable_list(hit_list);
+}
 
 // hitable_list cornell_box()
 // {
@@ -472,13 +467,12 @@ hitable_list test_Load_complex_Models()
 	// 这里渲染1000面的兔子模型
 	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.01), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.01), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
-	
+
 	// hit_list.push_back(new models(module_path_list[2], grass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	hit_list.push_back(new models(module_path_list[2], grass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
 	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
-
 
 	hit_list = gen_sky_box(skybox_textures_high, hit_list, 10);
 

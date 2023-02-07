@@ -28,6 +28,8 @@ camera::camera(cameraCreateInfo createInfo)
 						half_height * createInfo.focus_dist * v;
 	horizontal = 2 * half_width * createInfo.focus_dist * u;
 	vertical = 2 * half_height * createInfo.focus_dist * v;
+
+	RussianRoulette = createInfo.RussianRoulette;
 }
 
 vec3 random_in_unit_disk()
@@ -64,6 +66,12 @@ void camera::sampleLight(hit_record &pos, float &pdf)
 		// std::cout << "k = " << k << std::endl;
 	}
 
+	// 2023/02/06
+	// 现在问题已经很明确了：没有光源或者只有一个光源的情况都不适用！！！你的系统无法兼容这种情况
+	if (emit_area_sum == 0)
+	{
+		throw std::runtime_error("there is no light source in this scene! please check your world construction");
+	}
 
 	// std::cout << "total area = " << emit_area_sum << std::endl;
 
@@ -173,9 +181,10 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	// }
 	// else
 	// {
-	// 	vec3 unit_direction = unit_vector(r.direction());
-	// 	auto t = 0.5 * (unit_direction.y() + 1.0);
-	// 	return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+	// 	// vec3 unit_direction = unit_vector(r.direction());
+	// 	// auto t = 0.5 * (unit_direction.y() + 1.0);
+	// 	// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+	// 	return vec3(0, 0, 0);
 	// }
 
 	// 2023/01/12
@@ -240,12 +249,24 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 
 			if (first_block_point.t - light_point_distance > -0.05)
 			{
-				L_dir = light_point_emit * BRDF * cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
+				float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
+				parameter = parameter < 0 ? -parameter : parameter;
+				// L_dir = light_point_emit * BRDF * cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
+				L_dir = light_point_emit * BRDF * parameter;
+
+				// std::cout << std::endl;
+				// std::cout << "parameter = " << parameter << std::endl;
+				// std::cout << "pow = " << pow(light_point_distance, 2) << std::endl;
 			}
+			// if (L_dir[0] < 0 && light_point_distance < 50)
+			// {
+			// 	std::cout << "hahhhh" << std::endl;
+			// }
 
 			// Then, secondary ray
 			vec3 L_indir(0, 0, 0);
-			if (RussianRoulette)
+
+			if (this->RussianRoulette < get_random_float())
 			{
 				return L_dir;
 			}
@@ -262,6 +283,11 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 				const float global_pdf = rec.mat_ptr->pdf(wo, w0, shade_point_normal);
 				BRDF = rec.mat_ptr->computeBRDF(wo, w0, rec);
 				L_indir = shading(depth - 1, r_deeper) * BRDF * dot(w0, shade_point_normal) / RussianRoulette / global_pdf;
+
+				// if ((L_indir)[0] > 1 && light_point_distance < 50)
+				// {
+				// 	std::cout << "haha" << std::endl;
+				// }
 			}
 
 			return L_dir + L_indir;
@@ -275,7 +301,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 
 void camera::renderFrame(PresentMethod present, std::string file_path)
 {
-	uint8_t spp = 5;
+	uint8_t spp = 1;
 	cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
 	switch (present)
@@ -292,7 +318,11 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 			int ig = int(255.99 * pixelVal[1]);
 			int ib = int(255.99 * pixelVal[2]);
 
-			OutputImage << (ir<0?0:ir) << " " << (ig<0?255:ig) << " " << (ib<0?0:ib) << "\n";
+			// OutputImage << ir << " " << ig << " " << ib << "\n";
+			// OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 255 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
+			// OutputImage << (ir < 0 ? 255 : ir) << " " << (ig < 0 ? 0 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
+			// OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 0 : ig) << " " << (ib < 0 ? 255 : ib) << "\n";
+			OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 0 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
 		}
 	}
 	break;

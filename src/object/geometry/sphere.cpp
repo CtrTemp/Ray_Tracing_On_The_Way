@@ -2,6 +2,7 @@
 bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 {
 	vec3 oc = r.origin() - center;
+	// std::cout << "why" << std::endl;
 	float a = dot(r.direction(), r.direction());
 	float b = 2.0 * dot(oc, r.direction());
 	float c = dot(oc, oc) - radius * radius;
@@ -105,6 +106,8 @@ void sphere::Sample(hit_record &pos, float &probability)
 	pos.normal = dir;
 	// pos.emit = mat_ptr->emitted();
 	probability = 1.0f / area;
+	pos.happened = true;
+	pos.mat_ptr = this->mat_ptr;
 }
 
 float sphere::getArea()

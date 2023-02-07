@@ -20,9 +20,9 @@ vec3 random_in_unit_sphere()
 
 float get_random_float()
 {
-	std::random_device dev; // the seed
-	std::mt19937 rng(dev());
-	std::uniform_real_distribution<float> dist(0.f, 0.f);
+	// std::random_device dev; // the seed
+	// std::mt19937 rng(dev());
+	// std::uniform_real_distribution<float> dist(0.f, 0.f);
 
 	// gen random float between (0-1)
 	// return dist(rng);
