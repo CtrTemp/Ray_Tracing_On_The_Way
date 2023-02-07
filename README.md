@@ -81,25 +81,36 @@ Finally, the program can correctlly sample the light soure instead of randomly s
 
 Firstly, I turn to test simpler sphere geometry rather than confused "complex" bunnny object. And I got that(wrong pixel is still marked with color green)
 
+![weirdGhostGreen](https://user-images.githubusercontent.com/89559223/217293391-caf0ada5-95e8-425b-b4a2-160907657ad7.png)
 
 
 Debugged with GDB, I've found that when the radiance value is too small, converting it from float to int(32 bit signed) may got wrong result: it turn to be the minimum value of 32 bit int, -2147483648 that is. After I've solved this, I got this pic as follow:
 
+![direct_cast_ray_1spp_still_bug](https://user-images.githubusercontent.com/89559223/217293452-2c766290-1df1-40e4-b368-198263c9e77a.png)
+
 
 A Little bit noisy. More spp always works.  
+
+![direct_cast_ray_5spp_still_bug](https://user-images.githubusercontent.com/89559223/217293497-c2c1756d-eab4-407a-a30c-36a403430c37.png)
 
 
 Wait, what's going on?! It supposed to be much more lighter in the conner of those spheres, however, it becomes dimmer! After checking the code, I've found tha I've fogot to initialize the **RussianRoulette** value, cause **L_indir** use it as a divisor, it always gets a "Nan" value. After fix this bug, I got the follow pic:
 
 512*512 20spp using 8.9seconds
+![direct_cast_ray_20spp_8 9s](https://user-images.githubusercontent.com/89559223/217293623-95b2fc5c-1cdd-418a-ad38-bfdd354575e5.png)
+
 
 Comparing with Whitted styled rendering result.
 
 512*512 100spp using 26.6seconds(same rendering quality)
 
+![incorrect_whitted_styled_100spp_26 6s](https://user-images.githubusercontent.com/89559223/217293699-ab65fd4f-f2cd-4ba2-9b16-e794556c3a26.png)
+
+
 
 512*512 100spp using 26.6seconds(same light source power) In this pic, we can see that Whitted styled ray tracing result is WRONG! It cannot present the true light transform law. What is correct? Rendering Equation of course.
 
+![incorrect_whitted_styled_20spp_5 2s](https://user-images.githubusercontent.com/89559223/217294363-c7028d59-c409-4ad9-ae4a-866ca5e6f901.png)
 
 
 #### 2023/02/06
