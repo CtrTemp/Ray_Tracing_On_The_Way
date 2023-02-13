@@ -90,7 +90,22 @@ My Own Render Program
 
 #### 2023/02/13
 
+![material_bug_direct](https://user-images.githubusercontent.com/89559223/218373766-51809145-d731-4ed7-9ac6-cdd3b3690b88.png)
 
+
+![increasing](https://user-images.githubusercontent.com/89559223/218373783-4618bda9-5cc2-425a-b9dc-7e2f8ac95841.png)
+
+
+![fuzz0 9_correct_50spp](https://user-images.githubusercontent.com/89559223/218373827-d6eed970-ab87-4ae2-a121-49bcdd033653.png)
+
+
+![anoWired](https://user-images.githubusercontent.com/89559223/218373859-63933920-9cd1-478a-99b3-73ed8ef1e24b.png)
+
+
+![muchCloser](https://user-images.githubusercontent.com/89559223/218373876-2ebf3ea4-013f-4505-8ce9-e3c82867475d.png)
+
+
+![got_it](https://user-images.githubusercontent.com/89559223/218373883-9cb29d40-9cff-4dfe-9b85-2facc791975e.png)
 
 #### 2023/02/07
 
