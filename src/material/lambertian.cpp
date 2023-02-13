@@ -15,6 +15,17 @@ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuate
 	return (dot(scattered.direction(), rec.normal) > 0);
 }
 
+float lambertian::pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal)
+{
+	if (dot(r_out_dir, normal) > 0.0f)
+	{
+		return 0.5f / M_PI;
+	}
+	else
+	{
+		return 0.0f;
+	}
+}
 // Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
 //     switch(m_type){
 //         case DIFFUSE:
@@ -32,9 +43,10 @@ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuate
 //     }
 // }
 
-vec3 lambertian::computeBRDF(const vec3 wi, const vec3 wo, const hit_record p)
+// wi是射线指向着色点的方向向量，wo是着色点指向采样光源的方向 
+vec3 lambertian::computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p)
 {
-	float cosalpha = dot(p.normal, wo);
+	float cosalpha = dot(p.normal, -light_in_dir_wi);
 	if (cosalpha > 0.0f)
 	{
 		vec3 diffuse = this->albedo->value(p.u, p.v, p.p) / M_PI;

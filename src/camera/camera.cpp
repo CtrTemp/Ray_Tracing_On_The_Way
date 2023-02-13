@@ -96,6 +96,27 @@ void camera::sampleLight(hit_record &pos, float &pdf)
 // 规定从左上角遍历到右下角，行优先遍历
 void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 {
+
+	float u, v;
+	switch (distribute)
+	{
+	case RayDistribution::NAIVE_RANDOM:
+		// 这里我们默认使用了一般的射线在亚像素级的分布方式
+		u = float(256 + rand() % 101 / float(101)) / float(this->frame_width);
+		v = float(225 + rand() % 101 / float(101)) / float(this->frame_height);
+		break;
+
+	default:
+		throw std::runtime_error("invaild RayDistribution method!");
+		break;
+	}
+
+	ray r = get_ray(u, v);
+	// !!@!!changing depth!!
+	uint8_t max_bounce_depth = 50;
+	vec3 pixel = vec3(0,0,0);
+	pixel += shading(max_bounce_depth, r);
+
 	for (int row = 0; row < frame_height; row++)
 	{
 		for (int col = 0; col < frame_width; col++)
@@ -181,10 +202,10 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	// }
 	// else
 	// {
-	// 	// vec3 unit_direction = unit_vector(r.direction());
-	// 	// auto t = 0.5 * (unit_direction.y() + 1.0);
-	// 	// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-	// 	return vec3(0, 0, 0);
+	// 	vec3 unit_direction = unit_vector(r.direction());
+	// 	auto t = 0.5 * (unit_direction.y() + 1.0);
+	// 	return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+	// 	// return vec3(0, 0, 0);
 	// }
 
 	// 2023/01/12
@@ -235,25 +256,47 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 
 			double light_point_distance = (light_point_coord - shade_point_coord).length();
 
-			vec3 wo = r.direction();
-			vec3 wii = (light_point_coord - shade_point_coord);
-			wii.make_unit_vector();
+			/**
+			 * 	从这里开始，我们对命名以及物理量的正方向进行规范化定义
+			 * 	基本准则就是，以实际物理意义为准：
+			 * 	对于正方向：以实际光线传播方向为准进行定义：从光源发出，最终经过光线在场景中的bounce最终到达
+			 * 人眼/观察点，以该方向为正方向。
+			 * 	对于命名：以计算过程中体现在公式中的命名为准。
+			 * */
+			vec3 shadePoint_to_viewPoint_wo = -r.direction();
+			vec3 directLightSource_to_shadePoint_wi = (shade_point_coord - light_point_coord);
+			shadePoint_to_viewPoint_wo.make_unit_vector();
+			directLightSource_to_shadePoint_wi.make_unit_vector();
 
 			hit_record first_block_point;
-			world.hit(ray(shade_point_coord, wii), 0.001, 999999, first_block_point);
+			world.hit(ray(shade_point_coord, -directLightSource_to_shadePoint_wi), 0.001, 999999, first_block_point);
 
-			const float cos_theta_shadePoint = dot(shade_point_normal, wii);
-			const float cos_theta_lightPoint = dot(light_point_normal, -wii);
+			const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
+			const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
 
-			vec3 BRDF = rec.mat_ptr->computeBRDF(wo, wii, rec);
+			// computeBRDF 里面要全部大改
+			// 现在先改逻辑
+			vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
 
-			if (first_block_point.t - light_point_distance > -0.05)
+			if (BRDF_dir[0] < 0)
+			{
+				std::cout << "haha" << std::endl;
+			}
+			vec3 BRDF_indir;
+			// std::cout << "BRDF == " << BRDF[0] << ", " << BRDF[1] << ", " << BRDF[2] << " " << std::endl;
+
+			// std::cout << "first_block_point.t = " << first_block_point.t << std::endl;
+			// std::cout << "light_point_distance = " << light_point_distance << std::endl;
+			// std::cout << "light_point_distance = " << first_block_point.t - light_point_distance << std::endl;
+			if (first_block_point.t - light_point_distance > -0.05 || first_block_point.t - light_point_distance < 0.05)
 			{
 				float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
 				parameter = parameter < 0 ? -parameter : parameter;
+				// std::cout << "parameter = " << parameter << std::endl;
 				// L_dir = light_point_emit * BRDF * cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
-				L_dir = light_point_emit * BRDF * parameter;
+				L_dir = light_point_emit * BRDF_dir * parameter;
 
+				// 这里改写完了还要进一步检查 2023-02-10
 				// std::cout << std::endl;
 				// std::cout << "parameter = " << parameter << std::endl;
 				// std::cout << "pow = " << pow(light_point_distance, 2) << std::endl;
@@ -264,6 +307,8 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			// }
 
 			// Then, secondary ray
+
+			// 还是优先检查后面的 L_indir 部分吧 2023-02-10
 			vec3 L_indir(0, 0, 0);
 
 			if (this->RussianRoulette < get_random_float())
@@ -273,23 +318,39 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			ray scattered;
 			vec3 attenuation;
 			rec.mat_ptr->scatter(r, rec, attenuation, scattered);
-			vec3 w0 = scattered.direction();
-			w0.make_unit_vector();
-			ray r_deeper(shade_point_coord, w0);
+			vec3 secondaryLightSource_to_shadePoint_wi = -scattered.direction();
+			secondaryLightSource_to_shadePoint_wi.make_unit_vector();
+			// ray r_deeper(shade_point_coord, secondaryLightSource_to_shadePoint_wi);
 			hit_record no_emit_obj;
-			bool hitted = world.hit(r_deeper, 0.0001, 999999, no_emit_obj);
+			bool hitted = world.hit(scattered, 0.0001, 999999, no_emit_obj);
 			if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
 			{
-				const float global_pdf = rec.mat_ptr->pdf(wo, w0, shade_point_normal);
-				BRDF = rec.mat_ptr->computeBRDF(wo, w0, rec);
-				L_indir = shading(depth - 1, r_deeper) * BRDF * dot(w0, shade_point_normal) / RussianRoulette / global_pdf;
+				const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+				BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+				float cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+				cos_para = cos_para < 0 ? -cos_para : cos_para;
+				float para_indir = cos_para / RussianRoulette / global_pdf;
+				L_indir = shading(depth - 1, scattered) * BRDF_indir * para_indir;
 
-				// if ((L_indir)[0] > 1 && light_point_distance < 50)
-				// {
-				// 	std::cout << "haha" << std::endl;
-				// }
+				if (BRDF_indir[0] < 0)
+				{
+					std::cout << "haha" << std::endl;
+				}
+				if ((L_indir)[0] < 0 && light_point_distance < 50)
+				{
+					std::cout << "haha" << std::endl;
+				}
 			}
 
+			// if ((L_dir + L_indir)[0] <= 0.1 && light_point_distance < 50)
+			// {
+			// 	std::cout << "haha" << std::endl;
+			// }
+			// if (rec.mat_ptr->getMaterialType() == material::SelfMaterialType::DIELECTRIC)
+			// {
+			// 	// std::cout << "material type DIELECTRIC" << std::endl;
+			// 	return L_indir;
+			// }
 			return L_dir + L_indir;
 		}
 	}
@@ -301,7 +362,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 
 void camera::renderFrame(PresentMethod present, std::string file_path)
 {
-	uint8_t spp = 1;
+	uint8_t spp = 50;
 	cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
 	switch (present)
@@ -319,8 +380,8 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 			int ib = int(255.99 * pixelVal[2]);
 
 			// OutputImage << ir << " " << ig << " " << ib << "\n";
-			// OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 255 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
 			// OutputImage << (ir < 0 ? 255 : ir) << " " << (ig < 0 ? 0 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
+			// OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 255 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
 			// OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 0 : ig) << " " << (ib < 0 ? 255 : ib) << "\n";
 			OutputImage << (ir < 0 ? 0 : ir) << " " << (ig < 0 ? 0 : ig) << " " << (ib < 0 ? 0 : ib) << "\n";
 		}

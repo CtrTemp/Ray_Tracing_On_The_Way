@@ -6,9 +6,6 @@ camera createCamera(void);
 unsigned int frame_width = 512;
 unsigned int frame_height = 512;
 
-
-
-
 vec3 color(const ray &r, hitable *world, int depth)
 {
 
@@ -57,7 +54,7 @@ int main(void)
 	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);
-	//停止计时
+	// 停止计时
 	runTime = (timeEnd.tv_sec - timeStart.tv_sec) + (double)(timeEnd.tv_usec - timeStart.tv_usec) / 1000000;
 	std::cout << ": The total time of the pirmary loop is: " << runTime << "s" << std::endl;
 
@@ -81,7 +78,7 @@ camera createCamera(void)
 	// vec3 lookfrom(2, 1, 2);
 	// vec3 lookat(0, 0, 0);
 
-
+	// createCamera.lookfrom = vec3(2, 1, 2);
 	createCamera.lookfrom = vec3(20, 15, 20);
 	createCamera.lookat = vec3(0, 0, 0);
 

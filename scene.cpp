@@ -44,22 +44,26 @@ hitable_list sample_light_RGB()
 	material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
 	material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
 	material *light = new diffuse_light(new constant_texture(vec3(70, 70, 70)));
+	material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
+	material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
+	material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
 	std::vector<hitable *> hit_list;
 
 	hit_list.push_back(new sphere(vec3(0, -1000, 0), 1000, noise)); // Ground
 	hit_list.push_back(new sphere(vec3(0, 2, 0), 2, noise));
-	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, noise));
-	// hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
+	hit_list.push_back(new sphere(vec3(2, 2, -4), 2, new dielectric(1.5)));
+	// hit_list.push_back(new sphere(vec3(0, 2, 0), 2, new dielectric(1.5)));
 
-	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, noise));
-	// hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.05)));
+	// hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, noise));
+	// hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new dielectric(1.5)));
+	hit_list.push_back(new sphere(vec3(-2, 2, 6), 2, new mental(vec3(0.8, 0.8, 0.8), 0.02)));
 
-	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, light));
+	hit_list.push_back(new sphere(vec3(0, 15, 0), 2, light_red));
 	hit_list.push_back(new sphere(vec3(10, 15, 10), 2, light));
-	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, light));
+	hit_list.push_back(new sphere(vec3(10, 15, -10), 2, light_green));
 	hit_list.push_back(new sphere(vec3(-10, 15, -10), 2, light));
-	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, light));
+	hit_list.push_back(new sphere(vec3(-10, 15, 10), 2, light_blue));
 
 	// hit_list.push_back(new xy_rect(5, 7, 1, 3, 0, new diffuse_light(new constant_texture(vec3(20, 0, 0)))));
 	// hit_list.push_back(new xy_rect(5, 7, 1, 3, 3, new diffuse_light(new constant_texture(vec3(0, 20, 0)))));
