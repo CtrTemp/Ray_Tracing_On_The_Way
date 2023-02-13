@@ -21,11 +21,18 @@ My Own Render Program
 8、直接向光源采样，正确实现基本的渲染方程
 
 ## 最近更新：
-#### 1、直接向光源采样，正确应用rendering equation，抛弃Whitted styled Ray-Tracing（23/03/07）
+
+#### 1、基于现有的BRDF方程，扩充融入BTDF加以完善，从而可以适应透射表面材质：如玻璃等（23/02/13）
+
+
+  * 直接向光源采样，正确应用rendering equation，抛弃Whitted styled Ray-Tracing（23/02/07）
+
   * 修复了加速渲染结构的bug，之前很多的黑色噪点现在已经得到了优化（23/02/04）
   * 加速渲染结构的渲染速度已经回归正常，不会再出现比一般暴力遍历算法更慢的情况（23/02/04）
+  
   * 整个渲染函数，射线投射循环等现已全部被融入到camera类中，成为其成员函数，main函数被大幅简化。（23/01/11）
   * 对于组件的创建与拼接，参考Vulkan中的方式，通过配置特殊的创建结构体，对camera、framebuffer、renderpass等组件进行创建，后期会逐步统一（23/01/11）
+  
   * 优化了类的层级结构，hitable下属四类：geometry基本几何、primitive基本面元、models面元几何（面元列表）、group组（对象列表）。（23/01/08）
     * 原sphere类以及box类被归入基本几何geometry类，并成为其派生类，后期将添加用于描述空间曲线/曲面的curve_function/surface_function类；（23/01/08）
     * 原triangle类被归为primitive的派生类，后期会添加四边形面元quadrangle类；（23/01/08）
@@ -72,10 +79,17 @@ My Own Render Program
 
 9、引入并使用标准矩阵运算库
 
-10、正确应用渲染方程，向光源采样（**Done**）
+10、正确应用渲染方程，向光源采样--适应lambertian表面材质（**done**）
+
+11、正确应用渲染方程，向光源采样--适应mental表面材质（**done**）
+
+12、正确应用渲染方程，向光源采样--适应dielectric表面材质（**done**）
 
 
 ## Gallery
+
+#### 2023/02/13
+
 
 
 #### 2023/02/07
