@@ -90,8 +90,16 @@ My Own Render Program
 
 #### 2023/02/13
 
+
+Last time, I've correctly using the rendering equation to generate a picture that only contains diffuse material. However, when it turns to render a frame contains mental and other materials, mistakes comes~
+
 ![material_bug_direct](https://user-images.githubusercontent.com/89559223/218373766-51809145-d731-4ed7-9ac6-cdd3b3690b88.png)
 
+
+That is because I've not apply a correct BRDF term of mental or dielectric material. 
+
+
+Cause the BTDF term of the dielectric material should be considered, we just save it for last. Let's firstly consider the mental material BRDF. 
 
 ![increasing](https://user-images.githubusercontent.com/89559223/218373783-4618bda9-5cc2-425a-b9dc-7e2f8ac95841.png)
 
@@ -102,10 +110,23 @@ My Own Render Program
 ![anoWired](https://user-images.githubusercontent.com/89559223/218373859-63933920-9cd1-478a-99b3-73ed8ef1e24b.png)
 
 
+
+To merge the BTDF into the current Rendering Equation is definitely the hardest part from now on. 
+
+Well, if we take the problem into two independent parts, pure reflect and pure refract, it becomes easier to figure out. 
+
+Pure reflect term is easy to simulate, cause we can refer to the mental surface we've just done. Pure refract surface is a little bit hard(cost me a day or two to get a correct result). Finally, I got it.
+
 ![muchCloser](https://user-images.githubusercontent.com/89559223/218373876-2ebf3ea4-013f-4505-8ce9-e3c82867475d.png)
 
 
+
+Merge the two parts together then we got the final result.
+
 ![got_it](https://user-images.githubusercontent.com/89559223/218373883-9cb29d40-9cff-4dfe-9b85-2facc791975e.png)
+
+
+(Besides, there is still some bugs in my code, it seems that the energy distribution is not true and the refract part is always too strong for the dielectric surface.)
 
 #### 2023/02/07
 
