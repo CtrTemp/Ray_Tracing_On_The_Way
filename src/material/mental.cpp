@@ -20,7 +20,7 @@ float mental::pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal)
 {
 	if (dot(r_out_dir, normal) > 0.0f)
 	{
-		return 0.5f / M_PI;
+		return 1.0f / (2 * M_PI * 0.2);
 	}
 	else
 	{
@@ -54,7 +54,7 @@ vec3 mental::computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo,
 	float compute_fuzz = dot(mirror_wo, light_in_dir_wi);
 
 	// fuzz 应该用单位向量的终端圆半径来定义？？
-	vec3 ret_color = this->albedo * compute_fuzz / 2;
+	vec3 ret_color = this->albedo * compute_fuzz;
 
 	// vec3 test_vec = mirror_wi + wi;
 	// float test_val = dot(test_vec, shade_point_normal);

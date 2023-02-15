@@ -63,7 +63,7 @@ bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuati
 // 因为对于这种可以透射的表面上下半球都可以采样，所以这里直接返回单位半球面积，不用考虑上下半球
 float dielectric::pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal)
 {
-	return 0.5f / M_PI;
+	return 1.0f / (2 * M_PI * 0.2);
 }
 
 // wi是射线指向着色点的方向向量，wo是着色点指向采样光源的方向
@@ -142,7 +142,7 @@ vec3 dielectric::computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir
 		// }
 		mirror_reflect_wi = reflect(light_in_dir_wi, shade_point_normal);
 		compute_fuzz_reflect = dot(mirror_reflect_wi, light_in_dir_wo);
-		if (compute_fuzz_reflect <= 0.98)
+		if (compute_fuzz_reflect <= 0.995)
 		{
 			return vec3(0, 0, 0);
 		}
@@ -173,16 +173,16 @@ vec3 dielectric::computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir
 		{
 			compute_fuzz_refract = dot(mirror_refract_wi, light_in_dir_wo);
 
-			if (compute_fuzz_refract <= 0.98)
+			if (compute_fuzz_refract <= 0.995)
 			{
 				return vec3(0, 0, 0);
 			}
 			if (compute_fuzz_refract > 1)
 			{
 				// std::cout << "sss" << std::endl;
-				compute_fuzz_refract = 0.99;
+				compute_fuzz_refract = 0.999;
 			}
-			vec3 ret_color = vec3(0.2, 0.2,0.2) * compute_fuzz_refract;
+			vec3 ret_color = vec3(1, 1, 1) * compute_fuzz_refract;
 			// reflect_prob = schlick(cosine, ref_idx);
 			// std::cout << "reflect_prob = " << reflect_prob << std::endl;
 			return ret_color;

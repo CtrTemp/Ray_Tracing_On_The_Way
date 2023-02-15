@@ -7,7 +7,11 @@ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuate
 	// 		  << "rec.v = " << rec.v << "; "
 	// 		  << std::endl;
 	vec3 target = rec.p + rec.normal + random_in_unit_sphere(); // 获得本次打击后得到的下一个目标点
-	scattered = ray(rec.p, target - rec.p, r_in.time());		// 本次击中一个目标点后的下一个射线（获得散射光线）
+
+	// // 2023-02-15 改写
+	// vec3 target = rec.p + rec.normal + random_in_unit_sphere(); // 获得本次打击后得到的下一个目标点
+
+	scattered = ray(rec.p, target - rec.p, r_in.time()); // 本次击中一个目标点后的下一个射线（获得散射光线）
 	// std::cout << "this" << std::endl;
 	attenuated = albedo->value(rec.u, rec.v, rec.p);
 
@@ -43,7 +47,7 @@ float lambertian::pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal)
 //     }
 // }
 
-// wi是射线指向着色点的方向向量，wo是着色点指向采样光源的方向 
+// wi是射线指向着色点的方向向量，wo是着色点指向采样光源的方向
 vec3 lambertian::computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p)
 {
 	float cosalpha = dot(p.normal, -light_in_dir_wi);
