@@ -296,7 +296,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			}
 
 			// if (first_block_point.t - light_point_distance > -0.05 || first_block_point.t - light_point_distance < 0.05)
-			if (first_block_point.t - light_point_distance > -0.05)
+			if (first_block_point.t - light_point_distance > -0.005)
 			{
 
 				// if (depth != 50)
@@ -338,13 +338,14 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			float cos_para;
 			float para_indir;
 			// if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
-			if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.05)
+			if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005)
 			{
 
 				// 这一大长串应该被优化，写到一个typedef里面进行缩减
-				if (rec.mat_ptr->getMaterialType() == material::SelfMaterialType::DIELECTRIC ||
-					rec.mat_ptr->getMaterialType() == material::SelfMaterialType::MENTAL ||
-					(rec.mat_ptr->getMaterialType() == material::SelfMaterialType::LAMBERTAIN && !no_emit_obj.mat_ptr->hasEmission()))
+				// if (rec.mat_ptr->getMaterialType() == material::SelfMaterialType::DIELECTRIC ||
+				// 	rec.mat_ptr->getMaterialType() == material::SelfMaterialType::MENTAL ||
+				// 	(rec.mat_ptr->getMaterialType() == material::SelfMaterialType::LAMBERTAIN && !no_emit_obj.mat_ptr->hasEmission()))
+				if (!no_emit_obj.mat_ptr->hasEmission())
 				{
 					// 这里也有问题，这就是为什么你需要特异化你的采样函数
 					// 对于lambertian表面以下确实正确，但对于mental这种，以下采样并非半球均匀采样！
@@ -425,7 +426,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 void camera::renderFrame(PresentMethod present, std::string file_path)
 {
 	spark_ofstream.open(test_file_path);
-	uint8_t spp = 5;
+	uint8_t spp = 50;
 	cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
 	switch (present)

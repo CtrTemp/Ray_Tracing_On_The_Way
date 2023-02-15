@@ -78,9 +78,11 @@ camera createCamera(void)
 	// vec3 lookfrom(2, 1, 2);
 	// vec3 lookat(0, 0, 0);
 
-	createCamera.lookfrom = vec3(2, 1, 2);
+	createCamera.lookfrom = vec3(278, 278, -800);
+	// createCamera.lookfrom = vec3(2, 1, 2);
 	// createCamera.lookfrom = vec3(20, 15, 20);
-	createCamera.lookat = vec3(0, 0, 0);
+	// createCamera.lookat = vec3(0, 0, 0);
+	createCamera.lookat = vec3(278, 278, 0);
 
 	createCamera.up_dir = vec3(0, 1, 0);
 	createCamera.fov = 40;
@@ -94,12 +96,12 @@ camera createCamera(void)
 	// createCamera.world = sample_light_RGB_world;
 	// createCamera.world = test_triangle_world;
 	// createCamera.world = test_triangleList_world;
-	// createCamera.world = test_Load_Models_world;
+	createCamera.world = test_Load_Models_world;
 	// createCamera.world = test_image_texture_world;
 	// createCamera.world = test_sky_box_world;
 
 	// createCamera.world = test_multi_triangleList_world;
-	createCamera.world = test_Load_complex_Models_world;
+	// createCamera.world = test_Load_complex_Models_world;
 	// createCamera.world = test_complex_scene_world;
 	// createCamera.world = test_complex_scene_with_complex_models_world;
 	createCamera.RussianRoulette = 0.8;

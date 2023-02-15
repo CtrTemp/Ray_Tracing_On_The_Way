@@ -282,7 +282,8 @@ hitable_list test_Load_Models()
 		"../models/cornellbox/light.obj",
 	};
 
-	hit_list.push_back(new models(module_path_list[0], new mental(vec3(0.9, 0.9, 0.9), 0.5 * drand48()), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	// hit_list.push_back(new models(module_path_list[0], new mental(vec3(0.9, 0.9, 0.9), 0.005), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[0], gray, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	hit_list.push_back(new models(module_path_list[1], gray, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	hit_list.push_back(new models(module_path_list[2], green, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	hit_list.push_back(new models(module_path_list[3], red, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
@@ -450,7 +451,7 @@ hitable_list test_Load_complex_Models()
 
 	material *mental_sur = new mental(vec3(0.8, 0.8, 0.8), 0.005); // mental(vec3(0.8, 0.8, 0.8), 0.02);
 	material *glass_sur = new dielectric(1.5);
-	
+
 	texture *pertext = new noise_texture(1.5);
 	material *light = new diffuse_light(new constant_texture(vec3(15, 15, 15)));
 	material *yellow = new lambertian(new constant_texture(vec3(0.85, 0.55, 0.025)));
@@ -481,7 +482,7 @@ hitable_list test_Load_complex_Models()
 	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.01), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
 	// hit_list.push_back(new models(module_path_list[2], grass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
-	hit_list.push_back(new models(module_path_list[2], glass_sur, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
+	hit_list.push_back(new models(module_path_list[2], mental_sur, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
 
 	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
 	// hit_list.push_back(new models(module_path_list[2], new dielectric(1.5), models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE));
