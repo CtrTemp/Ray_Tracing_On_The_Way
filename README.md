@@ -88,6 +88,79 @@ My Own Render Program
 
 ## Gallery
 
+#### 2023/02/16
+
+Skybox test-Mental
+
+![22-1_skybox_50spp_35s](https://user-images.githubusercontent.com/89559223/219355998-4204d3f0-2528-45a2-b72d-528c53be4fd9.png)
+
+
+Skybox test-Glass
+
+![23-2](https://user-images.githubusercontent.com/89559223/219356126-832f4532-ae30-4dae-a5cf-7c4638777aab.png)
+
+
+Model test mental Bunny
+
+![24-2_mental_15spp_70sec](https://user-images.githubusercontent.com/89559223/219356213-2b35dbc9-80f6-43d9-b78e-6e120b5f62c9.png)
+
+
+Model test glass Bunny
+
+![25-2_15spp_137sec](https://user-images.githubusercontent.com/89559223/219356281-f7e48b0a-a163-47cb-90bf-d57019fc6984.png)
+
+
+Cornell Box-01-mirror
+
+![26-2_5spp_29sec](https://user-images.githubusercontent.com/89559223/219356455-d3d04882-66d2-44c7-819c-c5390b2377c4.png)
+
+
+Cornell Box-02-lambertian
+
+![27-3_50spp_288sec](https://user-images.githubusercontent.com/89559223/219356388-c70aa210-aaca-4abf-80a6-d2d10e6cae67.png)
+
+
+
+#### 2023/02/15
+
+Maybe you've already mentioned that the reflect of a mental surface may have a too strong light power, even stronger than the surface itself. Like that: 
+
+![04_50spp_why_lighter](https://user-images.githubusercontent.com/89559223/219352319-306fc911-9e80-4691-88ee-0d7207b3c8d9.png)
+
+
+That is caused by a wrong sample pdf function. We know that we can use a pure uniform sample function to sample lambertian surface, which the pdf=1/S=1/(2*pi). Of course, the mental and dielectric surface can still use a uniform sample function, however, the S is not equals to 2*pi! That is to say, the sample angle must be much less than that for lambertian surface. Then, we almost get the correct result:
+
+![15_mental_pdf_25percents_50spp](https://user-images.githubusercontent.com/89559223/219352592-d3c79605-bcf2-46ab-8fb4-031cd3bf8a65.png)
+
+If we allow indirect light scattered to direct light source for mental and dielectric surface, then we can get a even better highlight view:
+
+![17_highLight_optimize](https://user-images.githubusercontent.com/89559223/219355193-3d6466e1-864a-4ce4-b0bb-99c8f70a9edd.png)
+
+![21-2](https://user-images.githubusercontent.com/89559223/219355435-47de2fdc-b8ee-4e0f-b317-0d20cd45795d.png)
+
+Mirror Ground:
+
+![20_pure_mirror](https://user-images.githubusercontent.com/89559223/219355321-ab17a3f1-2039-4617-ba6c-23b10b7f6a08.png)
+
+
+
+
+#### 2024/02/14
+
+You should have mentioned Salt Pepper noise spread all around the picture like that:
+
+![05_spark_5spp](https://user-images.githubusercontent.com/89559223/219353353-37e06851-894b-4a84-87d5-54ca9ef46d4e.png)
+
+As we add more spp to average this noise, the result gets even worse:
+
+![06_spark_50spp_even_worse](https://user-images.githubusercontent.com/89559223/219353650-2d026b14-7981-4b9d-ab48-b07987b04254.png)
+
+I finally found that problem is caused by a Numerical accuracy bug. It makes the scattered ray intersects to it's original shade point(self intersect) so the energy of a light start to add to a extremely large value. After solved this problem, we got this result without salt pepper noise:
+
+![14_spark_problem_solved_50spp](https://user-images.githubusercontent.com/89559223/219354615-1157b174-80e0-4119-92e1-1f186643d8a0.png)
+
+
+
 #### 2023/02/13
 
 
