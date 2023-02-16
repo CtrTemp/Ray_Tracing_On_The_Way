@@ -138,8 +138,6 @@ void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 
 vec3 camera::shading(uint16_t depth, const ray &r)
 {
-	// // 暂时考虑只返回单一颜色
-	// return vec3(1, 10, 10);
 	hit_record rec;
 
 	// if (world.hit(r, 0.001, 999999, rec)) // FLT_MAX
@@ -155,32 +153,6 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	// 	}
 	// 	else
 	// 	{
-	// 		// if (emitted[0] == 0 && emitted[1] == 0 && emitted[2] == 0)
-	// 		// {
-	// 		// 	// // std::cout << depth << std::endl;
-	// 		// 	// std::cout << "origin point = "
-	// 		// 	// 		  << r.origin()[0] << ", "
-	// 		// 	// 		  << r.origin()[1] << ", "
-	// 		// 	// 		  << r.origin()[2] << std::endl;
-	// 		// 	// std::cout << "hit point = "
-	// 		// 	// 		  << rec.p[0] << ", "
-	// 		// 	// 		  << rec.p[1] << ", "
-	// 		// 	// 		  << rec.p[2] << std::endl;
-	// 		// 	// // std::cout << "surface normal = "
-	// 		// 	// // 		  << rec.normal[0] << ", "
-	// 		// 	// // 		  << rec.normal[1] << ", "
-	// 		// 	// // 		  << rec.normal[2] << std::endl;
-	// 		// 	// // std::cout << "scattered = "
-	// 		// 	// // 		  << scattered.direction()[0] << ", "
-	// 		// 	// // 		  << scattered.direction()[0] << ", "
-	// 		// 	// // 		  << scattered.direction()[0] << std::endl;
-
-	// 		// 	// std::cout << "t = " << rec.t << std::endl;
-
-	// 		// 	// std::cout << std::endl;
-	// 		// 	// return emitted;
-	// 		// 	// return vec3(0.1, 0.1, 0.8);
-	// 		// }
 	// 		return emitted;
 	// 	}
 	// }
@@ -192,10 +164,6 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	// 	return vec3(0, 0, 0);
 	// }
 
-	// 2023/01/12
-	// 这次我们换一种方式，放弃之前漫无目的的随机scatter，转而对光源进行采样
-	// 这个scatter的计算感觉应该被集成在material的scatter函数中
-	// 通过不同的表面材质对场景中的光源进行采样
 
 	// 2023/02/05 continue
 
@@ -216,37 +184,13 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			vec3 shade_point_normal = rec.normal;
 			shade_point_normal.make_unit_vector();
 			double shade_point_distance = rec.t;
-			// vec3 I;	 // 光源发光强度 Radiant Intensity
-			// vec3 E;	 // 着色点辐照度 Irradiance 从可见光源吸收的光强
-			// vec3 Fi; // 反照率：当前着色点向特定方向射出的能量 用 Radiance 表示
 
-			// // 第一步应该是获取所有光源辐射到当前着色点的光强
-			// for (int i = 0; i < world.list_size; i++)
-			// {
-			// 	hitable *current_obj = world.list[i];
-			// 	// 检测当前物体是不是光源
-			// 	if (current_obj->hasEmission())
-			// 	{
-			// 		// ray
-			// 	}
-			// }
+
 			vec3 L_dir(0, 0, 0);
 			float light_pdf = 0.0;
 			hit_record light_point;
 			sampleLight(light_point, light_pdf);
 
-			/**
-			 * 	问题发现：2023-02-15晚
-			 *
-			 * 	对于球状光源的采样我们似乎忽视了一些问题，这导致mental表上的高光似乎并不那么明显：
-			 * 这是因为我们在某个球状光源上随机采样时，选择的某个点有可能被自身遮挡从而让我们的着色点错误的
-			 * 忽视该光源，这就是为什么一些应该有高光的地方显得比较暗淡。
-			 * 	解决这个问题我们需要分开讨论：至少现在看来暂时lambertian表面还算正常，所以我们不对其作太多
-			 * 修改。而对于mental表面以及之后的dielectric表面，我们均应允许二次光线打击到光源，从而使得
-			 * L_indir中也包含直接光源的影响，尽管这样做在能量守恒上可能是错误的，但至少可以在现在让我们的
-			 * 渲染结果变得更加真实。
-			 * 	我们来试试看
-			 * */
 
 			vec3 light_point_coord = light_point.p;
 			vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
@@ -273,8 +217,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
 			const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
 
-			// computeBRDF 里面要全部大改
-			// 现在先改逻辑
+
 			vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
 
 			if (BRDF_dir[0] < 0)
@@ -282,11 +225,6 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 				std::cout << "haha" << std::endl;
 			}
 			vec3 BRDF_indir;
-			// std::cout << "BRDF == " << BRDF[0] << ", " << BRDF[1] << ", " << BRDF[2] << " " << std::endl;
-
-			// std::cout << "first_block_point.t = " << first_block_point.t << std::endl;
-			// std::cout << "light_point_distance = " << light_point_distance << std::endl;
-			// std::cout << "light_point_distance = " << first_block_point.t - light_point_distance << std::endl;
 			float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
 
 			if (parameter <= 0)
@@ -295,32 +233,13 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 				parameter = -parameter;
 			}
 
-			// if (first_block_point.t - light_point_distance > -0.05 || first_block_point.t - light_point_distance < 0.05)
 			if (first_block_point.t - light_point_distance > -0.005)
 			{
 
-				// if (depth != 50)
-				// {
-				// 	std::cout << "depth not 50" << std::endl;
-				// }
-
 				parameter = parameter < 0 ? -parameter : parameter;
-				// std::cout << "parameter = " << parameter << std::endl;
-				// L_dir = light_point_emit * BRDF * cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
 				L_dir = light_point_emit * BRDF_dir * parameter;
-
-				// 这里改写完了还要进一步检查 2023-02-10
-				// std::cout << std::endl;
-				// std::cout << "parameter = " << parameter << std::endl;
-				// std::cout << "pow = " << pow(light_point_distance, 2) << std::endl;
 			}
-			// if ((L_dir)[0] >= 1)
-			// {
-			// 	std::cout << " L_dir[0] = " << L_dir[0] << std::endl;
-			// }
-			// Then, secondary ray
-
-			// 还是优先检查后面的 L_indir 部分吧 2023-02-10
+			
 			vec3 L_indir(0, 0, 0);
 
 			if (this->RussianRoulette < get_random_float())
@@ -338,81 +257,24 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			float cos_para;
 			float para_indir;
 			// if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
-			if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005)
+			if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005 && !no_emit_obj.mat_ptr->hasEmission())
 			{
 
-				// 这一大长串应该被优化，写到一个typedef里面进行缩减
-				// if (rec.mat_ptr->getMaterialType() == material::SelfMaterialType::DIELECTRIC ||
-				// 	rec.mat_ptr->getMaterialType() == material::SelfMaterialType::MENTAL ||
-				// 	(rec.mat_ptr->getMaterialType() == material::SelfMaterialType::LAMBERTAIN && !no_emit_obj.mat_ptr->hasEmission()))
-				if (!no_emit_obj.mat_ptr->hasEmission())
+				const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+
+				BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+				cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+
+				// 对于折射光所必要考虑的一步
+				if (cos_para <= 0)
 				{
-					// 这里也有问题，这就是为什么你需要特异化你的采样函数
-					// 对于lambertian表面以下确实正确，但对于mental这种，以下采样并非半球均匀采样！
-					// 同理对于dielectric也不是半球均匀采样，所以你需要进行对提到的这两种表面材质重新
-					// 书写pdf采样函数
-					const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
-
-					BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
-					cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
-
-					// 对于折射光所必要考虑的一步
-					if (cos_para <= 0)
-					{
-						// std::cout << "cou_para = " << cos_para << std::endl;
-						cos_para = -cos_para;
-					}
-
-					para_indir = cos_para / RussianRoulette / global_pdf;
-
-					L_indir = shading(depth - 1, scattered) * BRDF_indir * para_indir;
+					cos_para = -cos_para;
 				}
 
-				// mental/dielectric的高光部分作为二次光源被lambertian采样到了的情况
-				// 我们应该对这个高光项进行限制，暂时还没有想到比较好的对策，我们先不谈这一块
+				para_indir = cos_para / RussianRoulette / global_pdf;
 
-				// if (BRDF_indir[0] < 0)
-				// {
-				// 	std::cout << "haha" << std::endl;
-				// }
+				L_indir = shading(depth - 1, scattered) * BRDF_indir * para_indir;
 			}
-
-			// if ((L_dir + L_indir)[0] <= 0.1 && light_point_distance < 50)
-			// {
-			// 	std::cout << "haha" << std::endl;
-			// }
-			// if (rec.mat_ptr->getMaterialType() == material::SelfMaterialType::DIELECTRIC)
-			// {
-			// 	// std::cout << "material type DIELECTRIC" << std::endl;
-			// 	return L_indir;
-			// }
-			// return L_dir;
-
-			// 这里基本上可以验证确定是因为偶发的极大值无法被平均造成了椒盐噪声！！
-			// 但你还无法解释为何大曲率表面不会发生这种现象？！
-			// 2023-02-14
-			/**
-			 * 	猜想以及推导：
-			 * 	1.造成这种极大值的项有L_dir和L_indir，后来发现极大值的贡献项主要是L_indir！
-			 *  2.然而对于我们现在的测试表面，scatter只可能有两种情况，要么打击不到，要么打击到光源
-			 * 而以上两种情况按照逻辑都一定会返回空vec(0,0,0)。
-			 *  3.所以可以确定是这一步出问题了，要么是scatter到光源，没有被屏蔽，这是逻辑错误；要么
-			 * 就是scatter函数写错，造成了自身scatter到了自身。
-			 *  4.我更怀疑是第二种情况的错误：自身scatter到了自身原位置，并且判断通过！先来检查一下。
-			 *  5.解决了！！！ 就是二次光线没有判断自相交！！！分析非常合理，应该记录
-			 * 	首先想是哪种情况造成了这种极大值？首先是表面对一次光源采样，得到了光源，且正确
-			 * 采样，光源的特定采样点与当前着色点之间没有遮挡；其次，
-			 * */
-			// if (L_dir[0] + L_indir[0] >= 50)
-			// {
-			// 	vec3 temp = L_indir + L_dir;
-			// 	std::cout << "L_dir[0] + L_indir[0] = " << L_dir[0] + L_indir[0] << " ; ";
-			// 	std::cout << "L_indir = " << L_indir[0] << std::endl
-			// 			  << std::endl;
-
-			// 	spark_ofstream << "[" << temp[0] << " ]"
-			// 				   << "\n";
-			// }
 
 			return L_dir + L_indir;
 		}
@@ -426,7 +288,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 void camera::renderFrame(PresentMethod present, std::string file_path)
 {
 	spark_ofstream.open(test_file_path);
-	uint8_t spp = 50;
+	uint8_t spp = 1;
 	cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
 	switch (present)

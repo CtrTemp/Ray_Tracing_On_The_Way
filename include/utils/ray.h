@@ -15,8 +15,7 @@ public:
 		inv_dir = vec3(1. / B.x(), 1. / B.y(), 1. / B.z());
 	}
 
-	// 为什么会是这里报错？！
-	// 2023/02/06
+
 	vec3 origin() const { return A; }	 //射线起始点
 	vec3 direction() const { return B; } //射线方向向量（应该是单位向量）
 	float time() const { return _time; }

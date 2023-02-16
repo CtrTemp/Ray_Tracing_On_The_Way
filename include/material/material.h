@@ -4,8 +4,6 @@
 
 struct hit_record;
 
-// #include "utils/vec3.h"
-// #include "object/hitable.h"
 #include "utils/ray.h"
 #include "math/random.h"
 #include "texture/textures.h"
@@ -13,6 +11,8 @@ struct hit_record;
 vec3 reflect(const vec3 &v, const vec3 &n);
 bool refract(const vec3 &v, const vec3 &n, float ni_over_nt, vec3 &refracted);
 float schlick(float cosine, float ref_idx);
+
+
 
 // 基类material有两个函数
 class material
@@ -40,20 +40,11 @@ public:
 
 	virtual float pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal) = 0;
 	virtual SelfMaterialType getMaterialType() = 0;
-	// {
-	// 	if (dot(r_out_dir, normal) > 0.0f)
-	// 	{
-	// 		return 0.5f / M_PI;
-	// 	}
-	// 	else
-	// 	{
-	// 		// 这里不能是0.0，pdf是要作为分母的，作为0的除数会造成-inf数值错误
-	// 		// 再有一个点，pdf采样应该分开考虑，diffuse和mental都只能进行上半球采样
-	// 		// 而新加入的玻璃表面dielectric可以进行下半球采样（透射！！！）
-	// 		return 1.0f;
-	// 		// return 0.0f;
-	// 	}
-	// }
 };
+
+
+
+// 我应该怎么简写这个枚举类型
+// typedef enum material::SelfMaterialType::DIELECTRIC DIELECTRIC;
 
 #endif

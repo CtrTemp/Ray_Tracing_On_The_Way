@@ -1,14 +1,6 @@
 #include "object/primitive/triangle.h"
-// #include <tuple>
 
-// // 质心计算
-// void getBarycentricCoord(vec3 p, vec3 v1, vec3 v2, vec3 v3, float *alpha, float *beta, float *gamma)
-// {
-//     // *beta = ((v1[0] - p[0]) * (v1[1] - v3[1]) - (v1[0] - v3[0]) * (v1[1] - p[1])) / ((v1[0] - v3[0]) * (v2[1] - v1[1]) - (v2[0] - v1[0]) * (v1[1] - v3[1]));
-//     // *gamma = ((v2[1] - v1[1]) * (p[0] - v1[0]) - (v2[0] - v1[0]) * (p[1] - v1[1])) / ((v1[1] - v3[1]) * (v2[0] - v1[0]) - (v1[0] - v3[0]) * (v2[1] - v1[1]));
-//     // *alpha = 1 - *beta - *gamma;
 
-// }
 
 // 质心计算 这次我们使用莱布尼茨公式进行求解
 void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float *alpha, float *beta, float *gamma)
@@ -56,32 +48,16 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
 
     t = temp_num_1 / temp_num_2;
 
-    // float constant = dot(vertices[0].position, normal);
-    // t = constant - dot(normal, r.origin()) / dot(normal, r.direction());
+
     if (t > t_max || t < t_min)
     {
-        // std::cout << "abandon 01" << std::endl;
         rec.happened = false;
         return false;
     }
-
-    // std::cout << "current t = " << t << std::endl;
-
-    // 以下检查平面法相量是否有问题
-    // std::cout << "triangle normal = "
-    //           << normal[0] << "; "
-    //           << normal[1] << "; "
-    //           << normal[2] << "; "
-    //           << std::endl;
+    
 
     vec3 current_point = r.point_at_parameter(t);
-
-    // std::cout << "current_point = "
-    //           << current_point.x() << " ; "
-    //           << current_point.y() << " ; "
-    //           << current_point.z() << " ; "
-    //           << std::endl;
-    // std::cout << std::endl;
+    
 
     /*
         第二步是判断当前点是否在三角形内部，实际上就是看当前点是否可以用三角形的质心
@@ -94,29 +70,17 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
     vec3 e_temp2 = current_point - vertices[1].position;
     vec3 e_temp3 = current_point - vertices[2].position;
 
-    // std::cout << "edge1 = " << edges[0].x() << "; " << edges[0].y() << "; " << edges[0].z() << "; " << std::endl;
-    // std::cout << "edge2 = " << edges[1].x() << "; " << edges[1].y() << "; " << edges[1].z() << "; " << std::endl;
-    // std::cout << "edge3 = " << edges[2].x() << "; " << edges[2].y() << "; " << edges[2].z() << "; " << std::endl;
 
-    // vec3 edge2 = -edge2;
     vec3 judgeVec1 = normalized_vec(cross(edges[0], e_temp1));
     vec3 judgeVec2 = normalized_vec(cross(edges[1], e_temp2));
     vec3 judgeVec3 = normalized_vec(cross(edges[2], e_temp3));
 
-    // std::cout << "judgeVec1 = " << judgeVec1[0] << "; " << judgeVec1[1] << "; " << judgeVec1[2] << "; " << std::endl;
-    // std::cout << "judgeVec2 = " << judgeVec2[0] << "; " << judgeVec2[1] << "; " << judgeVec2[2] << "; " << std::endl;
-    // std::cout << "judgeVec3 = " << judgeVec3[0] << "; " << judgeVec3[1] << "; " << judgeVec3[2] << "; " << std::endl;
-    // std::cout << std::endl;
+
 
     float judge1 = dot(judgeVec1, judgeVec2);
     float judge2 = dot(judgeVec2, judgeVec3);
     float judge3 = dot(judgeVec3, judgeVec1);
-
-    // std::cout << "judge1 = " << judge1 << " ; "
-    //           << "judge2 = " << judge2 << " ; "
-    //           << "judge3 = " << judge3 << " ; " << std::endl;
-    // if ((judgeVec1.x() <= 0 && judgeVec2.x() <= 0 && judgeVec3.x() <= 0) ||
-    //     (judgeVec1.x() >= 0 && judgeVec2.x() >= 0 && judgeVec3.x() >= 0))
+    
     if (judge1 > 0 && judge2 > 0 && judge3 > 0)
     {
         // std::cout << "sss" << std::endl;
@@ -129,14 +93,8 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
         */
         float alpha, beta, gamma;
         getBarycentricCoord(current_point, vertices[0].position, vertices[1].position, vertices[2].position, &alpha, &beta, &gamma);
-        // std::cout << "alpha = " << alpha << "; "
-        //           << "beta = " << beta << "; "
-        //           << "gamma = " << gamma << "; " << std::endl;
-        // std::cout << std::endl;
-
-        // 2023-01-01结果
-        // 这里暂时得出的是错误结果，但是我们先不管它，先写后面的逻辑
-        // 以下应该记录计算出的该点的uv值，使用以上计算出的的质心坐标系下的值进行变换
+        
+        
         float u_temp = vertices[0].tex_coord[0] * alpha + vertices[1].tex_coord[0] * beta + vertices[2].tex_coord[0] * gamma;
         float v_temp = vertices[0].tex_coord[1] * alpha + vertices[1].tex_coord[1] * beta + vertices[2].tex_coord[1] * gamma;
         // float w = vertices[0].tex_coord[2] * alpha + vertices[1].tex_coord[2] * beta + vertices[2].tex_coord[2] * gamma;
@@ -144,11 +102,6 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
         rec.u = u_temp;
         rec.v = v_temp;
 
-        // std::cout << "u_temp = " << u_temp << "; "
-        //           << "v_temp = " << v_temp << "; "
-        //           //   << "w_temp = " << w_temp << "; "
-        //           << std::endl;
-        // std::cout << std::endl;
 
         rec.happened = true;
         return true;

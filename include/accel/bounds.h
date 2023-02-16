@@ -89,36 +89,8 @@ public:
 inline aabb Union(const aabb &b1, const aabb &b2)
 {
     aabb ret;
-    // std::cout << "b1 = "
-    //           << b1.min()[0] << "; "
-    //           << b1.min()[1] << "; "
-    //           << b1.min()[2] << "; "
-    //           << b1.max()[0] << "; "
-    //           << b1.max()[1] << "; "
-    //           << b1.max()[2] << "; "
-    //           << std::endl;
-
-    // std::cout << "b2 = "
-    //           << b2.min()[0] << "; "
-    //           << b2.min()[1] << "; "
-    //           << b2.min()[2] << "; "
-    //           << b2.max()[0] << "; "
-    //           << b2.max()[1] << "; "
-    //           << b2.max()[2] << "; "
-    //           << std::endl;
     ret._min = vec3::Min(b1.min(), b2.min());
     ret._max = vec3::Max(b1.max(), b2.max());
-
-    // std::cout << "ret = "
-    //           << ret.min()[0] << "; "
-    //           << ret.min()[1] << "; "
-    //           << ret.min()[2] << "; "
-    //           << ret.max()[0] << "; "
-    //           << ret.max()[1] << "; "
-    //           << ret.max()[2] << "; "
-    //           << std::endl;
-
-    // throw std::runtime_error("break point check bounds union");
 
     return ret;
 }

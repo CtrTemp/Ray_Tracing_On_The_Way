@@ -8,22 +8,10 @@
 #include <cmath>
 #include <algorithm>
 
-/*
-	一个比较显而易见的问题就是：我们赋予了这个三维向量太多的含义：
-我们可以用它来表示一个向量；
-我们可以用它来表示空间中的一个点的坐标；
-还可以用它老表示颜色值的取值
-
-这样难免会造成在定义时理解上的混淆！
-
-这是你之后要特别注意的一个地方，也是之后对代码进行你个人优化的一个首要方向
-*/
-
 class vec3
 {
 
 public:
-	// vec3() {}//大括号在这里就相当于一个分号，哈哈这里就是默认构造函数
 	vec3() = default;
 	vec3(float e0, float e1, float e2)
 	{
@@ -216,8 +204,6 @@ inline vec3 unit_vector(vec3 v)
 	取大于255的最大的通道色值，将其除以zone作为比例因子
 	将三个通道的通道值按比例因子缩小
 	得到三个均小于zone的通道值
-
-
 */
 inline vec3 color_unit_normalization(vec3 v, float zone)
 {

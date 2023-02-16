@@ -35,12 +35,7 @@ public:
 	texture *even;
 };
 
-// 这里有奇怪的bug，！！！！
-/*
-	问题解决：子类没有实现父类的纯虚函数时，会报错：error: undefined reference to `vtable for xxx`
-	注意，它的报错位点不准确，当你直接准备在cpp文件定义其构造函数，且没有在其之前定义实现父类的纯虚函数时，
-也会报这个错误，且报错位点在构造函数上，导致一些误导！！！
-*/
+
 class image_texture : public texture
 {
 public:

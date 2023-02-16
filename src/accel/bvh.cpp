@@ -24,19 +24,6 @@ bvh_tree::bvh_tree(std::vector<primitive *> prim_list, int maxPrimsInNode) : max
     printf("\rBVH Generation complete: \nTime Taken: %i hrs, %i mins, %i secs\n\n", hrs, mins, secs);
 
     std::cout << "max prims in nodes = " << maxPrimsInNode << std::endl;
-
-    for (int i = 0; i < prim_list.size(); i++)
-    {
-        // // 这里出错了，所有的 bounds 都是 inf ！ 说明之前的递归创建有问题
-        // std::cout << "bounds = "
-        //           << tri_list[i]->bounds.min()[0] << "; "
-        //           << tri_list[i]->bounds.min()[1] << "; "
-        //           << tri_list[i]->bounds.min()[2] << "; || "
-        //           << tri_list[i]->bounds.max()[0] << "; "
-        //           << tri_list[i]->bounds.max()[1] << "; "
-        //           << tri_list[i]->bounds.max()[2] << "; "
-        //           << std::endl;
-    }
 }
 
 bvh_node *bvh_tree::recursiveConstructTree(std::vector<primitive *> primitives)

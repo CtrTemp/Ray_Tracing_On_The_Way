@@ -1,41 +1,28 @@
 
 #include "scene.h"
 
+/**
+ * 	总结：目前进展来看，虽然渲染方程还存在一定的偏差错误，但已经可以先不进行图像质量的优化了，下一步应该
+ * 尽快完成进入下一阶段急需的一些必要工作，如下：
+ *
+ * 	1.完成一个复杂模型的渲染，并给其赋予贴图。这部分主要是考察复杂模型+贴图引入
+ *  2.完成模型的坐标变换函数组。这部分需要你将整个工程中涉及矩阵计算的部分全部替换成第三方库，而非目前
+ * 个人书写的库，方便之后的矩阵坐标变换（缩放/旋转/平移）的应用。
+ *
+ *  以上这些完成后便可以开始进入下一阶段：并行程序加速，真正使用CUDA完成并行计算，使得程序速度得到提升
+ * 真正变成可以完成实时渲染的程序。
+ *
+ *
+ * 	2023-02-16
+ * 	今天将程序进行“清洗”，抹除不必要的注释，以及多余的测试代码
+ *
+ * */
+
 camera createCamera(void);
 
 unsigned int frame_width = 512;
 unsigned int frame_height = 512;
 
-vec3 color(const ray &r, hitable *world, int depth)
-{
-
-	hit_record rec;
-
-	if (world->hit(r, 0.001, 999999, rec)) // FLT_MAX
-	{
-		ray scattered;
-		vec3 attenuation;
-		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-		// 在判断语句中执行并更新散射射线, 并判断是否还有射线生成
-		// 同样根据材质给出衰减系数
-		// 射线会在场景中最多bounce50次
-		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-		{
-			return emitted + attenuation * color(scattered, world, depth + 1);
-		}
-		else
-		{
-			return emitted;
-		}
-	}
-	else
-	{
-		// vec3 unit_direction = unit_vector(r.direction());
-		// auto t = 0.5 * (unit_direction.y() + 1.0);
-		// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-		return vec3(0, 0, 0);
-	}
-}
 
 int main(void)
 {
@@ -106,7 +93,6 @@ camera createCamera(void)
 	// createCamera.world = test_complex_scene_with_complex_models_world;
 	createCamera.RussianRoulette = 0.8;
 
-	// 考虑frame和这个camera的创建如何结合？
-	// 学会像vulkan那样构建！！！
+	// 学会像vulkan那样构建
 	return camera(createCamera);
 }

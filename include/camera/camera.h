@@ -34,12 +34,6 @@ typedef struct
 
 } cameraCreateInfo;
 
-// typedef struct
-// {
-// 	camera::PresentMethod present;
-// 	std::string filepath;
-// } renderPass;
-
 class camera
 {
 
@@ -57,7 +51,6 @@ public:
 
 public:
 	camera(cameraCreateInfo createInfo);
-	// camera(vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect, float aperture, float focus_dist, float t0, float t1);
 	ray get_ray(float s, float t);
 
 	// 2023-01-11
