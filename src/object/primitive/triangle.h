@@ -3,7 +3,7 @@
 #define TRIANGLE_H
 
 #include "object/hitable.h"
-#include "object/primitive/primitive.h"
+#include "primitive.h"
 #include "utils/vertex.h"
 #include "material/material.h"
 #include "accel/bounds.h"

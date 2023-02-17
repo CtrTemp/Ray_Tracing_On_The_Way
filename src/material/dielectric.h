@@ -2,7 +2,7 @@
 #ifndef DIELECTRIC_H
 #define DIELECTRIC_H
 
-#include "material/material.h"
+#include "material.h"
 #include "texture/textures.h"
 #include "object/hitable.h"
 

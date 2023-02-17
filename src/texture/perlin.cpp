@@ -1,4 +1,4 @@
-#include "texture/perlin.h"
+#include "perlin.h"
 
 inline float trelinear_interp(float c[2][2][2], float u, float v, float w)
 {

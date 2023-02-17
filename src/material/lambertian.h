@@ -2,7 +2,7 @@
 #ifndef LAMBERTIAN_H
 #define LAMBERTIAN_H
 
-#include "material/material.h"
+#include "material.h"
 #include "texture/textures.h"
 #include "object/hitable.h"
 

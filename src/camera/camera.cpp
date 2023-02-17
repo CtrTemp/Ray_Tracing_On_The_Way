@@ -1,5 +1,5 @@
-#include "camera/camera.h"
-#include "string"
+#include "camera.h"
+#include <string>
 
 std::string test_file_path = "spark.txt";
 std::ofstream spark_ofstream;

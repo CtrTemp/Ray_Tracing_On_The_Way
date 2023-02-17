@@ -1,4 +1,4 @@
-#include "material/mental.h"
+#include "mental.h"
 
 bool mental::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const
 {

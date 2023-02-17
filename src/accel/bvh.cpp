@@ -1,4 +1,4 @@
-#include "accel/bvh.h"
+#include "bvh.h"
 #include <cassert>
 #include <algorithm>
 

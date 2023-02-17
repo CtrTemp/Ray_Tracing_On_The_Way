@@ -1,4 +1,4 @@
-#include "math/random.h"
+#include "random.h"
 /*
 float drand48(void)
 {

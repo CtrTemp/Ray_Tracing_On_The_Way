@@ -1,3 +1,3 @@
 
-#include "object/primitive/primitive.h"
+#include "primitive.h"
 

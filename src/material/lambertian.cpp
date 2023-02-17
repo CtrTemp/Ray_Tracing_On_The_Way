@@ -1,4 +1,4 @@
-#include "material/lambertian.h"
+#include "lambertian.h"
 
 //  材质中的scatter函数用于决定二次射线如何生成，这是根据材料属性变化而变化的
 bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const

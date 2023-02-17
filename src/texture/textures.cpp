@@ -1,4 +1,4 @@
-#include "texture/textures.h"
+#include "textures.h"
 
 // 引入图片必要的stb_image库，这种定义写在头文件中的函数是否必须在cpp文件中引入？
 #define STB_IMAGE_IMPLEMENTATION

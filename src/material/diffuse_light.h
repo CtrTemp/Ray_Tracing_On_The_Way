@@ -2,7 +2,7 @@
 #ifndef DIFFUSE_LIGHT
 #define DIFFUSE_LIGHT
 
-#include "material/material.h"
+#include "material.h"
 #include "texture/textures.h"
 #include "object/hitable.h"
 

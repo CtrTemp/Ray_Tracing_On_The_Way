@@ -1,4 +1,4 @@
-#include "material/diffuse_light.h"
+#include "diffuse_light.h"
 
 bool diffuse_light::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const
 {

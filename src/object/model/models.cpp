@@ -1,4 +1,4 @@
-#include "object/model/models.h"
+#include "models.h"
 // 为什么这个只能定义在cpp文件中？？是因为它的函数定义和声明都卸载.h文件中了么
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"

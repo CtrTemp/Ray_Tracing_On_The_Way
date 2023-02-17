@@ -2,7 +2,7 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include "object/hitable.h"
+#include "../hitable.h"
 #include "object/group/hitableList.h"
 #include "material/diffuse_light.h"
 

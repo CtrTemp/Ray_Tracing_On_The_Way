@@ -1,4 +1,4 @@
-#include "accel/bounds.h"
+#include "bounds.h"
 
 bool aabb::IntersectP(const ray &ray, const vec3 &invDir, const std::array<int, 3> dirIsNeg) const
 {

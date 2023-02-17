@@ -1,4 +1,4 @@
-#include "object/group/hitableList.h"
+#include "hitableList.h"
 
 aabb surronding_box(aabb box0, aabb box1)
 {

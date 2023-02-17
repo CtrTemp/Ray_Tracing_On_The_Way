@@ -1,4 +1,4 @@
-#include "object/hitable.h"
+#include "hitable.h"
 
 bool aabb::hit(const ray& r, float tmin, float tmax) const {
 

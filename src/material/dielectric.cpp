@@ -1,4 +1,4 @@
-#include "material/dielectric.h"
+#include "dielectric.h"
 
 bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered) const
 {

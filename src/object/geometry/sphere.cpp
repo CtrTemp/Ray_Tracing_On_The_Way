@@ -1,4 +1,4 @@
-#include "object/geometry/sphere.h"
+#include "sphere.h"
 bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 {
 	vec3 oc = r.origin() - center;

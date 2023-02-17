@@ -1,4 +1,4 @@
-#include "material/material.h"
+#include "material.h"
 
 vec3 reflect(const vec3 &v, const vec3 &n)
 {
