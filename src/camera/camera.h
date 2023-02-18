@@ -31,6 +31,7 @@ typedef struct
 	uint16_t frame_height;
 	hitable_list world;
 	float RussianRoulette;
+	int spp;
 
 } cameraCreateInfo;
 
@@ -82,6 +83,7 @@ public:
 	uint16_t frame_height;
 	hitable_list world;
 	float RussianRoulette = 0;
+	int spp;
 };
 
 #endif // !1

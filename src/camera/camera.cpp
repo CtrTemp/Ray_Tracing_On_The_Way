@@ -34,6 +34,7 @@ camera::camera(cameraCreateInfo createInfo)
 	vertical = 2 * half_height * createInfo.focus_dist * v;
 
 	RussianRoulette = createInfo.RussianRoulette;
+	spp = createInfo.spp;
 }
 
 vec3 random_in_unit_disk()
@@ -164,7 +165,6 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	// 	return vec3(0, 0, 0);
 	// }
 
-
 	// 2023/02/05 continue
 
 	// 如果击中了场景中的某个物体
@@ -185,12 +185,10 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			shade_point_normal.make_unit_vector();
 			double shade_point_distance = rec.t;
 
-
 			vec3 L_dir(0, 0, 0);
 			float light_pdf = 0.0;
 			hit_record light_point;
 			sampleLight(light_point, light_pdf);
-
 
 			vec3 light_point_coord = light_point.p;
 			vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
@@ -217,7 +215,6 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
 			const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
 
-
 			vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
 
 			if (BRDF_dir[0] < 0)
@@ -239,7 +236,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 				parameter = parameter < 0 ? -parameter : parameter;
 				L_dir = light_point_emit * BRDF_dir * parameter;
 			}
-			
+
 			vec3 L_indir(0, 0, 0);
 
 			if (this->RussianRoulette < get_random_float())
@@ -257,23 +254,30 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			float cos_para;
 			float para_indir;
 			// if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
-			if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005 && !no_emit_obj.mat_ptr->hasEmission())
+			if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005)
 			{
-
-				const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
-
-				BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
-				cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
-
-				// 对于折射光所必要考虑的一步
-				if (cos_para <= 0)
+				if (no_emit_obj.mat_ptr->getMaterialType() == material::SelfMaterialType::LAMBERTAIN && no_emit_obj.mat_ptr->hasEmission())
 				{
-					cos_para = -cos_para;
+					return L_dir;
 				}
+				else
+				{
 
-				para_indir = cos_para / RussianRoulette / global_pdf;
+					const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
 
-				L_indir = shading(depth - 1, scattered) * BRDF_indir * para_indir;
+					BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+					cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+
+					// 对于折射光所必要考虑的一步
+					if (cos_para <= 0)
+					{
+						cos_para = -cos_para;
+					}
+
+					para_indir = cos_para / RussianRoulette / global_pdf;
+
+					L_indir = shading(depth - 1, scattered) * BRDF_indir * para_indir;
+				}
 			}
 
 			return L_dir + L_indir;
@@ -288,7 +292,6 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 void camera::renderFrame(PresentMethod present, std::string file_path)
 {
 	spark_ofstream.open(test_file_path);
-	uint8_t spp = 1;
 	cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
 	switch (present)

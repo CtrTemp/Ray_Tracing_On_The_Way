@@ -23,7 +23,6 @@ camera createCamera(void);
 unsigned int frame_width = 512;
 unsigned int frame_height = 512;
 
-
 int main(void)
 {
 
@@ -37,7 +36,8 @@ int main(void)
 	std::cout << "iNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN" << std::endl;
 
 	gettimeofday(&timeStart, NULL);
-	std::string path = "../gen_pic/any.ppm";
+
+	std::string path = "./app/03_test_load_model/gen_pic/any.ppm";
 	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);
@@ -53,23 +53,11 @@ camera createCamera(void)
 {
 	cameraCreateInfo createCamera{};
 
-	// // general
-	// vec3 lookfrom(20, 15, 20);
-	// vec3 lookat(0, 0, 0);
 
-	// // only for cornell box
-	// vec3 lookfrom(278, 278, -800);
-	// vec3 lookat(278, 278, 0);
-
-	// // only for bunny
-	// vec3 lookfrom(2, 1, 2);
-	// vec3 lookat(0, 0, 0);
-
-	createCamera.lookfrom = vec3(278, 278, -800);
-	// createCamera.lookfrom = vec3(2, 1, 2);
-	// createCamera.lookfrom = vec3(20, 15, 20);
-	// createCamera.lookat = vec3(0, 0, 0);
-	createCamera.lookat = vec3(278, 278, 0);
+	// createCamera.lookfrom = vec3(278, 278, -800);
+	// createCamera.lookat = vec3(278, 278, 0);
+	createCamera.lookfrom = vec3(2, 1, 2);
+	createCamera.lookat = vec3(0, 0, 0);
 
 	createCamera.up_dir = vec3(0, 1, 0);
 	createCamera.fov = 40;
@@ -80,18 +68,10 @@ camera createCamera(void)
 	createCamera.frame_width = frame_width;
 	createCamera.frame_height = frame_height;
 
-	// createCamera.world = sample_light_RGB_world;
-	// createCamera.world = test_triangle_world;
-	// createCamera.world = test_triangleList_world;
-	createCamera.world = test_Load_Models_world;
-	// createCamera.world = test_image_texture_world;
-	// createCamera.world = test_sky_box_world;
-
-	// createCamera.world = test_multi_triangleList_world;
-	// createCamera.world = test_Load_complex_Models_world;
-	// createCamera.world = test_complex_scene_world;
-	// createCamera.world = test_complex_scene_with_complex_models_world;
+	// createCamera.world = test_Load_Models();
+	createCamera.world = test_Load_complex_Models();
 	createCamera.RussianRoulette = 0.8;
+	createCamera.spp = 1;
 
 	// 学会像vulkan那样构建
 	return camera(createCamera);
