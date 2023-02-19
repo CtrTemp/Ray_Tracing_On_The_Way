@@ -20,7 +20,7 @@ int main(void)
 
 	gettimeofday(&timeStart, NULL);
 	// 目前的问题是我想知道这个默认路径的相对路径的位置，它到底是相对的是哪个文件夹？！
-	std::string path = "./app/01_test_basic_geo/gen_pic/any.ppm";
+	std::string path = "./gen_pic/any.ppm";
 	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);

@@ -1,26 +1,26 @@
 #include "scene.h"
 
 std::vector<std::string> skybox_textures_heavy = {
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"};
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"};
 std::vector<std::string> skybox_textures_fire = {
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png"};
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png"};
 std::vector<std::string> skybox_textures_high = {
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_0_Front+Z.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_1_Back-Z.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_2_Left+X.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_3_Right-X.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_0_Front+Z.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_1_Back-Z.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_2_Left+X.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_3_Right-X.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
 
 
 
@@ -40,12 +40,12 @@ hitable_list test_Load_Models()
 	material *blue = new lambertian(new constant_texture(vec3(0.12, 0.15, 0.85)));
 
 	std::vector<std::string> module_path_list = {
-		"../models/cornellbox/tallbox.obj",
-		"../models/cornellbox/shortbox.obj",
-		"../models/cornellbox/right.obj",
-		"../models/cornellbox/left.obj",
-		"../models/cornellbox/floor.obj",
-		"../models/cornellbox/light.obj",
+		"../../../models/cornellbox/tallbox.obj",
+		"../../../models/cornellbox/shortbox.obj",
+		"../../../models/cornellbox/right.obj",
+		"../../../models/cornellbox/left.obj",
+		"../../../models/cornellbox/floor.obj",
+		"../../../models/cornellbox/light.obj",
 	};
 
 	// hit_list.push_back(new models(module_path_list[0], new mental(vec3(0.9, 0.9, 0.9), 0.005), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));
@@ -161,12 +161,12 @@ hitable_list test_Load_complex_Models()
 	// hit_list.push_back(new sphere(vec3(0, 250, 0), 50, grass);
 	// hit_list.push_back(new sphere(vec3(250, 0, 0), 50, red);
 
-	// std::string module_path = "../models/cornellbox/tallbox.obj";
-	// std::string module_path = "../models/viking/viking_room.obj";
+	// std::string module_path = "../../../models/cornellbox/tallbox.obj";
+	// std::string module_path = "../../../models/viking/viking_room.obj";
 	std::vector<std::string> module_path_list = {
-		"../models/basic_geo/cuboid.obj",
-		"../models/basic_geo/dodecahedron.obj",
-		"../models/bunny/bunny_low_resolution.obj"};
+		"../../../models/basic_geo/cuboid.obj",
+		"../../../models/basic_geo/dodecahedron.obj",
+		"../../../models/bunny/bunny_low_resolution.obj"};
 
 	// 这里渲染1000面的兔子模型
 	// hit_list.push_back(new models(module_path_list[2], new mental(vec3(0.8, 0.8, 0.8), 0.01), models::HitMethod::NAIVE, models::PrimType::TRIANGLE));

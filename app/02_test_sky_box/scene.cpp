@@ -1,26 +1,26 @@
 #include "scene.h"
 
 std::vector<std::string> skybox_textures_heavy = {
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png",
-	"../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"};
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_0_Front+Z.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_1_Back-Z.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_2_Left+X.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_3_Right-X.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_4_Up+Y.png",
+	"../../../Pic/skybox_heavy/Sky_FantasySky_Heavy_1_Cam_5_Down-Y.png"};
 std::vector<std::string> skybox_textures_fire = {
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png",
-	"../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png"};
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png",
+	"../../../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png"};
 std::vector<std::string> skybox_textures_high = {
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_0_Front+Z.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_1_Back-Z.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_2_Left+X.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_3_Right-X.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
-	"../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_0_Front+Z.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_1_Back-Z.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_2_Left+X.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_3_Right-X.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_4_Up+Y.png",
+	"../../../Pic/skybox_high/Sky_FantasyClouds2_High_Cam_5_Down-Y.png"};
 
 
 

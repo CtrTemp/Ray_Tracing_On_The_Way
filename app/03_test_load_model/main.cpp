@@ -37,7 +37,7 @@ int main(void)
 
 	gettimeofday(&timeStart, NULL);
 
-	std::string path = "./app/03_test_load_model/gen_pic/any.ppm";
+	std::string path = "./gen_pic/any.ppm";
 	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);
