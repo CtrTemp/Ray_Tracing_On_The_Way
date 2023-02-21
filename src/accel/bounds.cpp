@@ -1,6 +1,6 @@
 #include "bounds.h"
 
-bool aabb::IntersectP(const ray &ray, const vec3 &invDir, const std::array<int, 3> dirIsNeg) const
+bool aabb::IntersectP(const ray &ray, const Vector3f &invDir, const std::array<int, 3> dirIsNeg) const
 {
     float x_min = this->_min.x(), y_min = this->_min.y(), z_min = this->_min.z();
     float x_max = this->_max.x(), y_max = this->_max.y(), z_max = this->_max.z();

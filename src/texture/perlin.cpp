@@ -13,7 +13,7 @@ inline float trelinear_interp(float c[2][2][2], float u, float v, float w)
 	return accum;
 }
 
-inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w)
+inline float perlin_interp(Vector3f c[2][2][2], float u, float v, float w)
 {
 	float uu = u * u * (3 - 2 * u);
 	float vv = v * v * (3 - 2 * v);
@@ -24,11 +24,11 @@ inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w)
 		for (int j = 0; j < 2; ++j)
 			for (int k = 0; k < 2; ++k)
 			{
-				vec3 weight_v(u - i, v - j, w - k);
+				Vector3f weight_v(u - i, v - j, w - k);
 				accum += (i * uu + (1 - i) * (1 - uu)) *
 						 (j * vv + (1 - j) * (1 - vv)) *
 						 (k * ww + (1 - k) * (1 - ww)) *
-						 dot(c[i][j][k], weight_v);
+						 c[i][j][k].dot(weight_v);
 			}
 
 	return fabs(accum);
@@ -41,11 +41,11 @@ static float *perlin_generate()
 		p[i] = drand48();
 	return p;
 }
-static vec3 *perlin_generate_vec()
+static Vector3f *perlin_generate_vec()
 {
-	vec3 *p = new vec3[256];
+	Vector3f *p = new Vector3f[256];
 	for (int i = 0; i < 256; ++i)
-		p[i] = unit_vector(vec3((2 * drand48() - 1), (2 * drand48() - 1), (2 * drand48() - 1)));
+		p[i] = Vector3f((2 * drand48() - 1), (2 * drand48() - 1), (2 * drand48() - 1)).normalized();
 	return p;
 }
 
@@ -70,7 +70,7 @@ static int *perlin_generate_perm()
 	return p;
 }
 
-float perlin::noise(const vec3 &p) const
+float perlin::noise(const Vector3f &p) const
 {
 	float u = p.x() - floor(p.x());
 	float v = p.y() - floor(p.y());
@@ -81,7 +81,7 @@ float perlin::noise(const vec3 &p) const
 	int k = floor(p.z());
 
 	// float c[2][2][2];
-	vec3 c[2][2][2];
+	Vector3f c[2][2][2];
 
 	for (int di = 0; di < 2; ++di)
 		for (int dj = 0; dj < 2; ++dj)
@@ -93,14 +93,14 @@ float perlin::noise(const vec3 &p) const
 }
 
 // 普通白噪声
-vec3 noise_texture::value(float u, float v, const vec3 &p) const
+Vector3f noise_texture::value(float u, float v, const Vector3f &p) const
 {
-	return vec3(1, 1, 1) * noise.noise(scale * p);
+	return Vector3f(1, 1, 1) * noise.noise(scale * p);
 }
 
 // 通过将这几句话加入，初始化perlin类内的公有变量，使其在构造perlin噪声时可以直接被使用
 float *perlin::ranfloat = perlin_generate();
-vec3 *perlin::ranvec = perlin_generate_vec();
+Vector3f *perlin::ranvec = perlin_generate_vec();
 
 int *perlin::perm_x = perlin_generate_perm();
 int *perlin::perm_y = perlin_generate_perm();

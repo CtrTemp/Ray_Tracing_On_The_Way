@@ -10,17 +10,17 @@ class diffuse_light : public material
 {
 public:
 	diffuse_light(texture *a) : emit(a) {}
-	virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const;
-	virtual vec3 emitted(float u, float v, const vec3 &p) const;
+	virtual bool scatter(const ray &r_in, const hit_record &rec, Vector3f &attenuated, ray &scattered) const;
+	virtual Vector3f emitted(float u, float v, const Vector3f &p) const;
 	virtual bool hasEmission(void) const { return true; };
 
-	virtual vec3 computeBRDF(const vec3 wi, const vec3 wo, const hit_record p) { return vec3(0, 0, 0); };
+	virtual Vector3f computeBRDF(const Vector3f wi, const Vector3f wo, const hit_record p) { return Vector3f(0, 0, 0); };
 
-	float pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal) { return 1.0f; }
+	float pdf(Vector3f r_in_dir, Vector3f r_out_dir, Vector3f normal) { return 1.0f; }
 	SelfMaterialType getMaterialType() { return self_type; }
 
 	texture *emit;
-	vec3 BRDF;
+	Vector3f BRDF;
 	SelfMaterialType self_type = SelfMaterialType::LIGHT;
 };
 

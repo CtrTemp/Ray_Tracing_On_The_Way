@@ -3,17 +3,17 @@
 
 
 // 质心计算 这次我们使用莱布尼茨公式进行求解
-void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float *alpha, float *beta, float *gamma)
+void getBarycentricCoord(Vector3f P, Vector3f A, Vector3f B, Vector3f C, float *alpha, float *beta, float *gamma)
 {
-    vec3 v0 = B - A;
-    vec3 v1 = C - A;
-    vec3 v2 = P - A;
+    Vector3f v0 = B - A;
+    Vector3f v1 = C - A;
+    Vector3f v2 = P - A;
 
-    float d20 = dot(v2, v0);
-    float d21 = dot(v2, v1);
-    float d00 = dot(v0, v0);
-    float d11 = dot(v1, v1);
-    float d01 = dot(v0, v1);
+    float d20 = v2.dot(v0);
+    float d21 = v2.dot(v1);
+    float d00 = v0.dot(v0);
+    float d11 = v1.dot(v1);
+    float d01 = v0.dot(v1);
 
     float d = (d00 * d11 - d01 * d01);
     *beta = (d20 * d11 - d21 * d01) / d;
@@ -43,8 +43,8 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
     */
     float t = t_max;
 
-    const float temp_num_1 = dot((vertices[0].position - r.origin()), normal);
-    const float temp_num_2 = dot(r.direction(), normal);
+    const float temp_num_1 = (vertices[0].position - r.origin()).dot(normal);
+    const float temp_num_2 = r.direction().dot(normal);
 
     t = temp_num_1 / temp_num_2;
 
@@ -56,7 +56,7 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
     }
     
 
-    vec3 current_point = r.point_at_parameter(t);
+    Vector3f current_point = r.point_at_parameter(t);
     
 
     /*
@@ -66,20 +66,20 @@ bool triangle::hit(const ray &r, float t_min, float t_max, hit_record &rec) cons
     三角形三条边（按照法则规定顺序）的叉乘必须符号相同，才认为点在三角形平面内。
     */
 
-    vec3 e_temp1 = current_point - vertices[0].position;
-    vec3 e_temp2 = current_point - vertices[1].position;
-    vec3 e_temp3 = current_point - vertices[2].position;
+    Vector3f e_temp1 = current_point - vertices[0].position;
+    Vector3f e_temp2 = current_point - vertices[1].position;
+    Vector3f e_temp3 = current_point - vertices[2].position;
 
 
-    vec3 judgeVec1 = normalized_vec(cross(edges[0], e_temp1));
-    vec3 judgeVec2 = normalized_vec(cross(edges[1], e_temp2));
-    vec3 judgeVec3 = normalized_vec(cross(edges[2], e_temp3));
+    Vector3f judgeVec1 = edges[0].cross(e_temp1);
+    Vector3f judgeVec2 = edges[1].cross(e_temp2);
+    Vector3f judgeVector3f = edges[2].cross(e_temp3);
 
 
 
-    float judge1 = dot(judgeVec1, judgeVec2);
-    float judge2 = dot(judgeVec2, judgeVec3);
-    float judge3 = dot(judgeVec3, judgeVec1);
+    float judge1 = judgeVec1.dot(judgeVec2);
+    float judge2 = judgeVec2.dot(judgeVector3f);
+    float judge3 = judgeVector3f.dot(judgeVec1);
     
     if (judge1 > 0 && judge2 > 0 && judge3 > 0)
     {
@@ -126,9 +126,9 @@ bool triangle::bounding_box(float t0, float t1, aabb &box) const
 {
     // 找到“左下角点”和“右上角点”即可构造包围盒
 
-    vec3 v0 = vertices[0].position;
-    vec3 v1 = vertices[1].position;
-    vec3 v2 = vertices[2].position;
+    Vector3f v0 = vertices[0].position;
+    Vector3f v1 = vertices[1].position;
+    Vector3f v2 = vertices[2].position;
 
     float max_x = get_max_float_val(get_max_float_val(v0[0], v1[0]), v2[0]);
     float max_y = get_max_float_val(get_max_float_val(v0[1], v1[1]), v2[1]);
@@ -138,8 +138,8 @@ bool triangle::bounding_box(float t0, float t1, aabb &box) const
     float min_y = get_min_float_val(get_min_float_val(v0[1], v1[1]), v2[1]);
     float min_z = get_min_float_val(get_min_float_val(v0[2], v1[2]), v2[2]);
 
-    vec3 min_point(min_x, min_y, min_z);
-    vec3 max_point(max_x, max_y, max_z);
+    Vector3f min_point(min_x, min_y, min_z);
+    Vector3f max_point(max_x, max_y, max_z);
     box = aabb(min_point, max_point);
 
     return true;
@@ -148,9 +148,9 @@ bool triangle::bounding_box(float t0, float t1, aabb &box) const
 aabb triangle::getBound(void) const
 {
 
-    vec3 v0 = vertices[0].position;
-    vec3 v1 = vertices[1].position;
-    vec3 v2 = vertices[2].position;
+    Vector3f v0 = vertices[0].position;
+    Vector3f v1 = vertices[1].position;
+    Vector3f v2 = vertices[2].position;
 
     float max_x = get_max_float_val(get_max_float_val(v0[0], v1[0]), v2[0]);
     float max_y = get_max_float_val(get_max_float_val(v0[1], v1[1]), v2[1]);
@@ -160,8 +160,8 @@ aabb triangle::getBound(void) const
     float min_y = get_min_float_val(get_min_float_val(v0[1], v1[1]), v2[1]);
     float min_z = get_min_float_val(get_min_float_val(v0[2], v1[2]), v2[2]);
 
-    vec3 min_point(min_x, min_y, min_z);
-    vec3 max_point(max_x, max_y, max_z);
+    Vector3f min_point(min_x, min_y, min_z);
+    Vector3f max_point(max_x, max_y, max_z);
 
     return aabb(min_point, max_point);
 }

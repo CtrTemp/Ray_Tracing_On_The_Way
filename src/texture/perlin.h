@@ -9,9 +9,9 @@
 
 
 inline float trelinear_interp(float c[2][2][2], float u, float v, float w);
-inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w);
+inline float perlin_interp(Vector3f c[2][2][2], float u, float v, float w);
 static float* perlin_generate();
-static vec3* perlin_generate_vec();
+static Vector3f* perlin_generate_vec();
 void permute(int *p, int n);
 static int* perlin_generate_perm();
 
@@ -23,10 +23,10 @@ static int* perlin_generate_perm();
 
 class perlin {
 public:
-	float noise(const vec3& p) const;
+	float noise(const Vector3f& p) const;
 	static float *ranfloat;
 
-	static vec3 *ranvec;
+	static Vector3f *ranvec;
 
 	static int *perm_x;
 	static int *perm_y;
@@ -47,7 +47,7 @@ class noise_texture :public texture {
 public:
 	noise_texture() = default;
 	noise_texture(float sc) :scale(sc) { }
-	virtual vec3 value(float u, float v, const vec3& p) const;
+	virtual Vector3f value(float u, float v, const Vector3f& p) const;
 
 	perlin noise;
 	float scale;
@@ -69,10 +69,10 @@ return p;
 }
 
 
-static vec3* perlin_generate_vec() {
-vec3 *p = new vec3[256];
+static Vector3f* perlin_generate_vec() {
+Vector3f *p = new Vector3f[256];
 for (int i = 0; i < 256; ++i)
-p[i] = unit_vector(vec3((2 * drand48() - 1), (2 * drand48() - 1), (2 * drand48() - 1)));
+p[i] = unit_vector(Vector3f((2 * drand48() - 1), (2 * drand48() - 1), (2 * drand48() - 1)));
 return p;
 }
 
@@ -114,7 +114,7 @@ return accum;
 
 }
 
-inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w)
+inline float perlin_interp(Vector3f c[2][2][2], float u, float v, float w)
 {
 float uu = u*u*(3 - 2 * u);
 float vv = v*v*(3 - 2 * v);
@@ -125,7 +125,7 @@ for (int i = 0; i < 2; ++i)
 for (int j = 0; j < 2; ++j)
 for (int k = 0; k < 2; ++k)
 {
-vec3 weight_v(u - i, v - j, w - k);
+Vector3f weight_v(u - i, v - j, w - k);
 accum +=	(i*uu + (1 - i)*(1 - uu))*
 (j*vv + (1 - j)*(1 - vv))*
 (k*ww + (1 - k)*(1 - ww))*
@@ -142,7 +142,7 @@ return fabs(accum);
 
 class perlin {
 public:
-float noise(const vec3& p) const {
+float noise(const Vector3f& p) const {
 float u = p.x() - floor(p.x());
 float v = p.y() - floor(p.y());
 float w = p.z() - floor(p.z());
@@ -153,7 +153,7 @@ int i = floor(p.x());
 int j = floor(p.y());
 int k = floor(p.z());
 
-vec3 c[2][2][2];
+Vector3f c[2][2][2];
 //float c[2][2][2];
 
 for (int di = 0; di < 2; ++di)
@@ -166,9 +166,9 @@ c[di][dj][dk] = ranvec[perm_x[(i + di) & 255] ^ perm_y[(j + dj) & 255] ^ perm_z[
 return perlin_interp(c, u, v, w);
 }
 
-float turb(const vec3 &p, int depth = 7) const {
+float turb(const Vector3f &p, int depth = 7) const {
 float accum = 0;
-vec3 temp_p = p;
+Vector3f temp_p = p;
 float weight = 0;
 for (int i = 0; i < depth; ++i)
 {
@@ -182,7 +182,7 @@ return fabs(accum);
 
 static float *ranfloat;
 
-static vec3 *ranvec;
+static Vector3f *ranvec;
 
 static int *perm_x;
 static int *perm_y;
@@ -195,7 +195,7 @@ static int *perm_z;
 
 float *perlin::ranfloat = perlin_generate();
 
-vec3 *perlin::ranvec = perlin_generate_vec();
+Vector3f *perlin::ranvec = perlin_generate_vec();
 
 int *perlin::perm_x = perlin_generate_perm();
 int *perlin::perm_y = perlin_generate_perm();
@@ -208,10 +208,10 @@ class noise_texture :public texture {
 public:
 noise_texture() = default;
 noise_texture(float sc) :scale(sc) { }
-virtual vec3 value(float u, float v, const vec3& p) const {
-//return vec3(1, 1, 1)*noise.noise(scale * p);
-return vec3(1, 1, 1)*0.5*(1.0 + sin(scale*p.z() + 5 * noise.turb(p)));
-//return vec3(1, 1, 1)*0.5*(1 + sin(1 * p.z() + 2 * noise.turb(p*scale)));
+virtual Vector3f value(float u, float v, const Vector3f& p) const {
+//return Vector3f(1, 1, 1)*noise.noise(scale * p);
+return Vector3f(1, 1, 1)*0.5*(1.0 + sin(scale*p.z() + 5 * noise.turb(p)));
+//return Vector3f(1, 1, 1)*0.5*(1 + sin(1 * p.z() + 2 * noise.turb(p*scale)));
 }
 
 

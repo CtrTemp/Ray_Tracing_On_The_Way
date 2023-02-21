@@ -10,7 +10,7 @@
 class mental : public material
 {
 public:
-	mental(const vec3 &a, float f) : albedo(a)
+	mental(const Vector3f &a, float f) : albedo(a)
 	{
 		if (f < 1)
 			fuzz = f;
@@ -18,16 +18,16 @@ public:
 			fuzz = 1;
 	}
 
-	virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered) const;
-	virtual vec3 emitted(float u, float v, const vec3 &p) const { return vec3(0, 0, 0); };
+	virtual bool scatter(const ray &r_in, const hit_record &rec, Vector3f &attenuated, ray &scattered) const;
+	virtual Vector3f emitted(float u, float v, const Vector3f &p) const { return Vector3f(0, 0, 0); };
 	virtual bool hasEmission(void) const { return false; };
-    virtual vec3 computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p);
-	float pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal);
+    virtual Vector3f computeBRDF(const Vector3f light_in_dir_wi, const Vector3f light_in_dir_wo, const hit_record p);
+	float pdf(Vector3f r_in_dir, Vector3f r_out_dir, Vector3f normal);
 	SelfMaterialType getMaterialType() { return self_type; }
 	
-	vec3 albedo;
+	Vector3f albedo;
 	float fuzz;
-    vec3 BRDF;
+    Vector3f BRDF;
 	SelfMaterialType self_type = SelfMaterialType::MENTAL;
 };
 

@@ -6,12 +6,12 @@
 // 获取单个三角形的包围盒（之后要修改为更为通用的版本）
 aabb surronding_box_tri(aabb box0, aabb box1)
 {
-    vec3 small(
+    Vector3f small(
         fmin(box0.min().x(), box1.min().x()),
         fmin(box0.min().y(), box1.min().y()),
         fmin(box0.min().z(), box1.min().z()));
 
-    vec3 big(
+    Vector3f big(
         fmax(box0.max().x(), box1.max().x()),
         fmax(box0.max().y(), box1.max().y()),
         fmax(box0.max().z(), box1.max().z()));
@@ -214,10 +214,10 @@ models::models(const std::string module_path, material *mat, HitMethod m, PrimTy
             std::vector<vertex> vertList;
 
             // 遍历整个三角形列表，为当前列表创建整体的包围盒，能够囊括其中所有的面元
-            vec3 min_vert = vec3{std::numeric_limits<float>::infinity(),
+            Vector3f min_vert = Vector3f{std::numeric_limits<float>::infinity(),
                                  std::numeric_limits<float>::infinity(),
                                  std::numeric_limits<float>::infinity()};
-            vec3 max_vert = vec3{-std::numeric_limits<float>::infinity(),
+            Vector3f max_vert = Vector3f{-std::numeric_limits<float>::infinity(),
                                  -std::numeric_limits<float>::infinity(),
                                  -std::numeric_limits<float>::infinity()};
             for (const auto &index : shape.mesh.indices)
@@ -229,11 +229,11 @@ models::models(const std::string module_path, material *mat, HitMethod m, PrimTy
                     attrib.vertices[3 * index.vertex_index + 2]};
                 vertList.push_back(vert);
 
-                min_vert = vec3(std::min(min_vert[0], vert.position.x()),
+                min_vert = Vector3f(std::min(min_vert[0], vert.position.x()),
                                 std::min(min_vert[1], vert.position.y()),
                                 std::min(min_vert[2], vert.position.z()));
 
-                max_vert = vec3(std::max(max_vert[0], vert.position.x()),
+                max_vert = Vector3f(std::max(max_vert[0], vert.position.x()),
                                 std::max(max_vert[1], vert.position.y()),
                                 std::max(max_vert[2], vert.position.z()));
             }

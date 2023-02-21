@@ -34,7 +34,7 @@ public:
         edges[1] = vertices[2].position - vertices[1].position;
         edges[2] = vertices[0].position - vertices[2].position;
 
-        normal = normalized_vec(cross(edges[0], edges[1]));
+        normal = (edges[0].cross(edges[1])).normalized();
 
         mat_ptr = mat;
         // 获取当前三角形的包围盒，并将其传入成员变量
@@ -43,9 +43,9 @@ public:
 
 
         // 在这里计算一下三角形面积
-        float a = edges[0].length();
-        float b = edges[1].length();
-        float c = edges[2].length();
+        float a = edges[0].norm();
+        float b = edges[1].norm();
+        float c = edges[2].norm();
 
         float p = (a + b + c) / 2;
 
@@ -68,7 +68,7 @@ public:
         edges[1] = vertices[2].position - vertices[1].position;
         edges[2] = vertices[0].position - vertices[2].position;
 
-        normal = normalized_vec(cross(edges[0], edges[1]));
+        normal = (edges[0].cross(edges[1])).normalized();
 
         mat_ptr = mat;
         // 获取当前三角形的包围盒，并将其传入成员变量
@@ -76,9 +76,9 @@ public:
 
 
         // 在这里计算一下三角形面积
-        float a = edges[0].length();
-        float b = edges[1].length();
-        float c = edges[2].length();
+        float a = edges[0].norm();
+        float b = edges[1].norm();
+        float c = edges[2].norm();
 
         float p = (a + b + c) / 2;
 
@@ -110,9 +110,9 @@ public:
     // 规定第一条边是第0个顶点指向第1个顶点
     // 规定第二条边是第1个顶点指向第2个顶点
     // 规定第三条边是第2个顶点指向第0个顶点
-    vec3 edges[3];
+    Vector3f edges[3];
     // 面法向量，我们规定，面符合右手螺旋定则，按照索引找出其“正面”（逆时针为正面）
-    vec3 normal;
+    Vector3f normal;
 
     material *mat_ptr;
 

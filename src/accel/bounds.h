@@ -15,24 +15,24 @@ public:
     {
         double minNum = std::numeric_limits<double>::lowest();
         double maxNum = std::numeric_limits<double>::max();
-        _min = vec3(minNum, minNum, minNum);
-        _max = vec3(maxNum, maxNum, maxNum);
+        _min = Vector3f(minNum, minNum, minNum);
+        _max = Vector3f(maxNum, maxNum, maxNum);
     };
 
     // 基本的构造函数是:通过包围盒对角线的两个顶点来确定一个立方体
-    aabb(const vec3 &a, const vec3 &b)
+    aabb(const Vector3f &a, const Vector3f &b)
     {
-        _min = vec3(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));
-        _max = vec3(fmax(a.x(), b.x()), fmax(a.y(), b.y()), fmax(a.z(), b.z()));
+        _min = Vector3f(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));
+        _max = Vector3f(fmax(a.x(), b.x()), fmax(a.y(), b.y()), fmax(a.z(), b.z()));
     }
-    vec3 min() const { return _min; }
-    vec3 max() const { return _max; }
+    Vector3f min() const { return _min; }
+    Vector3f max() const { return _max; }
 
     // 用于返回是否击中?
     bool hit(const ray &r, float tmin, float tmax) const;
 
     // 用于返回对角线
-    inline vec3 Diagonal() const { return _max - _min; }
+    inline Vector3f Diagonal() const { return _max - _min; }
 
     // 找最大轴跨度的函数,返回当前BoundingBox跨度最大的轴
     // 0: x 轴跨度最大
@@ -40,7 +40,7 @@ public:
     // 2: z 轴跨度最大
     int maxExtent() const
     {
-        vec3 d = Diagonal();
+        Vector3f d = Diagonal();
         if (d.x() > d.y() && d.x() > d.z())
             return 0;
         else if (d.y() > d.z())
@@ -50,14 +50,14 @@ public:
     }
 
     // 返回质心坐标
-    vec3 center() { return 0.5 * _min + 0.5 * _max; }
+    Vector3f center() { return 0.5 * _min + 0.5 * _max; }
 
     // 求两个box相重叠的部分,并返回这个重叠部分的box
     aabb Intersect(const aabb &b)
     {
-        return aabb(vec3(fmax(_min.x(), b._min.x()), fmax(_min.y(), b._min.y()),
+        return aabb(Vector3f(fmax(_min.x(), b._min.x()), fmax(_min.y(), b._min.y()),
                          fmax(_min.z(), b._min.z())),
-                    vec3(fmin(_max.x(), b._max.x()), fmin(_max.y(), b._max.y()),
+                    Vector3f(fmin(_max.x(), b._max.x()), fmin(_max.y(), b._max.y()),
                          fmin(_max.z(), b._max.z())));
     }
 
@@ -71,36 +71,41 @@ public:
     }
 
     // 判断点是否在包围盒内
-    bool Inside(const vec3 &p, const aabb &b)
+    bool Inside(const Vector3f &p, const aabb &b)
     {
         return (p.x() >= b._min.x() && p.x() <= b._max.x() && p.y() >= b._min.y() &&
                 p.y() <= b._max.y() && p.z() >= b._min.z() && p.z() <= b._max.z());
     }
 
     // 声明一个射线与包围盒的相交判断函数
-    bool IntersectP(const ray &ray, const vec3 &invDir, const std::array<int, 3> dirIsNeg) const;
+    bool IntersectP(const ray &ray, const Vector3f &invDir, const std::array<int, 3> dirIsNeg) const;
 
     // 包围盒的两个顶点
-    vec3 _min;
-    vec3 _max;
+    Vector3f _min;
+    Vector3f _max;
 };
 
 // 两个包围盒做 merge, 扩成一个更大的box
 inline aabb Union(const aabb &b1, const aabb &b2)
 {
     aabb ret;
-    ret._min = vec3::Min(b1.min(), b2.min());
-    ret._max = vec3::Max(b1.max(), b2.max());
+    // ret._min = Vector3f::Min(b1.min(), b2.min());
+    // ret._max = Vector3f::Max(b1.max(), b2.max());
+
+    ret._min = Vector3f(fmin(b1.min()[0], b2.min()[0]), fmin(b1.min()[1], b2.min()[1]), fmin(b1.min()[2], b2.min()[2]));
+    ret._max = Vector3f(fmax(b1.max()[0], b2.max()[0]), fmax(b1.max()[1], b2.max()[1]), fmax(b1.max()[2], b2.max()[2]));
 
     return ret;
 }
 
 // 对一个包围盒做扩充, 如果点p在包围盒外, 则将包围盒扩充到刚好可以包裹住点p的位置
-inline aabb Union(const aabb &b, const vec3 &p)
+inline aabb Union(const aabb &b, const Vector3f &p)
 {
     aabb ret;
-    ret.min() = vec3::Min(b.min(), p);
-    ret.max() = vec3::Max(b.max(), p);
+    // ret.min() = Vector3f::Min(b.min(), p);
+    // ret.max() = Vector3f::Max(b.max(), p);
+    ret._min = Vector3f(fmin(b.min()[0], p[0]), fmin(b.min()[1], p[1]), fmin(b.min()[2], p[2]));
+    ret._max = Vector3f(fmax(b.max()[0], p[0]), fmax(b.max()[1], p[1]), fmax(b.max()[2], p[2]));
     return ret;
 }
 

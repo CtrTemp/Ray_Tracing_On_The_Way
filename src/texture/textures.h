@@ -9,18 +9,18 @@
 class texture
 {
 public:
-	virtual vec3 value(float u, float v, const vec3 &p) const = 0;
+	virtual Vector3f value(float u, float v, const Vector3f &p) const = 0;
 };
 
 class constant_texture : public texture
 {
 public:
 	constant_texture() = default;
-	constant_texture(vec3 c) : color(c) {}
+	constant_texture(Vector3f c) : color(c) {}
 
-	virtual vec3 value(float u, float v, const vec3 &p) const;
+	virtual Vector3f value(float u, float v, const Vector3f &p) const;
 
-	vec3 color;
+	Vector3f color;
 };
 
 class checker_texture : public texture
@@ -28,8 +28,8 @@ class checker_texture : public texture
 public:
 	checker_texture() = default;
 	checker_texture(texture *t0, texture *t1) : even(t0), odd(t1) {}
-	checker_texture(vec3 doom);
-	virtual vec3 value(float u, float v, const vec3 &p) const;
+	checker_texture(Vector3f doom);
+	virtual Vector3f value(float u, float v, const Vector3f &p) const;
 
 	texture *odd;
 	texture *even;
@@ -41,7 +41,7 @@ class image_texture : public texture
 public:
 	image_texture();
 	image_texture(std::string path);
-	virtual vec3 value(float u, float v, const vec3 &p) const;
+	virtual Vector3f value(float u, float v, const Vector3f &p) const;
 
 	unsigned char *map;
 	uint16_t textureWidth;

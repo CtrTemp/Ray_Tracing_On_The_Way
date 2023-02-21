@@ -8,7 +8,7 @@
 #include <random>
 
 
-vec3 random_in_unit_sphere();
+Vector3f random_in_unit_sphere();
 
 float get_random_float();
 

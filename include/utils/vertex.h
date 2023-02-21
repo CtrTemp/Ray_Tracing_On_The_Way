@@ -11,30 +11,30 @@ public:
     vertex() = default;
 
     // 允许用户只定义顶点坐标来确定
-    vertex(vec3 p)
+    vertex(Vector3f p)
     {
         position = p;
-        color = vec3(0, 0, 0);
-        normal = vec3(0, 0, 0);
-        tex_coord = vec3(0, 0, 0);
+        color = Vector3f(0, 0, 0);
+        normal = Vector3f(0, 0, 0);
+        tex_coord = Vector3f(0, 0, 0);
     }
     
     // 允许用户只定义顶点坐标/顶点颜色/顶点法相量来确定一个顶点
-    vertex(vec3 p, vec3 c, vec3 n)
+    vertex(Vector3f p, Vector3f c, Vector3f n)
     {
         position = p;
         color = c;
         normal = n;
-        tex_coord = vec3(0, 0, 0);
+        tex_coord = Vector3f(0, 0, 0);
     }
     
     // 
-    vertex(vec3 p, vec3 c, vec3 n, vec3 uvw) : position(p), color(c), normal(n), tex_coord(uvw){};
+    vertex(Vector3f p, Vector3f c, Vector3f n, Vector3f uvw) : position(p), color(c), normal(n), tex_coord(uvw){};
 
-    vec3 position;
-    vec3 color;
-    vec3 normal;
-    vec3 tex_coord;
+    Vector3f position;
+    Vector3f color;
+    Vector3f normal;
+    Vector3f tex_coord;
 };
 
 #endif

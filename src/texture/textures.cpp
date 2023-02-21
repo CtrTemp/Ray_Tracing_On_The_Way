@@ -5,13 +5,13 @@
 #include "stb_image.h"
 #include <fstream>
 //常数纹理贴图（恒定颜色）
-vec3 constant_texture::value(float u, float v, const vec3 &p) const
+Vector3f constant_texture::value(float u, float v, const Vector3f &p) const
 {
 	return color;
 }
 
 //棋盘格纹理贴图
-vec3 checker_texture::value(float u, float v, const vec3 &p) const
+Vector3f checker_texture::value(float u, float v, const Vector3f &p) const
 {
 	float sines = sin(10 * p.x()) * sin(10 * p.y()) * sin(10 * p.z());
 	if (sines < 0)
@@ -21,7 +21,7 @@ vec3 checker_texture::value(float u, float v, const vec3 &p) const
 }
 
 // u,v 都是归一化的值，取（0～1）
-vec3 image_texture::value(float u, float v, const vec3 &p) const
+Vector3f image_texture::value(float u, float v, const Vector3f &p) const
 {
 
 	int index_x = u * textureWidth;
@@ -29,7 +29,7 @@ vec3 image_texture::value(float u, float v, const vec3 &p) const
 	int index = (index_y * textureWidth + index_x) * static_cast<int>(channels);
 
 
-	vec3 color = vec3(static_cast<float>(map[index + 0]) / 256,
+	Vector3f color = Vector3f(static_cast<float>(map[index + 0]) / 256,
 					  static_cast<float>(map[index + 1]) / 256,
 					  static_cast<float>(map[index + 2]) / 256);
 

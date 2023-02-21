@@ -54,12 +54,12 @@ camera createCamera(void)
 	cameraCreateInfo createCamera{};
 
 
-	// createCamera.lookfrom = vec3(278, 278, -800);
-	// createCamera.lookat = vec3(278, 278, 0);
-	createCamera.lookfrom = vec3(2, 1, 2);
-	createCamera.lookat = vec3(0, 0, 0);
+	// createCamera.lookfrom = Vector3f(278, 278, -800);
+	// createCamera.lookat = Vector3f(278, 278, 0);
+	createCamera.lookfrom = Vector3f(2, 1, 2);
+	createCamera.lookat = Vector3f(0, 0, 0);
 
-	createCamera.up_dir = vec3(0, 1, 0);
+	createCamera.up_dir = Vector3f(0, 1, 0);
 	createCamera.fov = 40;
 	createCamera.aspect = float(frame_width) / float(frame_height);
 	createCamera.focus_dist = 10.0;

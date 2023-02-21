@@ -10,7 +10,7 @@ class sphere : public hitable
 { // 是sphere类，构造函数返回hitable*类型
 public:
 	sphere() = default;
-	sphere(vec3 cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat)
+	sphere(Vector3f cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat)
 	{
 		bounding_box(0, 0, bound);
 		area = 4 * M_PI * radius * radius;
@@ -28,7 +28,7 @@ public:
 
 	aabb bound;
 	// 球体作为可打击继承类的其他三个额外参数
-	vec3 center;
+	Vector3f center;
 	float radius;
 	float area;
 	material *mat_ptr;

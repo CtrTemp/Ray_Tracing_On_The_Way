@@ -30,5 +30,4 @@
 
 hitable_list sample_light_RGB();
 
-
 #endif

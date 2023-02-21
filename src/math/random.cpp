@@ -7,13 +7,13 @@ float drand48(void)
 }
 */
 
-vec3 random_in_unit_sphere()
+Vector3f random_in_unit_sphere()
 {
-	vec3 p;
+	Vector3f p;
 	do
 	{
-		p = 2.0 * vec3(drand48(), drand48(), drand48()) - vec3(1, 1, 1);
-	} while (p.squared_length() >= 1.0);
+		p = 2.0 * Vector3f(drand48(), drand48(), drand48()) - Vector3f(1, 1, 1);
+	} while (p.norm() >= 1.0);
 
 	return p;
 }

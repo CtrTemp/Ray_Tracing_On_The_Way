@@ -20,7 +20,7 @@ int main(void)
 
 	gettimeofday(&timeStart, NULL);
 	// 目前的问题是我想知道这个默认路径的相对路径的位置，它到底是相对的是哪个文件夹？！
-	std::string path = "./gen_pic/any.ppm";
+	std::string path = "skybox.ppm";
 	cam.renderFrame(camera::PresentMethod::WRITE_FILE, path);
 
 	gettimeofday(&timeEnd, NULL);
@@ -36,10 +36,10 @@ camera createCamera(void)
 {
 	cameraCreateInfo createCamera{};
 
-	createCamera.lookfrom = vec3(20, 15, 20);
-	createCamera.lookat = vec3(0, 0, 0);
+	createCamera.lookfrom = Vector3f(20, 15, 20);
+	createCamera.lookat = Vector3f(0, 0, 0);
 
-	createCamera.up_dir = vec3(0, 1, 0);
+	createCamera.up_dir = Vector3f(0, 1, 0);
 	createCamera.fov = 40;
 	createCamera.aspect = float(frame_width) / float(frame_height);
 	createCamera.focus_dist = 10.0;
@@ -50,7 +50,7 @@ camera createCamera(void)
 
 	createCamera.world = test_sky_box();
 	createCamera.RussianRoulette = 0.8;
-	createCamera.spp = 1;
+	createCamera.spp = 5;
 
 	// 学会像vulkan那样构建
 	return camera(createCamera);

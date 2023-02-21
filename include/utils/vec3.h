@@ -8,6 +8,11 @@
 #include <cmath>
 #include <algorithm>
 
+
+#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Core"
+using namespace Eigen;
+
 class vec3
 {
 
@@ -205,10 +210,10 @@ inline vec3 unit_vector(vec3 v)
 	将三个通道的通道值按比例因子缩小
 	得到三个均小于zone的通道值
 */
-inline vec3 color_unit_normalization(vec3 v, float zone)
+inline Vector3f color_unit_normalization(Vector3f v, float zone)
 {
 	float para = 0; // 比例因子
-	vec3 return_vec;
+	Vector3f return_vec;
 	if (v[0] > zone)
 		para = zone / v[0]; // 得到一个小于1的值
 	else if (v[1] > zone)

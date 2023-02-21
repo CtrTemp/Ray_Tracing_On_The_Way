@@ -14,13 +14,13 @@
 // #define M_PI	acos(-1)
 
 // 用于在圆盘光孔平面中模拟射入光孔的光线
-vec3 random_in_unit_disk();
+Vector3f random_in_unit_disk();
 
 typedef struct
 {
-	vec3 lookfrom;
-	vec3 lookat;
-	vec3 up_dir;
+	Vector3f lookfrom;
+	Vector3f lookat;
+	Vector3f up_dir;
 	float fov;
 	float aspect;
 	float aperture;
@@ -61,7 +61,7 @@ public:
 		RayDistribution distribute // 光线投射在像素中的分布函数
 	);
 	// 单一光线射出，在场景中bounce后返回着色结果
-	vec3 shading(uint16_t depth, // 最大bounce递归深度
+	Vector3f shading(uint16_t depth, // 最大bounce递归深度
 								 //  bool RussianRoulette, // 是否采用俄罗斯轮盘赌的方式终止光线bounce，为false时当达到最大递归深度则终止
 				 const ray &r);
 
@@ -69,16 +69,16 @@ public:
 
 	void sampleLight(hit_record &pos, float &pdf);
 
-	vec3 upper_left_conner;
-	vec3 horizontal;
-	vec3 vertical;
-	vec3 origin;
-	vec3 u, v, w;
+	Vector3f upper_left_conner;
+	Vector3f horizontal;
+	Vector3f vertical;
+	Vector3f origin;
+	Vector3f u, v, w;
 	float lens_radius;
 	float time0, time1;
 
 	// 2023-01-11 新加入成员变量 framebuffer/framesize
-	std::vector<vec3> frame_buffer;
+	std::vector<Vector3f> frame_buffer;
 	uint16_t frame_width;
 	uint16_t frame_height;
 	hitable_list world;

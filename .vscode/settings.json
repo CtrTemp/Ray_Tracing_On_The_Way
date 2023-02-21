@@ -62,7 +62,10 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "filesystem": "cpp",
-        "__nullptr": "cpp"
+        "__nullptr": "cpp",
+        "dense": "cpp",
+        "__locale": "cpp",
+        "__string": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }

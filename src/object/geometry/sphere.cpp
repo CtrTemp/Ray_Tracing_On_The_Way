@@ -1,11 +1,10 @@
 #include "sphere.h"
 bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 {
-	vec3 oc = r.origin() - center;
-	// std::cout << "why" << std::endl;
-	float a = dot(r.direction(), r.direction());
-	float b = 2.0 * dot(oc, r.direction());
-	float c = dot(oc, oc) - radius * radius;
+	Vector3f oc = r.origin() - center;
+	float a = r.direction().dot(r.direction());
+	float b = 2.0 * oc.dot(r.direction());
+	float c = oc.dot(oc) - radius * radius;
 	float discriminant = b * b - 4 * a * c;
 	// 这里是不是写错了？不应该是b*b-4ac么
 	// 不错，已经进行了修改，就应该是b*b - 4*a*c
@@ -41,21 +40,21 @@ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 
 bool sphere::bounding_box(float t0, float t1, aabb &box) const
 {
-	box = aabb(center - vec3(radius, radius, radius), center + vec3(radius, radius, radius));
+	box = aabb(center - Vector3f(radius, radius, radius), center + Vector3f(radius, radius, radius));
 	// 修改指针指向的目标,来隐式返回bounding_box
 	return true;
 }
 
 aabb sphere::getBound(void) const
 {
-	return aabb(center - vec3(radius, radius, radius), center + vec3(radius, radius, radius));
+	return aabb(center - Vector3f(radius, radius, radius), center + Vector3f(radius, radius, radius));
 }
 
 
 void sphere::Sample(hit_record &pos, float &probability)
 {
 	float theta = 2.0 * M_PI * get_random_float(), phi = M_PI * get_random_float();
-	vec3 dir(std::cos(phi), std::sin(phi) * std::cos(theta), std::sin(phi) * std::sin(theta));
+	Vector3f dir(std::cos(phi), std::sin(phi) * std::cos(theta), std::sin(phi) * std::sin(theta));
 	pos.p = center + radius * dir;
 	pos.normal = dir;
 	// pos.emit = mat_ptr->emitted();

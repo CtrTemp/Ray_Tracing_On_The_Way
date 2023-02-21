@@ -6,7 +6,7 @@ std::ofstream spark_ofstream;
 
 camera::camera(cameraCreateInfo createInfo)
 {
-	// vec3 u, v, w;
+	// Vector3f u, v, w;
 	world = createInfo.world;
 	frame_width = createInfo.frame_width;
 	frame_height = createInfo.frame_height;
@@ -19,9 +19,9 @@ camera::camera(cameraCreateInfo createInfo)
 
 	origin = createInfo.lookfrom;
 
-	w = unit_vector(createInfo.lookat - createInfo.lookfrom); // view_ray direction
-	u = unit_vector(cross(w, createInfo.up_dir));			  // camera plane horizontal direction vec
-	v = cross(w, u);										  // camera plane vertical direction vec
+	w = (createInfo.lookat - createInfo.lookfrom).normalized(); // view_ray direction
+	u = (w.cross(createInfo.up_dir)).normalized();				// camera plane horizontal direction vec
+	v = w.cross(u);												// camera plane vertical direction vec
 
 	// lower_left_conner = origin + focus_dist * w - half_width * focus_dist * u - half_height * focus_dist * v;
 
@@ -37,22 +37,22 @@ camera::camera(cameraCreateInfo createInfo)
 	spp = createInfo.spp;
 }
 
-vec3 random_in_unit_disk()
+Vector3f random_in_unit_disk()
 {
-	vec3 p;
+	Vector3f p;
 	do
 	{
-		p = 2.0 * vec3(drand48(), drand48(), 0) - vec3(1, 1, 0);
-	} while (dot(p, p) >= 1.0);
+		p = 2.0 * Vector3f(drand48(), drand48(), 0) - Vector3f(1, 1, 0);
+	} while (p.dot(p) >= 1.0);
 	// 模拟在方格中撒点，掉入圆圈的点被收录返回
 	return p;
 }
 
 ray camera::get_ray(float s, float t)
 {
-	vec3 rd = lens_radius * random_in_unit_disk(); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
+	Vector3f rd = lens_radius * random_in_unit_disk(); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
 	// （该乘积的后一项是单位光孔）
-	vec3 offset = rd.x() * u + rd.y() * v; // origin视点中心偏移（由xoy平面映射到u、v平面）
+	Vector3f offset = rd.x() * u + rd.y() * v; // origin视点中心偏移（由xoy平面映射到u、v平面）
 	// return ray(origin + offset, lower_left_conner + s*horizontal + t*vertical - origin - offset);
 	float time = time0 + drand48() * (time1 - time0);
 	return ray(origin + offset, upper_left_conner + s * horizontal + t * vertical - origin - offset, time);
@@ -107,7 +107,7 @@ void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 		for (int col = 0; col < frame_width; col++)
 		{
 
-			vec3 pixel(0, 0, 0);
+			Vector3f pixel(0, 0, 0);
 			for (int s = 0; s < spp; s++)
 			{
 				float u, v;
@@ -126,26 +126,26 @@ void camera::cast_ray(uint16_t spp, RayDistribution distribute)
 
 				ray r = get_ray(u, v);
 				// !!@!!changing depth!!
-				uint8_t max_bounce_depth = 50;
+				uint8_t max_bounce_depth = 5;
 				pixel += shading(max_bounce_depth, r);
 			}
 			pixel /= spp;
-			pixel = vec3(sqrt(pixel[0]), sqrt(pixel[1]), sqrt(pixel[2]));
+			pixel = Vector3f(sqrt(pixel[0]), sqrt(pixel[1]), sqrt(pixel[2]));
 			pixel = color_unit_normalization(pixel, 1);
 			frame_buffer.push_back(pixel);
 		}
 	}
 }
 
-vec3 camera::shading(uint16_t depth, const ray &r)
+Vector3f camera::shading(uint16_t depth, const ray &r)
 {
 	hit_record rec;
 
 	// if (world.hit(r, 0.001, 999999, rec)) // FLT_MAX
 	// {
 	// 	ray scattered;
-	// 	vec3 attenuation;
-	// 	vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+	// 	Vector3f attenuation;
+	// 	Vector3f emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 	// 	// 在判断语句中执行并更新散射射线, 并判断是否还有射线生成
 	// 	// 同样根据材质给出衰减系数
 	// 	if (depth > 0 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
@@ -159,10 +159,10 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	// }
 	// else
 	// {
-	// 	// vec3 unit_direction = unit_vector(r.direction());
+	// 	// Vector3f unit_direction = unit_vector(r.direction());
 	// 	// auto t = 0.5 * (unit_direction.y() + 1.0);
-	// 	// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-	// 	return vec3(0, 0, 0);
+	// 	// return (1.0 - t) * Vector3f(1.0, 1.0, 1.0) + t * Vector3f(0.5, 0.7, 1.0);
+	// 	return Vector3f(0, 0, 0);
 	// }
 
 	// 2023/02/05 continue
@@ -180,22 +180,22 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 		else
 		{
 
-			vec3 shade_point_coord = rec.p;
-			vec3 shade_point_normal = rec.normal;
-			shade_point_normal.make_unit_vector();
+			Vector3f shade_point_coord = rec.p;
+			Vector3f shade_point_normal = rec.normal;
+			shade_point_normal.normalize();
 			double shade_point_distance = rec.t;
 
-			vec3 L_dir(0, 0, 0);
+			Vector3f L_dir(0, 0, 0);
 			float light_pdf = 0.0;
 			hit_record light_point;
 			sampleLight(light_point, light_pdf);
 
-			vec3 light_point_coord = light_point.p;
-			vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
-			vec3 light_point_normal = light_point.normal;
-			light_point_normal.make_unit_vector();
+			Vector3f light_point_coord = light_point.p;
+			Vector3f light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
+			Vector3f light_point_normal = light_point.normal;
+			light_point_normal.normalize();
 
-			double light_point_distance = (light_point_coord - shade_point_coord).length();
+			double light_point_distance = (light_point_coord - shade_point_coord).norm();
 
 			/**
 			 * 	从这里开始，我们对命名以及物理量的正方向进行规范化定义
@@ -204,24 +204,24 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			 * 人眼/观察点，以该方向为正方向。
 			 * 	对于命名：以计算过程中体现在公式中的命名为准。
 			 * */
-			vec3 shadePoint_to_viewPoint_wo = -r.direction();
-			vec3 directLightSource_to_shadePoint_wi = (shade_point_coord - light_point_coord);
-			shadePoint_to_viewPoint_wo.make_unit_vector();
-			directLightSource_to_shadePoint_wi.make_unit_vector();
+			Vector3f shadePoint_to_viewPoint_wo = -r.direction();
+			Vector3f directLightSource_to_shadePoint_wi = (shade_point_coord - light_point_coord);
+			shadePoint_to_viewPoint_wo.normalize();
+			directLightSource_to_shadePoint_wi.normalize();
 
 			hit_record first_block_point;
 			world.hit(ray(shade_point_coord, -directLightSource_to_shadePoint_wi), 0.001, 999999, first_block_point);
 
-			const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
-			const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
+			const float cos_theta_shadePoint = shade_point_normal.dot(-directLightSource_to_shadePoint_wi);
+			const float cos_theta_lightPoint = light_point_normal.dot(directLightSource_to_shadePoint_wi);
 
-			vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+			Vector3f BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
 
 			if (BRDF_dir[0] < 0)
 			{
 				std::cout << "haha" << std::endl;
 			}
-			vec3 BRDF_indir;
+			Vector3f BRDF_indir;
 			float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
 
 			if (parameter <= 0)
@@ -234,20 +234,20 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 			{
 
 				parameter = parameter < 0 ? -parameter : parameter;
-				L_dir = light_point_emit * BRDF_dir * parameter;
+				L_dir = light_point_emit.array() * BRDF_dir.array() * parameter;
 			}
 
-			vec3 L_indir(0, 0, 0);
+			Vector3f L_indir(0, 0, 0);
 
 			if (this->RussianRoulette < get_random_float())
 			{
 				return L_dir;
 			}
 			ray scattered;
-			vec3 attenuation;
+			Vector3f attenuation;
 			rec.mat_ptr->scatter(r, rec, attenuation, scattered);
-			vec3 secondaryLightSource_to_shadePoint_wi = -scattered.direction();
-			secondaryLightSource_to_shadePoint_wi.make_unit_vector();
+			Vector3f secondaryLightSource_to_shadePoint_wi = -scattered.direction();
+			secondaryLightSource_to_shadePoint_wi.normalize();
 			// ray r_deeper(shade_point_coord, secondaryLightSource_to_shadePoint_wi);
 			hit_record no_emit_obj;
 			bool hitted = world.hit(scattered, 0.0001, 999999, no_emit_obj);
@@ -266,7 +266,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 					const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
 
 					BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
-					cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+					cos_para = -secondaryLightSource_to_shadePoint_wi.dot(shade_point_normal);
 
 					// 对于折射光所必要考虑的一步
 					if (cos_para <= 0)
@@ -276,7 +276,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 
 					para_indir = cos_para / RussianRoulette / global_pdf;
 
-					L_indir = shading(depth - 1, scattered) * BRDF_indir * para_indir;
+					L_indir = shading(depth - 1, scattered).array() * BRDF_indir .array()* para_indir;
 				}
 			}
 
@@ -285,7 +285,7 @@ vec3 camera::shading(uint16_t depth, const ray &r)
 	}
 	else
 	{
-		return vec3(0, 0, 0);
+		return Vector3f(0, 0, 0);
 	}
 }
 

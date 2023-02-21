@@ -13,8 +13,8 @@ inline float ffmax(float a, float b) { return a > b ? a : b; }
 struct hit_record
 {
 	float t;	 //用于记录击中点时，此时射线方向向量的乘数
-	vec3 p;		 //用于记录击中点坐标
-	vec3 normal; //用于记录击中点处的法线（注意是单位向量）
+	Vector3f p;		 //用于记录击中点坐标
+	Vector3f normal; //用于记录击中点处的法线（注意是单位向量）
 
 	// 这里是 uv 贴图坐标
 	float u;
