@@ -1,20 +1,16 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "utils/ray.h"
-#include "object/hitable.h"
-#include "material/material.h"
-#include "object/group/hitableList.h"
+#include "utils/ray.cuh"
 
 #include <math.h>
 #include <vector>
 #include <string>
 #include <fstream>
 
-// #define M_PI	acos(-1)
-
-// 用于在圆盘光孔平面中模拟射入光孔的光线
-vec3 random_in_unit_disk();
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 typedef struct
 {
@@ -29,8 +25,6 @@ typedef struct
 	float t1;
 	uint16_t frame_width;
 	uint16_t frame_height;
-	hitable_list world;
-	float RussianRoulette;
 	int spp;
 
 } cameraCreateInfo;
@@ -66,8 +60,7 @@ public:
 				 const ray &r);
 
 	void renderFrame(PresentMethod present, std::string file_path);
-
-	void sampleLight(hit_record &pos, float &pdf);
+	void showFrameFlow(int width, int height, float *frame_buffer_host);
 
 	vec3 upper_left_conner;
 	vec3 horizontal;
@@ -77,12 +70,9 @@ public:
 	float lens_radius;
 	float time0, time1;
 
-	// 2023-01-11 新加入成员变量 framebuffer/framesize
 	std::vector<vec3> frame_buffer;
 	uint16_t frame_width;
 	uint16_t frame_height;
-	hitable_list world;
-	float RussianRoulette = 0;
 	int spp;
 };
 

@@ -1,51 +1,38 @@
+cmake_minimum_required(VERSION 3.9)#Cmake最低版本
+#project(demo LANGUAGES CXX CUDA) #这个写法也是可以的
+project(demo)
+enable_language(CUDA)#激活CUDA语言支持，使用第一个写法时要进行注释
+#设置语言标准
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CUDA_STANDARD 11)   
 
-# 顶层 CMakeList 文件 这个文件应该负责将所有必要源文件编译成库
-# 并且指定调用特定的测试程序，为其生成可执行文件。顶层文件不应该生成其本身的可执行文件
-
-
-# C++ 最低版本
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-
-# C++ 标准
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-# 指定总工程名
-project(renderingCore LANGUAGES CXX)
-
-# # 允许GDB调试
-# set(CMAKE_BUILD_TYPE DEBUG)
-
-# 添加头文件引用路径
-# 注意，使用 INCLUDE_DIRECTORIES 包含的头文件路径可以被各级子目录中的目标所用，是可以传递下去的
-# 而使用 TARGET_INCLUDE_DIRECTORIES 包含的头文件路径只能被特定目标所使用
-# 所以对于上层目录中的CMakeList文件，我们只需要将本层可见的include的加入即可，
-# 之后的 add_subdirectory 会将顶层目录中的头文件引入下级目录中
-include_directories(./include ./src
-${ACCEL_INCLUDE_DIR_LIST}
-${CAMERA_INCLUDE_DIR_LIST}
-${MATERIAL_INCLUDE_DIR_LIST}
-${MATH_INCLUDE_DIR_LIST}
-${HITABLE_INCLUDE_DIR_LIST}
-${TEXTURE_INCLUDE_DIR_LIST}
-)
+#添加项目自身的库和依赖
+# set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)#设置编译后的程序存放位置
+aux_source_directory(src SRC_LIST)#添加src目录下的所有源文件
+include_directories(include)#添加头文件路径
 
 
-# 以下的底层调用CMakeList.txt将为其生成对应的库文件（默认生成静态库.a）
-add_subdirectory(./src/accel)
 add_subdirectory(./src/camera)
-add_subdirectory(./src/material)
-add_subdirectory(./src/math)
-add_subdirectory(./src/object)
-add_subdirectory(./src/texture)
+
+#编译列表
+add_executable(${PROJECT_NAME} ${SRC_LIST})
+
+target_link_libraries(${PROJECT_NAME} CAMERA libglfw.so GL 
 
 
-
-add_subdirectory(./app/01_test_basic_geo)
-add_subdirectory(./app/02_test_sky_box)
-add_subdirectory(./app/03_test_load_model)
-# add_subdirectory(./app/04_test_basic_geo)
-
- 
-
-
+opencv_calib3d
+opencv_core
+opencv_dnn
+opencv_features2d
+opencv_flann
+opencv_gapi
+opencv_highgui
+opencv_imgcodecs
+opencv_imgproc
+opencv_ml
+opencv_objdetect
+opencv_photo
+opencv_stitching
+opencv_videoio
+opencv_video
+)
