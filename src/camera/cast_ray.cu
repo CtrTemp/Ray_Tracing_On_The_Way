@@ -26,20 +26,11 @@ __global__ void cuda_shading_unit(float *frame_buffer)
     int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
     int global_index = (row_len * row_index + col_index); // 全局索引
 
-    float color = (float)global_index / (row_len * col_len);
+    int global_size = row_len * col_len;
+    float color = (float)(global_index) / global_size;
 
-    // frame_buffer[1] = 1.0;
-
-    float foo = 1.0f;
-    for (int i = 0; i < 100000; i++)
-    {
-        for (int j = 0; j < 100000; j++)
-        {
-            foo *= foo;
-            frame_buffer[global_index] = color;
-        }
-    }
-    frame_buffer[global_index] = color * foo;
+    frame_buffer[global_index] = color;
+    
 }
 
 float *cast_ray_cu(float frame_width, float frame_height, int spp)
@@ -69,6 +60,7 @@ float *cast_ray_cu(float frame_width, float frame_height, int spp)
     float *frame_buffer_device;
     cudaMalloc((void **)&frame_buffer_device, size);
 
+
     // ##################### 这里看一下并行用时 #####################
 
     cudaEvent_t start, stop;
@@ -78,6 +70,8 @@ float *cast_ray_cu(float frame_width, float frame_height, int spp)
     cudaEventRecord(start, 0);
 
     // 不要忘了给模板函数添加模板参数
+    // 所有的并行计算应该都在这一个函数中完成，这个函数要调用其他.cu文件中的函数，并且也要在device上执行
+    // 关键问题是那些预定义的类怎么办？CUDA中无法直接使用这些类
     cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device);
 
     cudaEventRecord(stop, 0);

@@ -38,7 +38,7 @@ using namespace cv;
  * */
 
 camera createCamera(void);
-int use_opencv_window(void);
+void use_opencv_window(void);
 int use_glfw_window(void);
 
 unsigned int frame_width = 512;
@@ -137,14 +137,13 @@ int use_glfw_window(void)
 	}
 
 	glfwTerminate();
+	return 0;
 }
 
-int use_opencv_window(void)
+void use_opencv_window(void)
 {
 	std::string path = "any.ppm";
 	cv::Mat img = imread(path);
 	imshow("Image", img);
 	waitKey(0); // 显示图片不会一闪而过
-
-	return 0;
 }

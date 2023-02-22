@@ -35,18 +35,25 @@ camera::camera(cameraCreateInfo createInfo)
 
 void camera::showFrameFlow(int width, int height, float *frame_buffer_host)
 {
-	cv::Mat img = cv::Mat(512, 512, 16);
 
-	for (int row = 0; row < height; row++)
+	cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3);
+
+	for (int col = 0; col < height; col++)
 	{
-		for (int col = 0; col < width; col++)
+		for (int row = 0; row < width; row++)
 		{
-			std::cout << "[row,col]" << row << col << std::endl;
-			img.at<cv::Scalar>(col, row) = cv::Scalar(255, 255, 0);
+			const int global_index = col * height + row;
+			int gray_color = frame_buffer_host[global_index] * 255.99;
+			// std::cout << global_index << "  gray_color = " << gray_color << std::endl;
+			img.at<unsigned char>(col, row * 3 + 0) = gray_color;
+			img.at<unsigned char>(col, row * 3 + 1) = gray_color;
+			img.at<unsigned char>(col, row * 3 + 2) = gray_color;
 		}
 	}
-	// cv::imshow("Image2", img);
-	// cv::waitKey(0);
+	// std::cout << "out" << std::endl;
+	cv::imshow("Image Flow", img);
+	// cv::waitKey(30);
+	// while(1){}
 }
 
 void camera::renderFrame(PresentMethod present, std::string file_path)
@@ -80,11 +87,21 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 	case PresentMethod::SCREEN_FLOW:
 		// throw std::runtime_error("not support SCREEN_FLOW presentation");
 		{
+			cv::namedWindow("Image Flow");
+			int counter = 0;
+			// 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
 			while (true)
 			{
 				/* code */
-				float *frame_buffer_host = cast_ray_cu(frame_width, frame_height, 1);
+				float *frame_buffer_host = cast_ray_cu(frame_width, frame_height, counter);
+				counter += 1;
+				std::cout << counter << std::endl;
 				showFrameFlow(frame_width, frame_height, frame_buffer_host);
+
+				if (cv::waitKey(1) == 27)
+				{
+					break;
+				}
 			}
 		}
 		break;
