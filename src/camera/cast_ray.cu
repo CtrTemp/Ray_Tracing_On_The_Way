@@ -12,10 +12,30 @@
  * */
 
 #include "cast_ray.cuh"
-#include "iostream"
-#include <sys/time.h>
 
-__global__ void cuda_shading_unit(float *frame_buffer)
+/**
+ *  现在要思考的一个主要问题：要把那些变量设置在device端让GPU可见，那些设置在host端让CPU可见
+ *  主要涉及：场景建立/相机摆放
+ *  我的初步思考：这些都应该在初始化的时候静态建立在device端，然后在需要修改的时候host端发送指令进行修改。
+ * 比如涉及场景中物体的移动或者相机的在场景中的漫游。
+ *  这就使得你必须要在host端保留一份和device端一模一样的副本，用于进行修改维护，并更新device端的变量。
+ * 所以现在看来最好的方法就是直接在host端建立，并拷贝到device端。
+ * */
+
+extern __constant__ camera PRIMARY_CAMERA;
+
+
+__device__ ray get_ray_cu(float s, float t)
+{
+    vec3 rd = PRIMARY_CAMERA.lens_radius * random_in_unit_disk(); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
+    // （该乘积的后一项是单位光孔）
+    vec3 offset = rd.x() * PRIMARY_CAMERA.u + rd.y() * PRIMARY_CAMERA.v; // origin视点中心偏移（由xoy平面映射到u、v平面）
+    // return ray(origin + offset, lower_left_conner + s*horizontal + t*vertical - origin - offset);
+    float time = PRIMARY_CAMERA.time0 + drand48() * (PRIMARY_CAMERA.time1 - PRIMARY_CAMERA.time0);
+    return ray(PRIMARY_CAMERA.origin + offset, PRIMARY_CAMERA.upper_left_conner + s * PRIMARY_CAMERA.horizontal + t * PRIMARY_CAMERA.vertical - PRIMARY_CAMERA.origin - offset, time);
+}
+
+__global__ void cuda_shading_unit(vec3 *frame_buffer)
 {
     // 这里使用二维线程开辟
 
@@ -27,13 +47,18 @@ __global__ void cuda_shading_unit(float *frame_buffer)
     int global_index = (row_len * row_index + col_index); // 全局索引
 
     int global_size = row_len * col_len;
-    float color = (float)(global_index) / global_size;
+    float single_color = (float)(global_index) / global_size;
+    vec3 color(0.9, 0.1, 0.8);
+    // color[0] = single_color;
+    // color[1] = single_color;
+    // color[2] = single_color;
+
+    // ray =
 
     frame_buffer[global_index] = color;
-    
 }
 
-float *cast_ray_cu(float frame_width, float frame_height, int spp)
+vec3 *cast_ray_cu(float frame_width, float frame_height, int spp)
 {
     int device = 0;        // 设置使用第0块GPU进行运算
     cudaSetDevice(device); // 设置运算显卡
@@ -41,9 +66,10 @@ float *cast_ray_cu(float frame_width, float frame_height, int spp)
     cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
 
     // 整个frame的大小
-    int size = frame_width * frame_height * sizeof(float);
+    // int size = frame_width * frame_height * sizeof(float);
+    int size = frame_width * frame_height * sizeof(vec3);
     // 开辟将要接收计算回传数据的内存空间
-    float *frame_buffer_host = (float *)malloc(size);
+    vec3 *frame_buffer_host = (vec3 *)malloc(size);
 
     unsigned int block_size_width = 32;
     unsigned int block_size_height = 32;
@@ -57,9 +83,8 @@ float *cast_ray_cu(float frame_width, float frame_height, int spp)
     dim3 dimGrid(grid_size_height, grid_size_width, 1);
 
     // 开辟显存空间
-    float *frame_buffer_device;
+    vec3 *frame_buffer_device;
     cudaMalloc((void **)&frame_buffer_device, size);
-
 
     // ##################### 这里看一下并行用时 #####################
 

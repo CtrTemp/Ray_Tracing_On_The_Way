@@ -1,6 +1,6 @@
 #pragma once
-#ifndef VERTEX_H
-#define VERTEX_H
+#ifndef VERTEX_CUH
+#define VERTEX_CUH
 
 #include "utils/vec3.cuh"
 
@@ -8,10 +8,10 @@ class vertex
 {
 
 public:
-    __global__ __host__ vertex() = default;
+    __device__ __host__ vertex() = default;
 
     // 允许用户只定义顶点坐标来确定
-    vertex(vec3 p)
+    __device__ __host__ vertex(vec3 p)
     {
         position = p;
         color = vec3(0, 0, 0);
@@ -20,7 +20,7 @@ public:
     }
     
     // 允许用户只定义顶点坐标/顶点颜色/顶点法相量来确定一个顶点
-    vertex(vec3 p, vec3 c, vec3 n)
+    __device__ __host__ vertex(vec3 p, vec3 c, vec3 n)
     {
         position = p;
         color = c;
@@ -28,8 +28,7 @@ public:
         tex_coord = vec3(0, 0, 0);
     }
     
-    // 
-    vertex(vec3 p, vec3 c, vec3 n, vec3 uvw) : position(p), color(c), normal(n), tex_coord(uvw){};
+    __device__ __host__ vertex(vec3 p, vec3 c, vec3 n, vec3 uvw) : position(p), color(c), normal(n), tex_coord(uvw){};
 
     vec3 position;
     vec3 color;

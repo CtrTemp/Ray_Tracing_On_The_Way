@@ -1,13 +1,13 @@
 #pragma once
-#ifndef RAY_H
-#define RAY_H
+#ifndef RAY_CUH
+#define RAY_CUH
 #include "utils/vec3.cuh"
 
 class ray
 {
 public:
-	ray() = default;
-	ray(const vec3 &a, const vec3 &b, float ti = 0.0)
+	__host__ __device__ ray() = default;
+	__host__ __device__ ray(const vec3 &a, const vec3 &b, float ti = 0.0)
 	{
 		A = a;
 		B = b;
@@ -16,10 +16,10 @@ public:
 	}
 
 
-	vec3 origin() const { return A; }	 //射线起始点
-	vec3 direction() const { return B; } //射线方向向量（应该是单位向量）
-	float time() const { return _time; }
-	vec3 point_at_parameter(float t) const { return A + t * B; }
+	__host__ __device__ vec3 origin() const { return A; }	 //射线起始点
+	__host__ __device__ vec3 direction() const { return B; } //射线方向向量（应该是单位向量）
+	__host__ __device__ float time() const { return _time; }
+	__host__ __device__ vec3 point_at_parameter(float t) const { return A + t * B; }
 	//给定射线方向向量倍数t，得到射线末端指向点
 
 	vec3 A;

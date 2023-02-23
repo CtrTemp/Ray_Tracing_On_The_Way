@@ -1,9 +1,9 @@
-#include "camera.h"
+#include "camera.cuh"
 #include <string>
 #include "cast_ray.cuh"
 #include "foo.cuh"
 
-camera::camera(cameraCreateInfo createInfo)
+__device__ __host__ camera::camera(cameraCreateInfo createInfo)
 {
 	frame_width = createInfo.frame_width;
 	frame_height = createInfo.frame_height;
@@ -33,7 +33,7 @@ camera::camera(cameraCreateInfo createInfo)
 	spp = createInfo.spp;
 }
 
-void camera::showFrameFlow(int width, int height, float *frame_buffer_host)
+__host__ void camera::showFrameFlow(int width, int height, vec3 *frame_buffer_host)
 {
 
 	cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3);
@@ -43,11 +43,13 @@ void camera::showFrameFlow(int width, int height, float *frame_buffer_host)
 		for (int row = 0; row < width; row++)
 		{
 			const int global_index = col * height + row;
-			int gray_color = frame_buffer_host[global_index] * 255.99;
+			int color_R = frame_buffer_host[global_index][0] * 255.99;
+			int color_G = frame_buffer_host[global_index][1] * 255.99;
+			int color_B = frame_buffer_host[global_index][2] * 255.99;
 			// std::cout << global_index << "  gray_color = " << gray_color << std::endl;
-			img.at<unsigned char>(col, row * 3 + 0) = gray_color;
-			img.at<unsigned char>(col, row * 3 + 1) = gray_color;
-			img.at<unsigned char>(col, row * 3 + 2) = gray_color;
+			img.at<unsigned char>(col, row * 3 + 0) = color_B;
+			img.at<unsigned char>(col, row * 3 + 1) = color_G;
+			img.at<unsigned char>(col, row * 3 + 2) = color_R;
 		}
 	}
 	// std::cout << "out" << std::endl;
@@ -56,7 +58,7 @@ void camera::showFrameFlow(int width, int height, float *frame_buffer_host)
 	// while(1){}
 }
 
-void camera::renderFrame(PresentMethod present, std::string file_path)
+__host__ void camera::renderFrame(PresentMethod present, std::string file_path)
 {
 	// cast_ray(spp, RayDistribution::NAIVE_RANDOM);
 
@@ -64,7 +66,7 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 	{
 	case PresentMethod::WRITE_FILE:
 	{
-		float *frame_buffer_host = cast_ray_cu(frame_width, frame_height, 1);
+		vec3 *frame_buffer_host = cast_ray_cu(frame_width, frame_height, 1);
 		std::ofstream OutputImage;
 		OutputImage.open(file_path);
 		OutputImage << "P3\n"
@@ -75,10 +77,10 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 			for (int col = 0; col < frame_width; col++)
 			{
 				const int global_index = row * frame_width + col;
-				float pixelVal = frame_buffer_host[global_index];
-				int ir = int(255.99 * pixelVal);
-				int ig = int(255.99 * pixelVal);
-				int ib = int(255.99 * pixelVal);
+				vec3 pixelVal = frame_buffer_host[global_index];
+				int ir = int(255.99 * pixelVal[0]);
+				int ig = int(255.99 * pixelVal[1]);
+				int ib = int(255.99 * pixelVal[2]);
 				OutputImage << ir << " " << ig << " " << ib << "\n";
 			}
 		}
@@ -93,7 +95,7 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 			while (true)
 			{
 				/* code */
-				float *frame_buffer_host = cast_ray_cu(frame_width, frame_height, counter);
+				vec3 *frame_buffer_host = cast_ray_cu(frame_width, frame_height, counter);
 				counter += 1;
 				std::cout << counter << std::endl;
 				showFrameFlow(frame_width, frame_height, frame_buffer_host);
@@ -111,18 +113,8 @@ void camera::renderFrame(PresentMethod present, std::string file_path)
 	}
 }
 
-vec3 random_in_unit_disk()
-{
-	vec3 p;
-	do
-	{
-		p = 2.0 * vec3(drand48(), drand48(), 0) - vec3(1, 1, 0);
-	} while (dot(p, p) >= 1.0);
-	// 模拟在方格中撒点，掉入圆圈的点被收录返回
-	return p;
-}
 
-ray camera::get_ray(float s, float t)
+__device__ __host__ ray camera::get_ray(float s, float t)
 {
 	vec3 rd = lens_radius * random_in_unit_disk(); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
 	// （该乘积的后一项是单位光孔）
@@ -133,36 +125,36 @@ ray camera::get_ray(float s, float t)
 }
 
 // 规定从左上角遍历到右下角，行优先遍历
-void camera::cast_ray(uint16_t spp, RayDistribution distribute)
-{
+// __device__ __host__ void camera::cast_ray(uint16_t spp, RayDistribution distribute)
+// {
 
-	for (int row = 0; row < frame_height; row++)
-	{
-		for (int col = 0; col < frame_width; col++)
-		{
+// 	for (int row = 0; row < frame_height; row++)
+// 	{
+// 		for (int col = 0; col < frame_width; col++)
+// 		{
 
-			vec3 pixel(0, 0, 0);
-			for (int s = 0; s < spp; s++)
-			{
-				float u, v;
+// 			vec3 pixel(0, 0, 0);
+// 			for (int s = 0; s < spp; s++)
+// 			{
+// 				float u, v;
 
-				u = float(col + rand() % 101 / float(101)) / float(this->frame_width);
-				v = float(row + rand() % 101 / float(101)) / float(this->frame_height);
+// 				u = float(col + rand() % 101 / float(101)) / float(this->frame_width);
+// 				v = float(row + rand() % 101 / float(101)) / float(this->frame_height);
 
-				ray r = get_ray(u, v);
-				// !!@!!changing depth!!
-				uint8_t max_bounce_depth = 50;
-				pixel += shading(max_bounce_depth, r);
-			}
-			pixel /= spp;
-			pixel = vec3(sqrt(pixel[0]), sqrt(pixel[1]), sqrt(pixel[2]));
-			pixel = color_unit_normalization(pixel, 1);
-			frame_buffer.push_back(pixel);
-		}
-	}
-}
+// 				ray r = get_ray(u, v);
+// 				// !!@!!changing depth!!
+// 				uint8_t max_bounce_depth = 50;
+// 				pixel += shading(max_bounce_depth, r);
+// 			}
+// 			pixel /= spp;
+// 			pixel = vec3(sqrt(pixel[0]), sqrt(pixel[1]), sqrt(pixel[2]));
+// 			pixel = color_unit_normalization(pixel, 1);
+// 			// frame_buffer.push_back(pixel);
+// 		}
+// 	}
+// }
 
-vec3 camera::shading(uint16_t depth, const ray &r)
+__device__ __host__ vec3 camera::shading(uint16_t depth, const ray &r)
 {
 	vec3 unit_direction = unit_vector(r.direction());
 	auto t = 0.5 * (unit_direction.y() + 1.0);
