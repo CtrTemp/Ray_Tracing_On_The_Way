@@ -71,10 +71,7 @@ public:
 	float lens_radius;
 	float time0, time1;
 
-	// 貌似加了这个vector就不能默认初始化
-	// 原因大概是在设备端找不到 vector 的默认初始化函数，所以导致包裹vector的camera也无法初始化
-	// 由于我们都为vec3这种类定义了 __device__ 版本，所以允许这种初始化
-	// std::vector<vec3> frame_buffer;
+
 	uint16_t frame_width;
 	uint16_t frame_height;
 	int spp;
@@ -83,7 +80,9 @@ public:
 __constant__ camera PRIMARY_CAMERA;
 
 extern "C" __host__ __device__ camera *createCamera(void);
-
+extern "C" __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size);
+extern "C" __global__ void cuda_shading_unit(vec3 *frame_buffer, curandStateXORWOW_t *rand_state);
+ 
 #endif // !1
 
 /*
