@@ -22,23 +22,44 @@
  * 所以现在看来最好的方法就是直接在host端建立，并拷贝到device端。
  * */
 
-extern __constant__ camera PRIMARY_CAMERA;
+// extern __constant__ camera PRIMARY_CAMERA;
 
-
-__device__ ray get_ray_cu(float s, float t)
+__device__ ray get_ray_cu(float s, float t, curandStateXORWOW *rand_state)
 {
-    vec3 rd = PRIMARY_CAMERA.lens_radius * random_in_unit_disk(); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
+
+    // 全部相机参数
+    vec3 u(0.707, 0, 0.707);
+    vec3 v(0.3313, -0.8835, 0.3313);
+    float lens_radius = 0.5;
+    float time0 = 0, time1 = 1.0;
+    vec3 origin(20, 15, 20);
+    vec3 upper_left_conner(9.97, 13.53, 15.12);
+    vec3 horizontal(5.15, 0, 5.15);
+    vec3 vertical(2.41, -6.43, 2.41);
+
+    // return ray();
+
+    vec3 rd = lens_radius * random_in_unit_disk_device(rand_state); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
     // （该乘积的后一项是单位光孔）
-    vec3 offset = rd.x() * PRIMARY_CAMERA.u + rd.y() * PRIMARY_CAMERA.v; // origin视点中心偏移（由xoy平面映射到u、v平面）
+    vec3 offset = rd.x() * u + rd.y() * v; // origin视点中心偏移（由xoy平面映射到u、v平面）
     // return ray(origin + offset, lower_left_conner + s*horizontal + t*vertical - origin - offset);
-    float time = PRIMARY_CAMERA.time0 + drand48() * (PRIMARY_CAMERA.time1 - PRIMARY_CAMERA.time0);
-    return ray(PRIMARY_CAMERA.origin + offset, PRIMARY_CAMERA.upper_left_conner + s * PRIMARY_CAMERA.horizontal + t * PRIMARY_CAMERA.vertical - PRIMARY_CAMERA.origin - offset, time);
+    float time = time0 + random_double_device(rand_state) * (time1 - time0);
+    return ray(origin + offset, upper_left_conner + s * horizontal + t * vertical - origin - offset, time);
 }
 
-__global__ void cuda_shading_unit(vec3 *frame_buffer)
+// 这个函数应该没有问题，出问题的应该是 ray 的获取函数，get_ray_cu() 出了问题
+__device__ vec3 shading_cu(ray r)
 {
-    // 这里使用二维线程开辟
+    vec3 unit_direction = unit_vector(r.direction());
+    auto t = 0.5 * (unit_direction.y() + 1.0);
+    // return vec3(0.5, 0, 0);
+    return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+}
 
+__global__ void cuda_shading_unit(vec3 *frame_buffer, curandStateXORWOW_t *rand_state)
+{
+
+    /*################################ 全局索引 ################################*/
     int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
     int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
 
@@ -46,16 +67,39 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer)
     int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
     int global_index = (row_len * row_index + col_index); // 全局索引
 
-    int global_size = row_len * col_len;
-    float single_color = (float)(global_index) / global_size;
-    vec3 color(0.9, 0.1, 0.8);
+    // int global_size = row_len * col_len;
+
+    // /*############################## 随机数初始化 ##############################*/
+    // curandStateXORWOW_t *rand_state;
+    // curand_init(global_index, 0, 0, rand_state);
+
+    // /*############################## 获取当前光线 ##############################*/
+    // 原来是这里出了大问题！！最后一项访问不到
+    float u = float(col_index + random_double_device(0, 1.0, &rand_state[global_index])) / float(512);
+    float v = float(row_index + random_double_device(0, 1.0, &rand_state[global_index])) / float(512);
+    ray kernal_ray = get_ray_cu(u, v, &rand_state[global_index]);
+    vec3 color = shading_cu(kernal_ray);
+
+    // float single_color = (float)(global_index) / global_size;
+    // vec3 color(random_double_device(&rand_state[global_index]), random_double_device(&rand_state[global_index]), random_double_device(&rand_state[global_index]));
     // color[0] = single_color;
     // color[1] = single_color;
     // color[2] = single_color;
 
-    // ray =
-
     frame_buffer[global_index] = color;
+}
+
+__global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size)
+{
+    /*################################ 全局索引 ################################*/
+    int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
+    int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
+
+    int row_len = gridDim.x * blockDim.x;                 // 行宽（列数）
+    int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
+    int global_index = (row_len * row_index + col_index); // 全局索引
+
+    curand_init(seed, global_index, 0, &states[global_index]);
 }
 
 vec3 *cast_ray_cu(float frame_width, float frame_height, int spp)
@@ -82,6 +126,16 @@ vec3 *cast_ray_cu(float frame_width, float frame_height, int spp)
     dim3 dimBlock(block_size_height, block_size_width, 1);
     dim3 dimGrid(grid_size_height, grid_size_width, 1);
 
+    /* ############################### 初始化随机数 ############################### */
+    curandStateXORWOW_t *states;
+    cudaMalloc(&states, sizeof(curandStateXORWOW_t) * FRAME_WIDTH * FRAME_HEIGHT);
+
+    initialize_device_random<<<dimGrid, dimBlock>>>(states, time(nullptr), frame_width * frame_height);
+
+    cudaDeviceSynchronize();
+
+    /* ############################### Real Render ############################### */
+
     // 开辟显存空间
     vec3 *frame_buffer_device;
     cudaMalloc((void **)&frame_buffer_device, size);
@@ -97,7 +151,7 @@ vec3 *cast_ray_cu(float frame_width, float frame_height, int spp)
     // 不要忘了给模板函数添加模板参数
     // 所有的并行计算应该都在这一个函数中完成，这个函数要调用其他.cu文件中的函数，并且也要在device上执行
     // 关键问题是那些预定义的类怎么办？CUDA中无法直接使用这些类
-    cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device);
+    cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, states);
 
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -119,3 +173,27 @@ vec3 *cast_ray_cu(float frame_width, float frame_height, int spp)
 
     return frame_buffer_host;
 }
+
+void camera_initialization(void)
+{
+    int device = 0;        // 设置使用第0块GPU进行运算
+    cudaSetDevice(device); // 设置运算显卡
+    cudaDeviceProp devProp;
+    cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
+
+    /* ############################### 初始化摄像机 ############################### */
+    int camera_size = sizeof(camera);
+
+    // std::cout << "camera size = " << camera_size << std::endl;
+    camera *cpu_camera = createCamera();
+
+    // 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
+    cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+
+    cudaDeviceSynchronize();
+
+    // std::cout << "camera height = " << get_camera_info()->frame_height << std::endl;
+}
+
+
+

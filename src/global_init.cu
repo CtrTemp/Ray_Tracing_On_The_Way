@@ -1,71 +1,76 @@
 #include "global_init.cuh"
 
-/**
- *  该文件用于用户的场景创建/摄像机拜访等基本的初始化操作。一些应该被导入到device端的常用变量在此被创建，并被声明
- * 为全局变量，所有位置均可访问。
- *
- * */
-// extern __constant__ camera PRIMARY_CAMERA;
+// /**
+//  *  该文件用于用户的场景创建/摄像机拜访等基本的初始化操作。一些应该被导入到device端的常用变量在此被创建，并被声明
+//  * 为全局变量，所有位置均可访问。
+//  *
+//  * */
+// // extern __constant__ camera PRIMARY_CAMERA;
+// // __constant__ camera PRIMARY_CAMERA = camera();
 
-void global_initialization(void)
-{
-    int device = 0;        // 设置使用第0块GPU进行运算
-    cudaSetDevice(device); // 设置运算显卡
-    cudaDeviceProp devProp;
-    cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
+// void global_initialization(void)
+// {
+//     int device = 0;        // 设置使用第0块GPU进行运算
+//     cudaSetDevice(device); // 设置运算显卡
+//     cudaDeviceProp devProp;
+//     cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
 
-    /* ############################### 初始化摄像机 ############################### */
-    int camera_size = sizeof(camera);
+   
+//     /* ############################### 初始化摄像机 ############################### */
+//     int camera_size = sizeof(camera);
 
-    // std::cout << "camera size = " << camera_size << std::endl;
-    camera *cpu_camera = createCamera();
+//     // std::cout << "camera size = " << camera_size << std::endl;
+//     camera *cpu_camera = createCamera();
 
-    // 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
-    cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+//     // 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
+//     cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
 
-    // std::cout << "camera height = " << cpu_camera->frame_height << std::endl;
+//     cudaDeviceSynchronize();
 
-    /* ############################### 初始化场景 ############################### */
-}
+//     std::cout << "camera height = " << get_camera_info()->frame_height << std::endl;
 
-camera *get_camera_info(void)
-{
+//     /* ############################### 初始化场景 ############################### */
+// }
 
-    int device = 0;        // 设置使用第0块GPU进行运算
-    cudaSetDevice(device); // 设置运算显卡
-    cudaDeviceProp devProp;
-    cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
+// camera *get_camera_info(void)
+// {
 
-    /* ############################### 初始化摄像机 ############################### */
-    int camera_size = sizeof(camera);
+//     int device = 0;        // 设置使用第0块GPU进行运算
+//     cudaSetDevice(device); // 设置运算显卡
+//     cudaDeviceProp devProp;
+//     cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
 
-    camera *cpu_camera;
+//     /* ############################### 初始化摄像机 ############################### */
+//     int camera_size = sizeof(camera);
 
-    // 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
-    cudaMemcpyFromSymbol(cpu_camera, PRIMARY_CAMERA, camera_size);
+//     camera *cpu_camera = new camera();
 
-    // std::cout << "camera height fetch back = " << cpu_camera->frame_height << std::endl;
-    return cpu_camera;
-}
+//     // 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
+//     cudaMemcpyFromSymbol(cpu_camera, PRIMARY_CAMERA, camera_size);
 
-camera *createCamera(void)
-{
-    cameraCreateInfo createCamera{};
+//     // std::cout << "camera height fetch back = " << cpu_camera->frame_height << std::endl;
+//     return cpu_camera;
+// }
 
-    createCamera.lookfrom = vec3(20, 15, 20);
-    createCamera.lookat = vec3(0, 0, 0);
+// __host__ __device__ camera *createCamera(void)
+// {
+//     cameraCreateInfo createCamera{};
 
-    createCamera.up_dir = vec3(0, 1, 0);
-    createCamera.fov = 40;
-    createCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
-    createCamera.focus_dist = 10.0;
-    createCamera.t0 = 0.0;
-    createCamera.t1 = 1.0;
-    createCamera.frame_width = FRAME_WIDTH;
-    createCamera.frame_height = FRAME_HEIGHT;
+//     createCamera.lookfrom = vec3(20, 15, 20);
+//     createCamera.lookat = vec3(0, 0, 0);
 
-    createCamera.spp = 1;
+//     createCamera.up_dir = vec3(0, 1, 0);
+//     createCamera.fov = 40;
+//     createCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
+//     createCamera.focus_dist = 10.0;
+//     createCamera.aperture = 1;
+//     createCamera.t0 = 0.0;
+//     createCamera.t1 = 1.0;
+//     createCamera.frame_width = FRAME_WIDTH;
+//     createCamera.frame_height = FRAME_HEIGHT;
 
-    // 学会像vulkan那样构建
-    return new camera(createCamera);
-}
+//     createCamera.spp = 1;
+
+//     // 学会像vulkan那样构建
+//     return new camera(createCamera);
+// }

@@ -8,11 +8,9 @@
 #include <cmath>
 #include <algorithm>
 
-
-//添加cuda库
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
+// 添加cuda库
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
 class vec3
 {
@@ -26,7 +24,6 @@ public:
 		e[2] = e2;
 	}
 
-	
 	__host__ __device__ __forceinline__ float x() const { return e[0]; }
 	__host__ __device__ __forceinline__ float y() const { return e[1]; }
 	__host__ __device__ __forceinline__ float z() const { return e[2]; }
@@ -38,7 +35,6 @@ public:
 	__host__ __device__ __forceinline__ const vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
 	__host__ __device__ __forceinline__ float operator[](int i) const { return e[i]; }
 	__host__ __device__ __forceinline__ float &operator[](int i) { return e[i]; } // 为什么要定义两个这个？！和上面那个有什么区分
-	
 
 	__host__ __device__ __forceinline__ vec3 &operator+=(const vec3 &v);
 	__host__ __device__ __forceinline__ vec3 &operator-=(const vec3 &v);
@@ -47,7 +43,6 @@ public:
 	__host__ __device__ __forceinline__ vec3 &operator*=(const float t);
 	__host__ __device__ __forceinline__ vec3 &operator/=(const float t);
 	__host__ __device__ __forceinline__ bool operator==(const vec3 v);
-
 
 	__host__ __device__ __forceinline__ float length() const
 	{
@@ -77,15 +72,15 @@ public:
 				// 这个类的其他部分都是关于这个数据的构造以及操作
 };
 
-__host__ __device__ __forceinline__ std::istream &operator>>(std::istream &is, vec3 &t)
+__host__ __forceinline__ std::istream &operator>>(std::istream &is, vec3 &t)
 {
 	is >> t.e[0] >> t.e[1] >> t.e[2];
 	return is;
 }
 
-__host__ __device__ __forceinline__ std::ostream &operator<<(std::ostream &os, const vec3 &t)
+__host__ __forceinline__ std::ostream &operator<<(std::ostream &os, const vec3 &t)
 {
-	os << t.e[0] << t.e[1] << t.e[2];
+	os << "[" << t.e[0] << ", " << t.e[1] << ", " << t.e[2] << "]";
 	return os;
 }
 
@@ -195,7 +190,7 @@ __host__ __device__ __forceinline__ vec3 &vec3::operator/=(float t)
 
 __host__ __device__ __forceinline__ bool vec3::operator==(const vec3 v)
 {
-	if(e[0]==v.e[0]&&e[1]==v.e[1]&&e[2]==v.e[2])
+	if (e[0] == v.e[0] && e[1] == v.e[1] && e[2] == v.e[2])
 		return true;
 	else
 		return false;
@@ -237,7 +232,7 @@ __host__ __device__ __forceinline__ vec3 normalized_vec(vec3 vec)
 	return vec /= vec.length();
 }
 
-__host__ __device__ __forceinline__ vec3 random_in_unit_disk()
+__host__ __forceinline__ vec3 random_in_unit_disk()
 {
 	vec3 p;
 	do
