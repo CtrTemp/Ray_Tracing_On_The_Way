@@ -12,12 +12,9 @@ using namespace cv;
 
 
 void use_opencv_window(void);
-int use_glfw_window(void);
 
 unsigned int frame_width = 512;
 unsigned int frame_height = 512;
-
-extern __constant__ camera PRIMARY_CAMERA;
 
 int main(void)
 {

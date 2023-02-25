@@ -1,9 +1,10 @@
 #include "camera.cuh"
 
 
+
 /**
  * 	相机构造函数
- * */ 
+ * */
 __device__ __host__ camera::camera(cameraCreateInfo createInfo)
 {
 	frame_width = createInfo.frame_width;
@@ -36,7 +37,7 @@ __device__ __host__ camera::camera(cameraCreateInfo createInfo)
 
 /**
  * 	相机渲染函数（host端调用，渲染入口）
- * */ 
+ * */
 __host__ void camera::renderFrame(PresentMethod present, std::string file_path)
 {
 	// cast_ray(spp, RayDistribution::NAIVE_RANDOM);
@@ -96,7 +97,7 @@ __host__ void camera::renderFrame(PresentMethod present, std::string file_path)
 
 /**
  * 	将并行渲染结果使用opencv创建窗口进行展示（图片流形式）
- * */ 
+ * */
 __host__ void camera::showFrameFlow(int width, int height, vec3 *frame_buffer_host)
 {
 
@@ -124,7 +125,7 @@ __host__ void camera::showFrameFlow(int width, int height, vec3 *frame_buffer_ho
 
 /**
  * 	渲染函数入口（内部调用 初始化随机数kernel 并行渲染kernel）
- * */ 
+ * */
 __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, int spp)
 {
 	int device = 0;		   // 设置使用第0块GPU进行运算
@@ -143,7 +144,6 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 	unsigned int grid_size_width = frame_width / block_size_width;
 	unsigned int grid_size_height = frame_height / block_size_height;
 
-
 	dim3 dimBlock(block_size_height, block_size_width, 1);
 	dim3 dimGrid(grid_size_height, grid_size_width, 1);
 
@@ -155,17 +155,24 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 
 	cudaDeviceSynchronize();
 
+	/* ############################### 初始化摄像机 ############################### */
+	int camera_size = sizeof(camera);
 
-    /* ############################### 初始化摄像机 ############################### */
-    int camera_size = sizeof(camera);
+	// std::cout << "camera size = " << camera_size << std::endl;
+	camera *cpu_camera = createCamera();
 
-    // std::cout << "camera size = " << camera_size << std::endl;
-    camera *cpu_camera = createCamera();
+	// 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
+	cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
 
-    // 将host本地创建初始化好的摄像机，连带参数一同拷贝到device设备端
-    cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+	cudaDeviceSynchronize();
 
-    cudaDeviceSynchronize();
+	/* ################################# 场景生成 ################################# */
+	// 	其实这里是分配到了显存上的全局内存上，按道理来讲这种经常被访问到的全局场景应该被放在带有
+	// 缓存的__constant__内存上，这是之后的修改升级空间（不过现在也是全局可见，不会出错）
+	hitable_list **world_device = NULL;
+	cudaMalloc((void **)&world_device, sizeof(hitable_list **));
+	gen_world<<<1, 1>>>(states, world_device);
+	// gen_world();
 
 	/* ############################### Real Render ############################### */
 
@@ -197,57 +204,54 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 	// 从显存向内存拷贝（第一个参数是dst，第二个参数是src）
 	cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
 
-
 	cudaFree(frame_buffer_device);
 
 	return frame_buffer_host;
 }
 
-
 /**
  * 	初始化device端随机数生成kernel
- * */ 
+ * */
 __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size)
 {
-    /*################################ 全局索引 ################################*/
-    int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
-    int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
+	/*################################ 全局索引 ################################*/
+	int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
+	int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
 
-    int row_len = gridDim.x * blockDim.x;                 // 行宽（列数）
-    // int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
-    int global_index = (row_len * row_index + col_index); // 全局索引
+	int row_len = gridDim.x * blockDim.x; // 行宽（列数）
+	// int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
+	int global_index = (row_len * row_index + col_index); // 全局索引
 
-    curand_init(seed, global_index, 0, &states[global_index]);
+	curand_init(seed, global_index, 0, &states[global_index]);
 }
 /**
  * 	单一像素并行渲染kernel
- * */ 
+ * */
 __global__ void cuda_shading_unit(vec3 *frame_buffer, curandStateXORWOW_t *rand_state)
 {
 
-    /*################################ 全局索引 ################################*/
-    int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
-    int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
+	/*################################ 全局索引 ################################*/
+	int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
+	int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
 
-    int row_len = gridDim.x * blockDim.x;                 // 行宽（列数）
-    // int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
-    int global_index = (row_len * row_index + col_index); // 全局索引
+	int row_len = gridDim.x * blockDim.x; // 行宽（列数）
+	// int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
+	int global_index = (row_len * row_index + col_index); // 全局索引
 
-    // int global_size = row_len * col_len;
-	
+	// int global_size = row_len * col_len;
 
-    // /*############################## 获取当前光线 ##############################*/
-    float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
-    float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
-    ray kernal_ray = PRIMARY_CAMERA.get_ray_device(u, v, &rand_state[global_index]);
-    vec3 color = PRIMARY_CAMERA.shading_device(kernal_ray);
+	// /*############################## 获取当前光线 ##############################*/
+	float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
+	float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
+	ray kernal_ray = PRIMARY_CAMERA.get_ray_device(u, v, &rand_state[global_index]);
+	vec3 color = PRIMARY_CAMERA.shading_device(kernal_ray);
 
-    frame_buffer[global_index] = color;
+	frame_buffer[global_index] = color;
 }
 
 /**
  * 	获取当前kernel对应射线
- * */ 
+ * */
 __device__ ray camera::get_ray_device(float s, float t, curandStateXORWOW *rand_state)
 {
 	// 全部相机参数
@@ -261,15 +265,14 @@ __device__ ray camera::get_ray_device(float s, float t, curandStateXORWOW *rand_
 	vec3 vertical = PRIMARY_CAMERA.vertical;
 
 	vec3 rd = lens_radius * random_in_unit_disk_device(rand_state); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
-	vec3 offset = rd.x() * u + rd.y() * v; // origin视点中心偏移（由xoy平面映射到u、v平面）
+	vec3 offset = rd.x() * u + rd.y() * v;							// origin视点中心偏移（由xoy平面映射到u、v平面）
 	float time = time0 + random_double_device(rand_state) * (time1 - time0);
 	return ray(origin + offset, upper_left_conner + s * horizontal + t * vertical - origin - offset, time);
 }
 
-
 /**
  * 	着色函数（之后的打击函数/射线相交测试都要写在这里面）
- * */ 
+ * */
 __device__ vec3 camera::shading_device(const ray &r)
 {
 	vec3 unit_direction = unit_vector(r.direction());
@@ -278,30 +281,29 @@ __device__ vec3 camera::shading_device(const ray &r)
 	return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
 }
 
-
 /**
  * 	摄像机创建，多用于host端的相机创建，device端的相机实例应从主机创建好后初始化设备上的constant内存
  * 因为相机各项参数是经常被访问到的，且必须对所有的thread全局可见，所以应该存在带有cache的constant内存
- * */ 
+ * */
 __host__ __device__ camera *createCamera(void)
 {
-    cameraCreateInfo createCamera{};
+	cameraCreateInfo createCamera{};
 
-    createCamera.lookfrom = vec3(20, 15, 20);
-    createCamera.lookat = vec3(0, 0, 0);
+	createCamera.lookfrom = vec3(20, 15, 20);
+	createCamera.lookat = vec3(0, 0, 0);
 
-    createCamera.up_dir = vec3(0, 1, 0);
-    createCamera.fov = 40;
-    createCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
-    createCamera.focus_dist = 10.0;
-    createCamera.aperture = 1;
-    createCamera.t0 = 0.0;
-    createCamera.t1 = 1.0;
-    createCamera.frame_width = FRAME_WIDTH;
-    createCamera.frame_height = FRAME_HEIGHT;
+	createCamera.up_dir = vec3(0, 1, 0);
+	createCamera.fov = 40;
+	createCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
+	createCamera.focus_dist = 10.0;
+	createCamera.aperture = 1;
+	createCamera.t0 = 0.0;
+	createCamera.t1 = 1.0;
+	createCamera.frame_width = FRAME_WIDTH;
+	createCamera.frame_height = FRAME_HEIGHT;
 
-    createCamera.spp = 1;
+	createCamera.spp = 1;
 
-    // 学会像vulkan那样构建
-    return new camera(createCamera);
+	// 学会像vulkan那样构建
+	return new camera(createCamera);
 }

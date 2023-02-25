@@ -9,15 +9,27 @@ set(CMAKE_CUDA_STANDARD 11)
 #添加项目自身的库和依赖
 # set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)#设置编译后的程序存放位置
 aux_source_directory(src SRC_LIST)#添加src目录下的所有源文件
-include_directories(include)#添加头文件路径
+
+include_directories(./include ./src
+# ${ACCEL_INCLUDE_DIR_LIST}
+${CAMERA_INCLUDE_DIR_LIST}
+${MATERIAL_INCLUDE_DIR_LIST}
+${MATH_INCLUDE_DIR_LIST}
+${HITABLE_INCLUDE_DIR_LIST}
+# ${TEXTURE_INCLUDE_DIR_LIST}
+)
 
 
+# add_subdirectory(./src/accel)
 add_subdirectory(./src/camera)
+add_subdirectory(./src/material)
+add_subdirectory(./src/object)
+# add_subdirectory(./src/texture)
 
 #编译列表
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 
-target_link_libraries(${PROJECT_NAME} CAMERA libglfw.so GL 
+target_link_libraries(${PROJECT_NAME} CAMERA libglfw.so GL MATERIAL HITABLE
 
 
 opencv_calib3d

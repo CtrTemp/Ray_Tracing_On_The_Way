@@ -14,6 +14,10 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+
+#include "object/hitable.cuh"
+#include "object/group/hitableList.cuh"
+
 #define FRAME_WIDTH 512
 #define FRAME_HEIGHT 512
 
@@ -82,7 +86,8 @@ __constant__ camera PRIMARY_CAMERA;
 extern "C" __host__ __device__ camera *createCamera(void);
 extern "C" __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size);
 extern "C" __global__ void cuda_shading_unit(vec3 *frame_buffer, curandStateXORWOW_t *rand_state);
- 
+extern "C" __global__ void gen_world(curandStateXORWOW_t *rand_state, hitable_list **world);
+
 #endif // !1
 
 /*
