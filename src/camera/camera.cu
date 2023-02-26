@@ -1,7 +1,5 @@
 #include "camera.cuh"
 
-
-
 /**
  * 	相机构造函数
  * */
@@ -191,7 +189,7 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 	// 不要忘了给模板函数添加模板参数
 	// 所有的并行计算应该都在这一个函数中完成，这个函数要调用其他.cu文件中的函数，并且也要在device上执行
 	// 关键问题是那些预定义的类怎么办？CUDA中无法直接使用这些类
-	cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, states);
+	cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
@@ -227,7 +225,7 @@ __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned l
 /**
  * 	单一像素并行渲染kernel
  * */
-__global__ void cuda_shading_unit(vec3 *frame_buffer, curandStateXORWOW_t *rand_state)
+__global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, curandStateXORWOW_t *rand_state)
 {
 
 	/*################################ 全局索引 ################################*/
@@ -244,7 +242,7 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, curandStateXORWOW_t *rand_
 	float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
 	float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
 	ray kernal_ray = PRIMARY_CAMERA.get_ray_device(u, v, &rand_state[global_index]);
-	vec3 color = PRIMARY_CAMERA.shading_device(kernal_ray);
+	vec3 color = PRIMARY_CAMERA.shading_device(3, kernal_ray, *world, rand_state);
 
 	frame_buffer[global_index] = color;
 }
@@ -273,13 +271,76 @@ __device__ ray camera::get_ray_device(float s, float t, curandStateXORWOW *rand_
 /**
  * 	着色函数（之后的打击函数/射线相交测试都要写在这里面）
  * */
-__device__ vec3 camera::shading_device(const ray &r)
+
+__device__ vec3 camera::shading_device(int depth, ray &r, hitable_list *world, curandStateXORWOW_t *rand_state)
 {
-	vec3 unit_direction = unit_vector(r.direction());
-	auto t = 0.5 * (unit_direction.y() + 1.0);
-	// return vec3(0.5, 0, 0);
-	return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+
+	hit_record rec;
+	// printf("depth = %d\n", depth);
+	// 现在可以确定的是，执行到这一步的时候出错了，hit函数并没有能良好执行
+	// 但是程序运行时也没有报错，说明可能是内部发生了指针错乱
+	if (world->hit(r, 0.001, 999999, rec)) // FLT_MAX
+	{
+		ray scattered;
+		vec3 attenuation;
+		// vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+		// 在判断语句中执行并更新散射射线, 并判断是否还有射线生成
+		// 同样根据材质给出衰减系数
+		// if (depth > 0 && rec.mat_ptr->scatter(r, rec, attenuation, scattered, rand_state))
+		// {
+		// 	// printf("ret depth");
+		// 	return emitted + attenuation * shading_device(depth - 1, scattered, world, rand_state);
+		// }
+		// else
+		// {
+		// 	// printf("emit return\n");
+		// 	return emitted;
+		// }
+		return vec3(0.1, 0.9, 0.8);
+	}
+	else
+	{
+		// printf("not hit return");
+		vec3 unit_direction = unit_vector(r.direction());
+		auto t = 0.5 * (unit_direction.y() + 1.0);
+		return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+		// return vec3(0, 0, 0);
+	}
 }
+// __device__ vec3 camera::shading_device(ray &r, hitable_list *world, curandStateXORWOW_t *rand_state)
+// {
+
+// 	hit_record rec;
+
+// 	vec3 mul(0, 0, 0);
+// 	int depth = 2;
+
+// 	while ((depth > 0) && world->hit(r, 0, 999999, rec))
+// 	{
+// 		depth--;
+// 		ray scattered;
+// 		vec3 attenuation;
+// 		if (rec.mat_ptr->scatter(r, rec, attenuation, scattered, rand_state))
+// 		{
+// 			r = scattered;
+// 			mul = cross(mul, attenuation);
+// 		}
+// 		else
+// 		{
+// 			return vec3(0, 0, 0);
+// 		}
+// 	}
+// 	if(depth==0)
+// 	{
+// 		return vec3(0,0,0);
+// 	}
+
+// 	vec3 unit_direction = unit_vector(r.direction());
+// 	auto t = 0.5 * (unit_direction.y() + 1.0);
+// 	// return vec3(0.5, 0, 0);
+// 	// return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+// 	return cross(mul, (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0));
+// }
 
 /**
  * 	摄像机创建，多用于host端的相机创建，device端的相机实例应从主机创建好后初始化设备上的constant内存

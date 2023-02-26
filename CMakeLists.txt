@@ -4,7 +4,10 @@ project(demo)
 enable_language(CUDA)#激活CUDA语言支持，使用第一个写法时要进行注释
 #设置语言标准
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CUDA_STANDARD 11)   
+set(CMAKE_CUDA_STANDARD 11)  
+set(CMAKE_BUILD_TYPE "Debug")
+# set(CMAKE_CUDA_FLAGS_DEBUG "$ENV{CUDAFLAGS} -O0 -Wall -g2 -ggdb")
+set(CUDA_NVCC_FLAGS -g; -G)
 
 #添加项目自身的库和依赖
 # set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)#设置编译后的程序存放位置
