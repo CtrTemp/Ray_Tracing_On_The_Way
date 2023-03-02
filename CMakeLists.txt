@@ -1,16 +1,19 @@
 cmake_minimum_required(VERSION 3.9)#Cmake最低版本
-#project(demo LANGUAGES CXX CUDA) #这个写法也是可以的
+
 project(demo)
-enable_language(CUDA)#激活CUDA语言支持，使用第一个写法时要进行注释
-#设置语言标准
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CUDA_STANDARD 11)  
-set(CMAKE_BUILD_TYPE "Debug")
-# set(CMAKE_CUDA_FLAGS_DEBUG "$ENV{CUDAFLAGS} -O0 -Wall -g2 -ggdb")
-set(CUDA_NVCC_FLAGS -g; -G)
+
+# packages
+find_package(CUDA)
+
+
+set(CUDA_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g)
+set(CMAKE_NVCC_FLAGS "CMAKE_NVCC_FLAGS -std=c++11")
+
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES 70 75 80)
+endif(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
 #添加项目自身的库和依赖
-# set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)#设置编译后的程序存放位置
 aux_source_directory(src SRC_LIST)#添加src目录下的所有源文件
 
 include_directories(./include ./src
@@ -30,7 +33,7 @@ add_subdirectory(./src/object)
 # add_subdirectory(./src/texture)
 
 #编译列表
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+CUDA_ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
 
 target_link_libraries(${PROJECT_NAME} CAMERA libglfw.so GL MATERIAL HITABLE
 
