@@ -14,11 +14,15 @@ __device__ bool hitable_list::hit(const ray &r, float tmin, float tmax, hit_reco
 	hit_record temp_rec;
 	bool hit_anything = false;
 	double closest_so_far = tmax;
+	// printf("hitable world size = %d", this->list_size);
+
+	// printf("tmin = %f, closest_so_far=%f   ", tmin, closest_so_far);
 
 	for (int i = 0; i < list_size; ++i)
 	{
 		if (list[i]->hit(r, tmin, closest_so_far, temp_rec))
 		{
+			printf("sss\n");
 			hit_anything = true;
 			closest_so_far = temp_rec.t;
 			rec = temp_rec;
@@ -27,9 +31,13 @@ __device__ bool hitable_list::hit(const ray &r, float tmin, float tmax, hit_reco
 	return hit_anything;
 }
 
-
-__global__ void gen_world(curandStateXORWOW_t *rand_state, hitable_list **world)
+__global__ void gen_world(curandStateXORWOW_t *rand_state, hitable **world, hitable **list)
 {
 	// 在设备端创建
-	*world = new hitable_list(rand_state);
+	// *world = new hitable_list(rand_state);
+	if (threadIdx.x == 0 && blockIdx.x == 0)
+	{
+		*(list) = new sphere(vec3(0, -1000, 0), 1000, new lambertian(vec3(0.5, 0.1, 0.1)));
+		*world = new hitable_list(list, 1);
+	}
 }

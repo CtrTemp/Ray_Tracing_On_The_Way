@@ -1,5 +1,4 @@
 #include "camera.cuh"
-
 /**
  * 	相机构造函数
  * */
@@ -167,9 +166,11 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 	/* ################################# 场景生成 ################################# */
 	// 	其实这里是分配到了显存上的全局内存上，按道理来讲这种经常被访问到的全局场景应该被放在带有
 	// 缓存的__constant__内存上，这是之后的修改升级空间（不过现在也是全局可见，不会出错）
-	hitable_list **world_device = NULL;
-	cudaMalloc((void **)&world_device, sizeof(hitable_list **));
-	gen_world<<<1, 1>>>(states, world_device);
+	hitable **world_device = NULL;
+	hitable **list_device = NULL;
+	cudaMalloc((void **)&world_device, sizeof(hitable *));
+	cudaMalloc((void **)&list_device, sizeof(hitable *));
+	gen_world<<<1, 1>>>(states, world_device, list_device);
 	// gen_world();
 
 	/* ############################### Real Render ############################### */
@@ -190,6 +191,8 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 	// 所有的并行计算应该都在这一个函数中完成，这个函数要调用其他.cu文件中的函数，并且也要在device上执行
 	// 关键问题是那些预定义的类怎么办？CUDA中无法直接使用这些类
 	cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+	cudaError_t error = cudaGetLastError();
+	printf("CUDA error %s\n", cudaGetErrorString(error));
 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
@@ -225,7 +228,7 @@ __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned l
 /**
  * 	单一像素并行渲染kernel
  * */
-__global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, curandStateXORWOW_t *rand_state)
+__global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW_t *rand_state)
 {
 
 	/*################################ 全局索引 ################################*/
@@ -242,7 +245,7 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, cura
 	float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
 	float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
 	ray kernal_ray = PRIMARY_CAMERA.get_ray_device(u, v, &rand_state[global_index]);
-	vec3 color = PRIMARY_CAMERA.shading_device(3, kernal_ray, *world, rand_state);
+	vec3 color = PRIMARY_CAMERA.shading_device(3, kernal_ray, world, rand_state);
 
 	frame_buffer[global_index] = color;
 }
@@ -272,14 +275,14 @@ __device__ ray camera::get_ray_device(float s, float t, curandStateXORWOW *rand_
  * 	着色函数（之后的打击函数/射线相交测试都要写在这里面）
  * */
 
-__device__ vec3 camera::shading_device(int depth, ray &r, hitable_list *world, curandStateXORWOW_t *rand_state)
+__device__ vec3 camera::shading_device(int depth, ray &r, hitable **world, curandStateXORWOW_t *rand_state)
 {
 
 	hit_record rec;
 	// printf("depth = %d\n", depth);
 	// 现在可以确定的是，执行到这一步的时候出错了，hit函数并没有能良好执行
 	// 但是程序运行时也没有报错，说明可能是内部发生了指针错乱
-	if (world->hit(r, 0.001, 999999, rec)) // FLT_MAX
+	if ((*world)->hit(r, 0.001, 999999, rec)) // FLT_MAX
 	{
 		ray scattered;
 		vec3 attenuation;

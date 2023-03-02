@@ -10,13 +10,14 @@
 class sphere : public hitable
 { // 是sphere类，构造函数返回hitable*类型
 public:
-	__device__ __host__ sphere() = default;
-	__device__ __host__ sphere(vec3 cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat)
+	__device__ sphere() = default;
+	__device__ sphere(vec3 cen, float r, material *mat) : center(cen), radius(r), mat_ptr(mat)
 	{
 		area = 4 * M_PI * radius * radius;
 	};
 	__device__ virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 	{
+		printf("why not in ???");
 		vec3 oc = r.origin() - center;
 		// std::cout << "why" << std::endl;
 		float a = dot(r.direction(), r.direction());

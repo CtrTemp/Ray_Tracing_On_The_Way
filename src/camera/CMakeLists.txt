@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 endif(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
 # nvcc flags 对应当前 GPU 版本优化 + 在生成文件中嵌入 cuda-gdb 调试代码
-set(CUDA_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g)
+set(CUDA_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g;-O0)
 
 # 添加源文件列表
 aux_source_directory(. CAMERA_SRC_LIST)

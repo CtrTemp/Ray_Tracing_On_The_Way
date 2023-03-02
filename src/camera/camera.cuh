@@ -61,7 +61,7 @@ public:
 	__host__ vec3 *cast_ray_device(float frame_width, float frame_height, int spp);
 
 	__device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state);
-	__device__ vec3 shading_device(int depth, ray &r, hitable_list *world, curandStateXORWOW_t *rand_state);
+	__device__ vec3 shading_device(int depth, ray &r, hitable **world, curandStateXORWOW_t *rand_state);
 
 	vec3 upper_left_conner;
 	vec3 horizontal;
@@ -80,8 +80,8 @@ __constant__ camera PRIMARY_CAMERA;
 
 extern "C" __host__ __device__ camera *createCamera(void);
 extern "C" __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size);
-extern "C" __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, curandStateXORWOW_t *rand_state);
-extern "C" __global__ void gen_world(curandStateXORWOW_t *rand_state, hitable_list **world);
+extern "C" __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW_t *rand_state);
+extern "C" __global__ void gen_world(curandStateXORWOW_t *rand_state, hitable **world, hitable **list);
 
 #endif // !1
 
