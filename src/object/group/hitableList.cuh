@@ -19,12 +19,7 @@ public:
 
 	__device__ hitable_list(hitable **d_list, int size)
 	{
-		// list = new hitable *[size];
-		*list = (hitable *)malloc(size);
-		for (int i = 0; i < size; i++)
-		{
-			list[i] = d_list[i];
-		}
+		list = d_list;
 		list_size = size;
 	}
 

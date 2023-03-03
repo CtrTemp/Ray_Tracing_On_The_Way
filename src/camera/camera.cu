@@ -166,10 +166,10 @@ __host__ vec3 *camera::cast_ray_device(float frame_width, float frame_height, in
 	/* ################################# 场景生成 ################################# */
 	// 	其实这里是分配到了显存上的全局内存上，按道理来讲这种经常被访问到的全局场景应该被放在带有
 	// 缓存的__constant__内存上，这是之后的修改升级空间（不过现在也是全局可见，不会出错）
-	hitable **world_device = NULL;
-	hitable **list_device = NULL;
+	hitable **world_device;
+	hitable **list_device;
 	cudaMalloc((void **)&world_device, sizeof(hitable *));
-	cudaMalloc((void **)&list_device, sizeof(hitable *));
+	cudaMalloc((void **)&list_device, sizeof(hitable_list *));
 	gen_world<<<1, 1>>>(states, world_device, list_device);
 	// gen_world();
 
