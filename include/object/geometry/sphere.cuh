@@ -17,7 +17,6 @@ public:
 	};
 	__device__ virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 	{
-		printf("why not in ???");
 		vec3 oc = r.origin() - center;
 		// std::cout << "why" << std::endl;
 		float a = dot(r.direction(), r.direction());
@@ -56,12 +55,19 @@ public:
 		return false;
 	}
 
-	__device__ virtual bool hasEmission(void) const { return mat_ptr->hasEmission(); };
+	__device__ virtual bool hasEmission(void) const
+	{
+		return mat_ptr->hasEmission();
+	}
 
 	vec3 center;
 	float radius;
 	float area;
 	material *mat_ptr;
 };
+
+// __device__ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
+
+// __device__ bool sphere::hasEmission(void) const
 
 #endif
