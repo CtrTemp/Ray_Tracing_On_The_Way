@@ -40,7 +40,7 @@ __host__ __device__ camera *createCamera(void)
 	createCamera.frame_width = FRAME_WIDTH;
 	createCamera.frame_height = FRAME_HEIGHT;
 
-	createCamera.spp = 1;
+	createCamera.spp = 100;
 
 	// 学会像vulkan那样构建
 	return new camera(createCamera);
@@ -71,61 +71,53 @@ __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state)
 
 	vec3 rd = lens_radius * random_in_unit_disk_device(rand_state); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
 	vec3 offset = rd.x() * u + rd.y() * v;							// origin视点中心偏移（由xoy平面映射到u、v平面）
+	offset = vec3(0, 0, 0);
 	float time = time0 + random_double_device(rand_state) * (time1 - time0);
 	return ray(origin + offset, upper_left_conner + s * horizontal + t * vertical - origin - offset);
+	// return ray(origin, upper_left_conner + u * horizontal + v * vertical - origin);
 }
 
-__device__ vec3 shading_pixel(int depth, ray &r, hitable **world, curandStateXORWOW_t *rand_state)
+__device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandStateXORWOW_t *rand_state)
 {
+
+	/**
+	 * 	现在发现这样一个问题：只要在当前的device函数中创建一个 ray 类的实例，必然出问题，
+	 * 导致报错  “received signal CUDA_EXCEPTION_2, Lane User Stack Overflow.”
+	 *
+	 * 	这里原因何在？是否是因为我没有显式地定义析构函数呢？导致太多次的射线创建，从而占满显
+	 * 存？尝试找出问题
+	 *
+	 * 	问题解决：在 vec3 类的函数中的强制内联会造成此问题 __forceinline__
+	 * */
+
 	hit_record rec;
-	ray cur_ray(vec3(0, 0, 0), vec3(0, 0, 0));
-	if ((*world)->hit(r, 0.001, 999999, rec)) // FLT_MAX
+	ray cur_ray = r;
+	vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
+	for (int i = 0; i < 50; i++)
 	{
-		// ray scattered;
-		// vec3 attenuation;
-		// rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state);
-		// return rec.mat_ptr.;
-		return vec3(0.9, 0.1, 0.1);
+		if ((*world)->hit(cur_ray, 0.001f, 999999, rec))
+		{
+			ray scattered;
+			vec3 attenuation;
+			if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
+			{
+				cur_attenuation *= attenuation;
+				cur_ray = scattered;
+			}
+			else
+			{
+				return vec3(0.0, 0.0, 0.0);
+			}
+		}
+		else
+		{
+			vec3 unit_direction = unit_vector(cur_ray.direction());
+			float t = 0.5f * (unit_direction.y() + 1.0f);
+			vec3 c = (1.0f - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+			return cur_attenuation * c;
+		}
 	}
-	else
-	{
-		// printf("not hit return");
-		vec3 unit_direction = unit_vector(cur_ray.direction());
-		auto t = 0.5 * (unit_direction.y() + 1.0);
-		return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-		// return vec3(0, 0, 0);
-	}
-
-	// return  cur_ray;
-
-	// ray cur_ray = r;
-	// vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
-	// for (int i = 0; i < 50; i++)
-	// {
-	// 	hit_record rec;
-	// 	if ((*world)->hit(cur_ray, 0.001f, 999999, rec))
-	// 	{
-	// 		ray scattered;
-	// 		vec3 attenuation;
-	// 		if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
-	// 		{
-	// 			cur_attenuation *= attenuation;
-	// 			cur_ray = scattered;
-	// 		}
-	// 		else
-	// 		{
-	// 			return vec3(0.0, 0.0, 0.0);
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		vec3 unit_direction = unit_vector(cur_ray.direction());
-	// 		float t = 0.5f * (unit_direction.y() + 1.0f);
-	// 		vec3 c = (1.0f - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-	// 		return cur_attenuation * c;
-	// 	}
-	// }
-	// return vec3(0.0, 0.0, 0.0);
+	return vec3(0.0, 0.0, 0.0);
 }
 __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW_t *rand_state)
 {
@@ -133,16 +125,33 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandSta
 	int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
 	int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
 
+	if ((row_index >= FRAME_HEIGHT) || (col_index >= FRAME_WIDTH))
+	{
+		return;
+	}
+	ray a_ray;
+	ray asdfa = ray();
+
 	int row_len = gridDim.x * blockDim.x; // 行宽（列数）
 	// int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
 	int global_index = (row_len * row_index + col_index); // 全局索引
+	// curandStateXORWOW_t local_rand_state = rand_state[global_index];
 
-	float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
-	float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
-	ray kernal_ray = get_ray_device(u, v, &rand_state[global_index]);
-	vec3 color = shading_pixel(3, kernal_ray, world, rand_state);
+	vec3 col(0, 0, 0);
+	for (int s = 0; s < PRIMARY_CAMERA.spp; s++)
+	{
+		float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
+		float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
+		ray kernal_ray = get_ray_device(u, v, &rand_state[global_index]);
+		col += shading_pixel(3, kernal_ray, world, rand_state);
+	}
+	// rand_state[pixel_index] = local_rand_state;
+	col /= float(PRIMARY_CAMERA.spp);
+	col[0] = sqrt(col[0]);
+	col[1] = sqrt(col[1]);
+	col[2] = sqrt(col[2]);
 
-	frame_buffer[global_index] = color;
+	frame_buffer[global_index] = col;
 }
 
 int main(void)
