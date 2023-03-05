@@ -53,7 +53,7 @@ public:
 
         // 在发生折射的情况下，每次也只生成一条光线，要么折射光，要么反射光，二者占比满足折射/反射的光能分配
         // reflect_prob 的值在 0-1 之间，表示反射光的光能占比
-        if (random_double_device(rand_state) < reflect_prob)
+        if (random_float_device(rand_state) < reflect_prob)
         {
             scattered = ray(rec.p, reflected);
         } // 明白

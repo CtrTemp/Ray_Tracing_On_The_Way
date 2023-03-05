@@ -16,13 +16,25 @@ class vec3
 {
 
 public:
-	__device__ __host__ vec3() {}
+	// 一个发现！@！！！！！ 以下这种方式创建default可以在内核使用 new 关键字创建变量
+	// 并且也支持多维数组直接创建！！！
+	__device__ __host__ vec3() = default;
+	// // 但是下面这种方式却不被接受！！！
+	// __device__ __host__ vec3(){};
 	__device__ __host__ vec3(float e0, float e1, float e2)
 	{
 		e[0] = e0;
 		e[1] = e1;
 		e[2] = e2;
 	}
+
+	// // 赋值构造函数
+	// __device__ __host__ inline void operator=(const vec3 &v)
+	// {
+	// 	e[0] = v.e[0];
+	// 	e[1] = v.e[1];
+	// 	e[2] = v.e[2];
+	// }
 
 	__host__ __device__ inline float x() const { return e[0]; }
 	__host__ __device__ inline float y() const { return e[1]; }
