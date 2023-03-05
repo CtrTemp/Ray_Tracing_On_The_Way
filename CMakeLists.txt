@@ -6,7 +6,7 @@ project(demo)
 find_package(CUDA)
 
 # 注意 “不要进行代码优化！！！使用-O选项，否则默认为-O2”
-set(CUDA_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g;-O3)
+set(CUDA_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g)
 set(CMAKE_NVCC_FLAGS "CMAKE_NVCC_FLAGS -std=c++11")
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)

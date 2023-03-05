@@ -196,7 +196,7 @@ __host__ __device__ inline bool vec3::operator==(const vec3 v)
 		return false;
 }
 
-__host__ __device__ inline vec3 unit_vector(vec3 v)
+__host__ __device__ inline vec3 unit_vector(const vec3 &v)
 {
 	return v / v.length();
 }

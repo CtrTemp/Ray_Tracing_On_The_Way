@@ -13,13 +13,13 @@ class lambertian : public material
 {
 public:
     __device__ lambertian(vec3 a) : albedo(a) {}
-    __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuated, ray &scattered, curandStateXORWOW_t *rand_state) const
+    __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandStateXORWOW_t *rand_state) const
     {
         vec3 target = rec.p + rec.normal + random_in_unit_sphere_device(rand_state); // 获得本次打击后得到的下一个目标点
 
         scattered = ray(rec.p, target - rec.p); // 本次击中一个目标点后的下一个射线（获得散射光线）
         // attenuated = albedo->value(rec.u, rec.v, rec.p);
-        attenuated = albedo;
+        attenuation = albedo;
 
         return (dot(scattered.direction(), rec.normal) > 0);
         // return true;

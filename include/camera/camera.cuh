@@ -19,7 +19,6 @@
 
 #define FRAME_WIDTH 512
 #define FRAME_HEIGHT 512
-
 typedef struct
 {
 	vec3 lookfrom;

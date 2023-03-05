@@ -11,17 +11,17 @@
 
 __device__ __forceinline__ double random_double_device(curandStateXORWOW *rand_state)
 {
-    return curand_uniform_double(rand_state);
+    return curand_uniform(rand_state);
 }
 
 __device__ __forceinline__ double random_double_device(double min, double max, curandStateXORWOW *rand_state)
 {
-    return min + (max - min) * curand_uniform_double(rand_state);
+    return min + (max - min) * curand_uniform(rand_state);
 }
 
 __device__ __forceinline__ vec3 random_vec3_device(curandStateXORWOW *rand_state)
 {
-    return vec3(curand_uniform_double(rand_state), curand_uniform_double(rand_state), curand_uniform_double(rand_state));
+    return vec3(curand_uniform(rand_state), curand_uniform(rand_state), curand_uniform(rand_state));
 }
 
 __device__ __forceinline__ vec3 random_vec3(double min, double max, curandStateXORWOW *rand_state)

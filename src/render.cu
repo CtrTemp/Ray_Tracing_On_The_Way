@@ -2,10 +2,10 @@
 
 /* ##################################### 随机数初始化 ##################################### */
 
-// __host__ curandStateXORWOW_t *init_rand(int block_size_width, int block_size_height)
+// __host__ curandStateXORWOW *init_rand(int block_size_width, int block_size_height)
 // {
-//     curandStateXORWOW_t *states;
-//     cudaMalloc(&states, sizeof(curandStateXORWOW_t) * FRAME_WIDTH * FRAME_HEIGHT);
+//     curandStateXORWOW *states;
+//     cudaMalloc(&states, sizeof(curandStateXORWOW) * FRAME_WIDTH * FRAME_HEIGHT);
 
 //     unsigned int grid_size_width = FRAME_WIDTH / block_size_width;
 //     unsigned int grid_size_height = FRAME_HEIGHT / block_size_height;
@@ -18,7 +18,7 @@
 //     return states;
 // }
 
-__global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size)
+__global__ void initialize_device_random(curandStateXORWOW *states, unsigned long long seed, size_t size)
 {
     int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
     int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
@@ -44,8 +44,11 @@ __host__ camera *createCamera(void)
 {
     cameraCreateInfo createCamera{};
 
-    createCamera.lookfrom = vec3(20, 15, 20);
-    createCamera.lookat = vec3(0, 0, 0);
+    // *d_camera = new camera(vec3(-2, 2, 1),
+    //                        vec3(0, 0, -1),
+    //                        vec3(0, 1, 0),
+    createCamera.lookfrom = vec3(-2, 2, 1);
+    createCamera.lookat = vec3(0, 0, -1);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -57,7 +60,7 @@ __host__ camera *createCamera(void)
     createCamera.frame_width = FRAME_WIDTH;
     createCamera.frame_height = FRAME_HEIGHT;
 
-    createCamera.spp = 100;
+    createCamera.spp = 1;
 
     // 学会像vulkan那样构建
     return new camera(createCamera);
@@ -65,7 +68,7 @@ __host__ camera *createCamera(void)
 
 /* ##################################### 场景初始化 ##################################### */
 
-// __host__ hitable **init_world(curandStateXORWOW_t *rand_states)
+// __host__ hitable **init_world(curandStateXORWOW *rand_states)
 // {
 //     hitable **world_device;
 //     hitable **list_device;
@@ -76,19 +79,31 @@ __host__ camera *createCamera(void)
 //     return world_device;
 // }
 
-__global__ void gen_world(curandStateXORWOW_t *rand_state, hitable **world, hitable **list)
+__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list)
 {
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        list[0] = new sphere(vec3(0, -100, 0), 100, new lambertian(vec3(0.5, 0.1, 0.1)));
-        list[1] = new sphere(vec3(0, 1, 0), 1, new lambertian(vec3(0.1, 0.1, 0.9)));
-        *world = new hitable_list(list, 2);
+        list[0] = new sphere(vec3(0, 0, -1), 0.5,
+                             new lambertian(vec3(0.1, 0.2, 0.5)));
+        list[1] = new sphere(vec3(0, -100.5, -1), 100,
+                             new lambertian(vec3(0.8, 0.8, 0.0)));
+        list[2] = new sphere(vec3(1, 0, -1), 0.5,
+                             new mental(vec3(0.8, 0.6, 0.2), 0.0));
+        list[3] = new sphere(vec3(-1, 0, -1), 0.5,
+                             new dielectric(1.5));
+        list[4] = new sphere(vec3(-1, 0, -1), -0.45,
+                             new dielectric(1.5));
+        *world = new hitable_list(list, 5);
+
+        // list[0] = new sphere(vec3(0, -100, 0), 100, new lambertian(vec3(0.5, 0.1, 0.1)));
+        // list[1] = new sphere(vec3(0, 1, 0), 1, new lambertian(vec3(0.1, 0.1, 0.9)));
+        // *world = new hitable_list(list, 2);
     }
 }
 /* ##################################### 光线投射全局渲染 ##################################### */
 
-// __host__ void render(int block_size_width, int block_size_height, curandStateXORWOW_t *rand_states, hitable **world_device, vec3 *frame_buffer_host)
+// __host__ void render(int block_size_width, int block_size_height, curandStateXORWOW *rand_states, hitable **world_device, vec3 *frame_buffer_host)
 // {
 //     vec3 *frame_buffer_device;
 //     int size = FRAME_WIDTH * FRAME_HEIGHT * sizeof(vec3);
@@ -119,13 +134,13 @@ __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state)
 
     vec3 rd = lens_radius * random_in_unit_disk_device(rand_state); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
     vec3 offset = rd.x() * u + rd.y() * v;                          // origin视点中心偏移（由xoy平面映射到u、v平面）
-    offset = vec3(0, 0, 0);
+    offset = vec3(0, 0, 0);                                         // 这里目前有bug，先置为0
     float time = time0 + random_double_device(rand_state) * (time1 - time0);
     return ray(origin + offset, upper_left_conner + s * horizontal + t * vertical - origin - offset);
     // return ray(origin, upper_left_conner + u * horizontal + v * vertical - origin);
 }
 
-__device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandStateXORWOW_t *rand_state)
+__device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandStateXORWOW *rand_state)
 {
 
     hit_record rec;
@@ -155,39 +170,43 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandSt
             return cur_attenuation * c;
         }
     }
-    return vec3(0.0, 0.0, 0.0);
+    return vec3(0.90, 0.0, 0.0);
 }
-__global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW_t *rand_state)
+__global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW *rand_state, float *debug_buffer)
 {
-    int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
-    int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
+    int row_index = threadIdx.y + blockIdx.y * blockDim.y; // 当前线程所在行索引
+    int col_index = threadIdx.x + blockIdx.x * blockDim.x; // 当前线程所在列索引
 
-    if ((row_index >= FRAME_HEIGHT) || (col_index >= FRAME_WIDTH))
-    {
-        return;
-    }
-    ray a_ray;
-    ray asdfa = ray();
-
+    // if ((row_index >= FRAME_HEIGHT) || (col_index >= FRAME_WIDTH))
+    // {
+    //     return;
+    // }
+    // if (row_index % 16 != 0)
+    //     printf("row");
+    // if (col_index % 16 != 0)
+    //     printf("col");
     int row_len = gridDim.x * blockDim.x; // 行宽（列数）
     // int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
     int global_index = (row_len * row_index + col_index); // 全局索引
-    // curandStateXORWOW_t local_rand_state = rand_state[global_index];
+    curandStateXORWOW local_rand_state = rand_state[global_index];
 
     vec3 col(0, 0, 0);
     for (int s = 0; s < PRIMARY_CAMERA.spp; s++)
     {
-        float u = float(col_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_width);
-        float v = float(row_index + random_double_device(&rand_state[global_index])) / float(PRIMARY_CAMERA.frame_height);
+        float u = float(col_index + 0) / float(PRIMARY_CAMERA.frame_width);
+        float v = float(row_index + 0) / float(PRIMARY_CAMERA.frame_height);
+
         ray kernal_ray = get_ray_device(u, v, &rand_state[global_index]);
-        col += shading_pixel(3, kernal_ray, world, rand_state);
+        col += shading_pixel(3, kernal_ray, world, &local_rand_state);
     }
-    // rand_state[pixel_index] = local_rand_state;
+    rand_state[global_index] = local_rand_state;
     col /= float(PRIMARY_CAMERA.spp);
     col[0] = sqrt(col[0]);
     col[1] = sqrt(col[1]);
     col[2] = sqrt(col[2]);
+    // col = random_vec3_device(&local_rand_state);
 
+    debug_buffer[global_index] = col[0];
     frame_buffer[global_index] = col;
 }
 
@@ -204,15 +223,15 @@ __host__ void init_and_render(void)
     unsigned int block_size_height = 32;
     unsigned int grid_size_width = FRAME_WIDTH / block_size_width;
     unsigned int grid_size_height = FRAME_HEIGHT / block_size_height;
-    dim3 dimBlock(block_size_height, block_size_width, 1);
-    dim3 dimGrid(grid_size_height, grid_size_width, 1);
+    dim3 dimBlock(block_size_height, block_size_width);
+    dim3 dimGrid(grid_size_height, grid_size_width);
 
     /* ##################################### 随机数初始化 ##################################### */
-    curandStateXORWOW_t *states;
-    cudaMalloc(&states, sizeof(curandStateXORWOW_t) * FRAME_WIDTH * FRAME_HEIGHT);
+    curandStateXORWOW *states;
+    cudaMalloc((void **)&states, sizeof(curandStateXORWOW) * FRAME_WIDTH * FRAME_HEIGHT);
     initialize_device_random<<<dimGrid, dimBlock>>>(states, time(nullptr), FRAME_WIDTH * FRAME_HEIGHT);
     cudaDeviceSynchronize();
-    // curandStateXORWOW_t *states = init_rand(block_size_width, block_size_height);
+    // curandStateXORWOW *states = init_rand(block_size_width, block_size_height);
 
     /* ##################################### 摄像机初始化 ##################################### */
     int camera_size = sizeof(camera);
@@ -224,7 +243,7 @@ __host__ void init_and_render(void)
     /* ##################################### 场景初始化 ##################################### */
     hitable **world_device;
     hitable **list_device;
-    cudaMalloc((void **)&world_device, 2 * sizeof(hitable *));
+    cudaMalloc((void **)&world_device, 5 * sizeof(hitable *));
     cudaMalloc((void **)&list_device, sizeof(hitable *));
     gen_world<<<1, 1>>>(states, world_device, list_device);
     // hitable **world = init_world(states);
@@ -232,15 +251,33 @@ __host__ void init_and_render(void)
     /* ##################################### 全局渲染入口 ##################################### */
     // 初始化帧缓存
     vec3 *frame_buffer_device;
+    float *debug_buffer_device;
     int size = FRAME_WIDTH * FRAME_HEIGHT * sizeof(vec3);
     cudaMalloc((void **)&frame_buffer_device, size);
-    cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+    cudaMalloc((void **)&debug_buffer_device, FRAME_WIDTH * FRAME_HEIGHT * sizeof(float));
+    cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states, debug_buffer_device);
     cudaDeviceSynchronize();
     // 在主机开辟 framebuffer 空间
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
+    float *debug_buffer_host = new float[FRAME_WIDTH * FRAME_HEIGHT];
     cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(debug_buffer_host, debug_buffer_device, FRAME_WIDTH * FRAME_HEIGHT * sizeof(float), cudaMemcpyDeviceToHost);
     // vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
     // render(block_size_height, block_size_height, states, world, frame_buffer_host);
+
+    std::string debug_path = "./debug.txt";
+    std::ofstream OutputDebugText;
+    OutputDebugText.open(debug_path);
+
+    for (int row = 0; row < FRAME_HEIGHT; row++)
+    {
+        for (int col = 0; col < FRAME_WIDTH; col++)
+        {
+            int global_index = row * FRAME_WIDTH + col;
+            OutputDebugText << debug_buffer_host[global_index] << " ";
+        }
+        OutputDebugText << std::endl;
+    }
 
     std::string file_path = "./any.ppm";
     std::ofstream OutputImage;

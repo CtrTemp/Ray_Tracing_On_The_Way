@@ -3,8 +3,6 @@
 #define HITABLELIST_H
 
 #include "object/hitable.cuh"
-#include "material/lambertian.cuh"
-#include "object/geometry/sphere.cuh"
 
 #include <memory>
 
