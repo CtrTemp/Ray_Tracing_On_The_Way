@@ -47,11 +47,10 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        // material *noise = new lambertian(new noise_texture(0.25, rand_state));
+        material *noise = new lambertian(new noise_texture(2.5, rand_state));
         list[0] = new sphere(vec3(0, 0, -1), 0.5,
                              new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
-        list[1] = new sphere(vec3(0, -100.5, -1), 100,
-                             new lambertian(new noise_texture(0.25, rand_state)));
+        list[1] = new sphere(vec3(0, -100.5, -1), 100, noise);
         list[2] = new sphere(vec3(1, 0, -1), 0.5,
                              new mental(vec3(0.8, 0.6, 0.2), 0.0));
         list[3] = new sphere(vec3(-1, 0, -1), 0.5,

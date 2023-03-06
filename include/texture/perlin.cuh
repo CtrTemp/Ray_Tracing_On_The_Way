@@ -13,8 +13,8 @@ __device__ static float *perlin_generate(curandStateXORWOW *rand_state);
 __device__ static vec3 *perlin_generate_vec(curandStateXORWOW *rand_state);
 __device__ static int *perlin_generate_perm(curandStateXORWOW *rand_state);
 
-__device__ inline float trelinear_interp(float c[2][2][2], float u, float v, float w);
-__device__ inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w);
+__device__ static float trelinear_interp(float c[2][2][2], float u, float v, float w);
+__device__ static float perlin_interp(const vec3 c[2][2][2], float u, float v, float w);
 
 class perlin
 {
@@ -31,7 +31,7 @@ public:
 		perm_z = perlin_generate_perm(rand_state);
 	};
 
-	__device__ inline float noise(const vec3 &p) const
+	__device__ float noise(const vec3 &p) const
 	{
 
 		float u = p.x() - floor(p.x());
@@ -45,21 +45,24 @@ public:
 		// 注意这里模拟一个三维数组
 		vec3 c[2][2][2];
 		// vec3 c[] = {vec3(1,1,1),vec3(1,1,1),vec3(1,1,1)};
-		// vec3 *a = new vec3();
 
 		for (int page = 0; page < 2; ++page)
 			for (int row = 0; row < 2; ++row)
 				for (int col = 0; col < 2; ++col)
 				{
-					// int global_index = page * 2 * 2 + row * 2 + col;
+					// // int global_index = page * 2 * 2 + row * 2 + col;
 					vec3 assign_vec = ranvec[perm_x[(i + page) & 255] ^ perm_y[(j + row) & 255] ^ perm_z[(k + col) & 255]];
-					// ***(c + global_index) = vec3(0, 0, 0);
-					c[page][row][col] = assign_vec;
+					// // ***(c + global_index) = vec3(0, 0, 0);
+					c[page][row][col].e[0] = assign_vec.e[0];
+					c[page][row][col].e[1] = assign_vec.e[1];
+					c[page][row][col].e[2] = assign_vec.e[2];
 				}
-		// float ano = perlin_interp(c, u, v, w);
-		// return a;
+		float ano = perlin_interp(c, u, v, w);
+		// printf("ano = %f   ", c[0][0][0].e[1]);
+		// vec3 aaahaha = vec3(1, 2, 3);
+		// aaahaha.e[0] = 0.99;
 
-		return 1.85;
+		return ano;
 	}
 
 public:
@@ -93,7 +96,7 @@ public:
 	float scale;
 };
 
-__device__ inline float trelinear_interp(float c[2][2][2], float u, float v, float w)
+__device__ static float trelinear_interp(float c[2][2][2], float u, float v, float w)
 {
 	float accum = 0;
 	for (int i = 0; i < 2; ++i)
@@ -106,28 +109,38 @@ __device__ inline float trelinear_interp(float c[2][2][2], float u, float v, flo
 	return accum;
 }
 
-__device__ inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w)
+__device__ static float perlin_interp(const vec3 c[2][2][2], float u, float v, float w)
 {
 	float uu = u * u * (3 - 2 * u);
 	float vv = v * v * (3 - 2 * v);
 	float ww = w * w * (3 - 2 * w);
+	// vec3 *asdf = new vec3;
+	// *asdf = c[0][0][0];
 
-	// float accum = 0;
-	// for (int i = 0; i < 2; ++i)
-	// 	for (int j = 0; j < 2; ++j)
-	// 		for (int k = 0; k < 2; ++k)
-	// 		{
-	// 			// vec3 *weight_v = new vec3();
-	// 			// weight_v[0] = 0;
-	// 			// vec3 weight_v(u - i, v - j, w - k);
-	// 			// accum += (i * uu + (1 - i) * (1 - uu)) *
-	// 			// 		 (j * vv + (1 - j) * (1 - vv)) *
-	// 			// 		 (k * ww + (1 - k) * (1 - ww)) *
-	// 			// 		 dot(c[i][j][k], c[i][j][k]);
-	// 		}
+	// printf("%f", c[0][0][0].e[0]);
 
-	return 0.35;
-	// return fabs(accum);
+	float accum = 0;
+	for (int i = 0; i < 2; ++i)
+		for (int j = 0; j < 2; ++j)
+			for (int k = 0; k < 2; ++k)
+			{
+				vec3 weight_v;
+				weight_v.e[0] = u - i;
+				weight_v.e[1] = v - j;
+				weight_v.e[2] = w - k;
+				// 为什么在这里我写的初始化函数失效了，在一些其他的地方就可以运行
+				// vec3 weight_v(u - i, v - j, w - k);
+				// 同样的，下面的这种定义过的device函数也无法实现
+				float dot_result = c[i][j][k].e[0] * weight_v.e[0] + c[i][j][k].e[1] * weight_v.e[1] + c[i][j][k].e[2] * weight_v.e[2];
+				accum = accum + (i * uu + (1 - i) * (1 - uu)) *
+									(j * vv + (1 - j) * (1 - vv)) *
+									(k * ww + (1 - k) * (1 - ww)) * dot_result;
+				// dot(weight_v, weight_v);
+				// dot(c[i][j][k], weight_v);
+			}
+
+	// return 0.65;
+	return accum > 0 ? accum : (-accum);
 }
 
 __device__ static float *perlin_generate(curandStateXORWOW *rand_state)
