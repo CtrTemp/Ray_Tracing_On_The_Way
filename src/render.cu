@@ -1,5 +1,23 @@
 #include "render.h"
 
+#define TEXTURE_WIDTH 5
+#define TEXTURE_HEIGHT 3
+texture<float, 2> texRef2D; // 2D texture
+
+__global__ void cpy_TextureMem_To_DeviceGlobalMem(float *device_mem)
+{
+    int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
+    int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
+    int row_len = blockDim.x * gridDim.x;
+    int global_index = row_len * row_index + col_index;
+    /**
+     *  注意：
+     *  1/ 这里函数调用的行列似乎是反过来的
+     *  2/ 必须调用cuda提供的 runtime api 才能访问纹理内存中的数据
+     * */
+    device_mem[global_index] = tex2D(texRef2D, col_index, row_index);
+}
+
 /* ##################################### 随机数初始化 ##################################### */
 
 __global__ void initialize_device_random(curandStateXORWOW *states, unsigned long long seed, size_t size)
@@ -81,7 +99,7 @@ __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state)
     vec3 temp02(3, 2, 1);
 
     temp02 = -temp01;
-    
+
     // 全部相机参数
     vec3 u = PRIMARY_CAMERA.u;
     vec3 v = PRIMARY_CAMERA.v;
@@ -189,10 +207,51 @@ __host__ void init_and_render(void)
     dim3 dimBlock(block_size_width, block_size_height);
     dim3 dimGrid(grid_size_width, grid_size_height);
 
+    /* ##################################### 纹理内存测试 ##################################### */
+    int width = TEXTURE_WIDTH;
+    int height = TEXTURE_HEIGHT;
+
+    float *host2D = new float[width * height];    // host 端纹理 buffer
+    float *hostRet2D = new float[width * height]; // 返回 host 端纹理 buffer
+
+    cudaArray *cuArray; // CUDA 数组类型定义
+    float *devRet2D;    // 显存数据
+    int row, col;
+    std::cout << " host2D:" << std::endl;
+    for (row = 0; row < height; ++row) // 初始化内存原数据
+    {
+        for (col = 0; col < width; ++col)
+        {
+            host2D[row * width + col] = row + col;
+            std::cout << "  " << host2D[row * width + col] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>(); // 这一步是建立映射？？
+    cudaMallocArray(&cuArray, &channelDesc, width, height);             // 申请显存空间
+    cudaMalloc((void **)&devRet2D, sizeof(float) * width * height);
+    cudaBindTextureToArray(texRef2D, cuArray); // 将显存数据和纹理绑定
+    cudaMemcpyToArray(cuArray, 0, 0, host2D, sizeof(float) * width * height, cudaMemcpyHostToDevice);
+
+    dim3 dimGridTex(1, 1, 1);
+    dim3 dimBlockTex(width, height, 1);
+    cpy_TextureMem_To_DeviceGlobalMem<<<dimGrid, dimBlock>>>(devRet2D);
+
+    cudaMemcpy(hostRet2D, devRet2D, sizeof(float) * width * height, cudaMemcpyDeviceToHost);
+    // 打印内存数据
+    std::cout << " hostRet2D:" << std::endl;
+    for (row = 0; row < height; ++row)
+    {
+        for (col = 0; col < width; ++col)
+            std::cout << "  " << hostRet2D[row * width + col] << " ";
+        std::cout << std::endl;
+    }
+
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
     cudaMalloc((void **)&states, sizeof(curandStateXORWOW) * FRAME_WIDTH * FRAME_HEIGHT);
-    initialize_device_random<<<dimGrid, dimBlock>>>(states, time(nullptr), FRAME_WIDTH * FRAME_HEIGHT);
+    initialize_device_random<<<dimGridTex, dimBlockTex>>>(states, time(nullptr), FRAME_WIDTH * FRAME_HEIGHT);
     cudaDeviceSynchronize();
     // curandStateXORWOW *states = init_rand(block_size_width, block_size_height);
 

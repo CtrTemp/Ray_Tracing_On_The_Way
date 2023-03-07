@@ -4,7 +4,7 @@
 #include "utils/vec3.cuh"
 // 引入图片必要的stb_image库，这种定义写在头文件中的函数是否必须在cpp文件中引入？
 // #define STB_IMAGE_IMPLEMENTATION
-// #include "stb_image.h"
+#include "stb_image.h"
 #include <fstream>
 #include <string>
 
@@ -50,7 +50,7 @@ public:
 	textures *even;
 };
 
-// 暂时先不引入图像贴图
+// // 暂时先不引入图像贴图
 // class image_texture : public textures
 // {
 // public:
@@ -72,6 +72,7 @@ public:
 // 		// channels = texChannels;
 // 		channels = 4;
 // 		// 通道数强制为4！
+		
 
 // 		// 注意这里不能free掉，因为你上面的 map 进行的是浅拷贝，仅仅是传递了指针，内存中的值并没有被拷贝过去
 // 		// 稍后这里一定要改成深拷贝而后free掉pixels

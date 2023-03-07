@@ -11,20 +11,6 @@
 // 质心计算 这次我们使用莱布尼茨公式进行求解
 __device__ static void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float *alpha, float *beta, float *gamma)
 {
-    const vec3 cP = P;
-    const vec3 cA = A;
-
-    // temp02 = -temp01;
-    /**
-     *  几个问题：
-     *  1/ inline 函数意义是什么？
-     *  2/ 函数返回值地址何时被销毁，其 return 传回的是什么东西？
-     *  3/ 何时调用赋值构造函数，何时调用重载的赋值运算符
-     *  4/ C++的深浅拷贝
-     */
-    // vec3 v0(1, 2, 3);
-    // vec3 v1(1, 2, 3);
-    // vec3 v2(1, 2, 3);
     vec3 v0(B.e[0] - A.e[0], B.e[1] - A.e[1], B.e[2] - A.e[2]);
     vec3 v1(C.e[0] - A.e[0], C.e[1] - A.e[1], C.e[2] - A.e[2]);
     vec3 v2(P.e[0] - A.e[0], P.e[1] - A.e[1], P.e[2] - A.e[2]);
