@@ -1,6 +1,6 @@
 #pragma once
-#ifndef HITABLELIST_H
-#define HITABLELIST_H
+#ifndef HITABLE_LIST_H
+#define HITABLE_LIST_H
 
 #include "object/hitable.cuh"
 

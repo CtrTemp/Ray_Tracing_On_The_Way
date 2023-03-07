@@ -15,10 +15,10 @@
 // #include <opencv2/imgproc.hpp>
 
 #include "object/hitable.cuh"
-#include "object/group/hitableList.cuh"
+#include "object/group/hitable_list.cuh"
 
-#define FRAME_WIDTH 512
-#define FRAME_HEIGHT 512
+#define FRAME_WIDTH 1000
+#define FRAME_HEIGHT 500
 typedef struct
 {
 	vec3 lookfrom;
@@ -80,9 +80,10 @@ public:
 		horizontal = 2 * half_width * createInfo.focus_dist * u;
 		vertical = 2 * half_height * createInfo.focus_dist * v;
 
+
 		spp = createInfo.spp;
 	};
-	__host__ void renderFrame(PresentMethod present, std::string file_path); //
+	// __host__ void renderFrame(PresentMethod present, std::string file_path); //
 	// __host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host); //
 
 	// __host__ vec3 *cast_ray_device(float frame_width, float frame_height, int spp);

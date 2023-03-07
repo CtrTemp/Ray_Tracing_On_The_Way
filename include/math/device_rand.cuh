@@ -9,27 +9,27 @@
 
 
 
-__device__ __forceinline__ double random_float_device(curandStateXORWOW *rand_state)
+__device__ inline double random_float_device(curandStateXORWOW *rand_state)
 {
     return curand_uniform(rand_state);
 }
 
-__device__ __forceinline__ double random_float_device(double min, double max, curandStateXORWOW *rand_state)
+__device__ inline double random_float_device(double min, double max, curandStateXORWOW *rand_state)
 {
     return min + (max - min) * curand_uniform(rand_state);
 }
 
-__device__ __forceinline__ vec3 random_vec3_device(curandStateXORWOW *rand_state)
+__device__ inline vec3 random_vec3_device(curandStateXORWOW *rand_state)
 {
     return vec3(curand_uniform(rand_state), curand_uniform(rand_state), curand_uniform(rand_state));
 }
 
-__device__ __forceinline__ vec3 random_vec3(double min, double max, curandStateXORWOW *rand_state)
+__device__ inline vec3 random_vec3(double min, double max, curandStateXORWOW *rand_state)
 {
     return vec3(random_float_device(min, max, rand_state), random_float_device(min, max, rand_state), random_float_device(min, max, rand_state));
 }
 
-__device__ __forceinline__ vec3 random_in_unit_disk_device(curandStateXORWOW *rand_state)
+__device__ inline vec3 random_in_unit_disk_device(curandStateXORWOW *rand_state)
 {
     vec3 p;
     do
@@ -40,7 +40,7 @@ __device__ __forceinline__ vec3 random_in_unit_disk_device(curandStateXORWOW *ra
     return p;
 }
 
-__device__ __forceinline__ vec3 random_in_unit_sphere_device(curandStateXORWOW *rand_state)
+__device__ inline vec3 random_in_unit_sphere_device(curandStateXORWOW *rand_state)
 {
     vec3 p;
     do

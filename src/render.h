@@ -5,7 +5,9 @@
 #include "material/lambertian.cuh"
 #include "material/mental.cuh"
 #include "material/dielectric.cuh"
+#include "material/diffuse_light.cuh"
 #include "texture/perlin.cuh"
+#include <sys/time.h>
 /* ##################################### 随机数初始化 ##################################### */
 // __host__ curandStateXORWOW_t *init_rand(int block_size_width, int block_size_height);
 __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size);

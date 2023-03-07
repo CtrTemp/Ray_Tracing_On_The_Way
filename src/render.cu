@@ -6,9 +6,12 @@ __global__ void initialize_device_random(curandStateXORWOW *states, unsigned lon
 {
     int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
     int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
-
-    int row_len = gridDim.x * blockDim.x; // 行宽（列数）
-    // int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
+    if ((row_index >= FRAME_HEIGHT) || (col_index >= FRAME_WIDTH))
+    {
+        return;
+    }
+    int row_len = FRAME_WIDTH; // 行宽（列数）
+    // int col_len = FRAME_HEIGHT;                 // 列高（行数）
     int global_index = (row_len * row_index + col_index); // 全局索引
 
     curand_init(seed, global_index, 0, &states[global_index]);
@@ -25,14 +28,14 @@ __host__ camera *createCamera(void)
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
     createCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
-    createCamera.focus_dist = 10.0;
+    createCamera.focus_dist = 10.0; // 这里是焦距
     createCamera.aperture = 1;
     createCamera.t0 = 0.0;
     createCamera.t1 = 1.0;
     createCamera.frame_width = FRAME_WIDTH;
     createCamera.frame_height = FRAME_HEIGHT;
 
-    createCamera.spp = 1;
+    createCamera.spp = 100;
 
     // 学会像vulkan那样构建
     return new camera(createCamera);
@@ -42,17 +45,21 @@ __host__ camera *createCamera(void)
 
 __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list)
 {
-    // perlin per_temp(rand_state);
-    // printf("per_temp x = %f\n", per_temp.noise(vec3(100, 2, 3)));
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         material *noise = new lambertian(new noise_texture(2.5, rand_state));
+        material *light = new diffuse_light(new constant_texture(vec3(6, 6, 6)));
+        material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
+        material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
+        material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
+
         list[0] = new sphere(vec3(0, 0, -1), 0.5,
-                             new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
+                             light);
+        //  new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
         list[1] = new sphere(vec3(0, -100.5, -1), 100, noise);
         list[2] = new sphere(vec3(1, 0, -1), 0.5,
-                             new mental(vec3(0.8, 0.6, 0.2), 0.0));
+                             new mental(vec3(0.8, 0.6, 0.2), 0.1));
         list[3] = new sphere(vec3(-1, 0, -1), 0.5,
                              new dielectric(1.5));
         list[4] = new sphere(vec3(-1, 0, -1), -0.45,
@@ -73,6 +80,9 @@ __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state)
     vec3 upper_left_conner = PRIMARY_CAMERA.upper_left_conner;
     vec3 horizontal = PRIMARY_CAMERA.horizontal;
     vec3 vertical = PRIMARY_CAMERA.vertical;
+
+    float hor_len = horizontal.length();
+    float ver_len = vertical.length();
 
     vec3 rd = lens_radius * random_in_unit_disk_device(rand_state); // 得到设定光孔大小内的任意散点（即origin点——viewpoint）
     vec3 offset = rd.x() * u + rd.y() * v;                          // origin视点中心偏移（由xoy平面映射到u、v平面）
@@ -99,6 +109,10 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandSt
                 cur_attenuation *= attenuation;
                 cur_ray = scattered;
             }
+            else if (rec.mat_ptr->hasEmission())
+            {
+                return rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+            }
             else
             {
                 return vec3(0.0, 0.0, 0.0);
@@ -116,21 +130,27 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandSt
 }
 __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW *rand_state)
 {
-    int row_index = threadIdx.y + blockIdx.y * blockDim.y; // 当前线程所在行索引
-    int col_index = threadIdx.x + blockIdx.x * blockDim.x; // 当前线程所在列索引
+    int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
+    int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
 
-    int row_len = gridDim.x * blockDim.x; // 行宽（列数）
-    // int col_len = gridDim.y * blockDim.y;                 // 列高（行数）
+    if ((row_index >= FRAME_HEIGHT) || (col_index >= FRAME_WIDTH))
+    {
+        return;
+    }
+
+    int row_len = FRAME_WIDTH; // 行宽（列数）
+    // int col_len = FRAME_HEIGHT;                           // 列高（行数）
     int global_index = (row_len * row_index + col_index); // 全局索引
     curandStateXORWOW local_rand_state = rand_state[global_index];
 
     vec3 col(0, 0, 0);
+    // random_float_device(&local_rand_state)
     for (int s = 0; s < PRIMARY_CAMERA.spp; s++)
     {
-        float u = float(col_index + 0) / float(PRIMARY_CAMERA.frame_width);
-        float v = float(row_index + 0) / float(PRIMARY_CAMERA.frame_height);
+        float u = float(col_index + random_float_device(&local_rand_state)) / float(FRAME_WIDTH);
+        float v = float(row_index + random_float_device(&local_rand_state)) / float(FRAME_HEIGHT);
 
-        ray kernal_ray = get_ray_device(u, v, &rand_state[global_index]);
+        ray kernal_ray = get_ray_device(u, v, &local_rand_state);
         col += shading_pixel(3, kernal_ray, world, &local_rand_state);
     }
     rand_state[global_index] = local_rand_state;
@@ -153,10 +173,10 @@ __host__ void init_and_render(void)
 
     unsigned int block_size_width = 32;
     unsigned int block_size_height = 32;
-    unsigned int grid_size_width = FRAME_WIDTH / block_size_width;
-    unsigned int grid_size_height = FRAME_HEIGHT / block_size_height;
-    dim3 dimBlock(block_size_height, block_size_width);
-    dim3 dimGrid(grid_size_height, grid_size_width);
+    unsigned int grid_size_width = FRAME_WIDTH / block_size_width + 1;
+    unsigned int grid_size_height = FRAME_HEIGHT / block_size_height + 1;
+    dim3 dimBlock(block_size_width, block_size_height);
+    dim3 dimGrid(grid_size_width, grid_size_height);
 
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
@@ -180,13 +200,29 @@ __host__ void init_and_render(void)
     gen_world<<<1, 1>>>(states, world_device, list_device);
     // hitable **world = init_world(states);
 
+    /* ################################## 初始化 CUDA 计时器 ################################## */
+    cudaEvent_t start, stop;
+    float time_cost = 0;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
     /* ##################################### 全局渲染入口 ##################################### */
     // 初始化帧缓存
     vec3 *frame_buffer_device;
     int size = FRAME_WIDTH * FRAME_HEIGHT * sizeof(vec3);
     cudaMalloc((void **)&frame_buffer_device, size);
+    cudaEventRecord(start); // device端 开始计时
     cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+    cudaEventRecord(stop); // device端 计时结束
     cudaDeviceSynchronize();
+    cudaEventSynchronize(stop); // 计时同步
+
+    cudaEventElapsedTime(&time_cost, start, stop); // 计算用时，单位为ms
+    // 停止计时
+    std::cout << ": The total time of the pirmary loop is: " << time_cost << "ms" << std::endl;
+
+    /* #################################### host端写图像文件 #################################### */
+
     // 在主机开辟 framebuffer 空间
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
     cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
@@ -211,4 +247,7 @@ __host__ void init_and_render(void)
             OutputImage << ir << " " << ig << " " << ib << "\n";
         }
     }
+
+    std::cout << "Render Loop ALL DONE" << std::endl;
+
 }
