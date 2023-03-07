@@ -22,8 +22,10 @@ __global__ void initialize_device_random(curandStateXORWOW *states, unsigned lon
 __host__ camera *createCamera(void)
 {
     cameraCreateInfo createCamera{};
-    createCamera.lookfrom = vec3(-2, 2, 1);
-    createCamera.lookat = vec3(0, 0, -1);
+    // createCamera.lookfrom = vec3(-2, 2, 1);
+    // createCamera.lookat = vec3(0, 0, -1);
+    createCamera.lookfrom = vec3(2, 2, 2);
+    createCamera.lookat = vec3(0, 0, 0);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -35,7 +37,7 @@ __host__ camera *createCamera(void)
     createCamera.frame_width = FRAME_WIDTH;
     createCamera.frame_height = FRAME_HEIGHT;
 
-    createCamera.spp = 100;
+    createCamera.spp = 1;
 
     // 学会像vulkan那样构建
     return new camera(createCamera);
@@ -45,32 +47,41 @@ __host__ camera *createCamera(void)
 
 __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list)
 {
+
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         material *noise = new lambertian(new noise_texture(2.5, rand_state));
+        material *diffuse_steelblue = new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5)));
+        material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.1);
+        material *glass = new dielectric(1.5);
         material *light = new diffuse_light(new constant_texture(vec3(6, 6, 6)));
         material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
         material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
         material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
-        list[0] = new sphere(vec3(0, 0, -1), 0.5,
-                             light);
-        //  new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
-        list[1] = new sphere(vec3(0, -100.5, -1), 100, noise);
-        list[2] = new sphere(vec3(1, 0, -1), 0.5,
-                             new mental(vec3(0.8, 0.6, 0.2), 0.1));
-        list[3] = new sphere(vec3(-1, 0, -1), 0.5,
-                             new dielectric(1.5));
-        list[4] = new sphere(vec3(-1, 0, -1), -0.45,
-                             new dielectric(1.5));
-        *world = new hitable_list(list, 5);
+        vertex v1(vec3(1, 0, 0)), v2(vec3(0, 1, 0)), v3(vec3(0, 0, 1));
+        triangle t1(v1, v2, v3, light_red);
+
+        int obj_index = 0;
+
+        list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
+        list[obj_index++] = new triangle(v1, v2, v3, diffuse_steelblue);
+        // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
+        // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
+        // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
+        *world = new hitable_list(list, 2);
     }
 }
 /* ##################################### 光线投射全局渲染 ##################################### */
 
 __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state)
 {
+    vec3 temp01(1, 2, 3);
+    vec3 temp02(3, 2, 1);
+
+    temp02 = -temp01;
+    
     // 全部相机参数
     vec3 u = PRIMARY_CAMERA.u;
     vec3 v = PRIMARY_CAMERA.v;
@@ -98,7 +109,7 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandSt
     hit_record rec;
     ray cur_ray = r;
     vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < depth; i++)
     {
         if ((*world)->hit(cur_ray, 0.001f, 999999, rec))
         {
@@ -151,7 +162,7 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandSta
         float v = float(row_index + random_float_device(&local_rand_state)) / float(FRAME_HEIGHT);
 
         ray kernal_ray = get_ray_device(u, v, &local_rand_state);
-        col += shading_pixel(3, kernal_ray, world, &local_rand_state);
+        col += shading_pixel(BOUNCE_DEPTH, kernal_ray, world, &local_rand_state);
     }
     rand_state[global_index] = local_rand_state;
     col /= float(PRIMARY_CAMERA.spp);
@@ -195,7 +206,7 @@ __host__ void init_and_render(void)
     /* ##################################### 场景初始化 ##################################### */
     hitable **world_device;
     hitable **list_device;
-    cudaMalloc((void **)&world_device, 5 * sizeof(hitable *));
+    cudaMalloc((void **)&world_device, 15 * sizeof(hitable *));
     cudaMalloc((void **)&list_device, sizeof(hitable *));
     gen_world<<<1, 1>>>(states, world_device, list_device);
     // hitable **world = init_world(states);
@@ -249,5 +260,4 @@ __host__ void init_and_render(void)
     }
 
     std::cout << "Render Loop ALL DONE" << std::endl;
-
 }

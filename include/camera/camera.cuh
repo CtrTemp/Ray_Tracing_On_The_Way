@@ -19,6 +19,9 @@
 
 #define FRAME_WIDTH 1000
 #define FRAME_HEIGHT 500
+
+#define BOUNCE_DEPTH 50
+
 typedef struct
 {
 	vec3 lookfrom;

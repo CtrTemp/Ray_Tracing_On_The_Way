@@ -2,11 +2,13 @@
 #define RENDER_H
 #include "camera/camera.cuh"
 #include "object/geometry/sphere.cuh"
+#include "object/primitive/triangle.cuh"
 #include "material/lambertian.cuh"
 #include "material/mental.cuh"
 #include "material/dielectric.cuh"
 #include "material/diffuse_light.cuh"
 #include "texture/perlin.cuh"
+
 #include <sys/time.h>
 /* ##################################### 随机数初始化 ##################################### */
 // __host__ curandStateXORWOW_t *init_rand(int block_size_width, int block_size_height);
