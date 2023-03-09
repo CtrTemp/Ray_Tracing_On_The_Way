@@ -9,10 +9,10 @@ find_package(CUDA)
 set(CUDA_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g;-O0)
 set(CMAKE_NVCC_FLAGS "CMAKE_NVCC_FLAGS -gencode arch=compute_86,code=sm_86;-G;-g;-O0")
 
-# if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-#     set(CMAKE_CUDA_ARCHITECTURES 86)
-#     # set(CMAKE_CUDA_ARCHITECTURES 70 75 80)
-# endif(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES 86)
+    # set(CMAKE_CUDA_ARCHITECTURES 70 75 80)
+endif(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
 #添加项目自身的库和依赖
 aux_source_directory(src SRC_LIST)#添加src目录下的所有源文件

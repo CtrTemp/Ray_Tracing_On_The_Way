@@ -1,12 +1,27 @@
 #ifndef TEXTURES_H
 #define TEXTURES_H
 
+// 没有这个定义会报错？！@为啥
+#define __CUDACC__
+
 #include "utils/vec3.cuh"
+
+// 下面这俩库必须手动添加，并不包含在 <cuda_runtime.h> 中
+#include <cuda_texture_types.h>
+#include <texture_fetch_functions.h>
 // 引入图片必要的stb_image库，这种定义写在头文件中的函数是否必须在cpp文件中引入？
 // #define STB_IMAGE_IMPLEMENTATION
 // #include "stb_image.h"
 #include <fstream>
 #include <string>
+
+// texture<uchar4, cudaTextureType2D, cudaReadModeElementType> _texRef2D_;
+// texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_image;
+#define TEXTURE_WIDTH 5
+#define TEXTURE_HEIGHT 3
+
+texture<float, 2> texRef2D_test;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_image_test;
 
 // 贴图类 基类
 // 注意贴图与材质不同, 可以理解为贴图是材质的一种附加属性, 主要展示材质的"颜色"属性
@@ -50,53 +65,41 @@ public:
 	textures *even;
 };
 
-// // 暂时先不引入图像贴图
-// class image_texture : public textures
-// {
-// public:
-// 	image_texture() = default;
-// 	image_texture(std::string image_path)
-// 	{
-// 		int texWidth, texHeight, texChannels;
-// 		stbi_uc *pixels = stbi_load(image_path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-// 		size_t imageSize = texWidth * texHeight * 4; // RGB（A） 三（四）通道
+// 暂时先不引入图像贴图
+class image_texture : public textures
+{
+public:
+	__device__ image_texture() = default;
+	__device__ image_texture(unsigned int w, unsigned int h, unsigned int ch, unsigned int texture_index)
+	{
+		textureWidth = w;
+		textureHeight = h;
+		channels = ch;
+		global_texture_offset = texture_index;
+	}
+	__device__ virtual vec3 value(float u, float v, const vec3 &p) const
+	{
 
-// 		if (!pixels)
-// 		{
-// 			throw std::runtime_error("failed to load texture image!");
-// 		}
+		int col_index = u * textureWidth;
+		int row_index = v * textureHeight;
 
-// 		map = pixels;
-// 		textureWidth = texWidth;
-// 		textureHeight = texHeight;
-// 		// channels = texChannels;
-// 		channels = 4;
-// 		// 通道数强制为4！
-		
+		// printf("index = [%d,%d]", col_index, row_index);
 
-// 		// 注意这里不能free掉，因为你上面的 map 进行的是浅拷贝，仅仅是传递了指针，内存中的值并没有被拷贝过去
-// 		// 稍后这里一定要改成深拷贝而后free掉pixels
-// 		// stbi_image_free(pixels);
-// 	}
-// 	virtual vec3 value(float u, float v, const vec3 &p) const
-// 	{
+		uchar4 pixel = tex2D(texRef2D_image_test, row_index, col_index);
 
-// 		int index_x = u * textureWidth;
-// 		int index_y = v * textureHeight;
-// 		int index = (index_y * textureWidth + index_x) * static_cast<int>(channels);
+		vec3 color = vec3((float)(pixel.x) / 256,
+						  (float)(pixel.y) / 256,
+						  (float)(pixel.z) / 256);
 
-// 		vec3 color = vec3(static_cast<float>(map[index + 0]) / 256,
-// 						  static_cast<float>(map[index + 1]) / 256,
-// 						  static_cast<float>(map[index + 2]) / 256);
+		// printf(" vec = [%d,%d,%d,%d] ", pixel.x, pixel.y, pixel.z, pixel.w);
 
-// 		return color;
-// 	}
-
-// 	unsigned char *map;
-// 	uint16_t textureWidth;
-// 	uint16_t textureHeight;
-// 	unsigned char channels;
-// };
+		return color;
+	}
+	unsigned long global_texture_offset;
+	unsigned int textureWidth;
+	unsigned int textureHeight;
+	unsigned int channels;
+};
 
 #endif
 
