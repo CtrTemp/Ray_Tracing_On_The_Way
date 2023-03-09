@@ -385,7 +385,7 @@ __host__ void init_and_render(void)
     cudaMallocArray(&cuArray, &channelDesc, texWidth, texHeight);        // 为array申请显存空间
     // 申请显存空间应该是以往的三倍（四通道应该是四倍）
     // 我们应该先对读到的数据进行转PPM验证，从而得出读取到的图像的RGB通道到底是如何排布的
-    cudaBindTextureToArray(texRef2D_test, cuArray);
+    cudaBindTextureToArray(texRef2D_image_test, cuArray);
     // 将显存数据和纹理绑定，texRef2D_image 实际上是 cuArray 的一个副本引用
     cudaMemcpyToArray(cuArray, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
