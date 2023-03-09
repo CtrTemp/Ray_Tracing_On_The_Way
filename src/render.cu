@@ -200,7 +200,8 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
         material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
-        material *image_tex = new diffuse_light(new image_texture(512, 512, 4, 0));
+        // material *image_tex = new diffuse_light(new image_texture(512, 512, 4, 0));
+        material *image_tex = new diffuse_light(new image_texture(512, 512, 4, 1));
 
         // vertex testVertexList[4] = {
         //     {vec3(5.66, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
@@ -346,6 +347,7 @@ __host__ void init_and_render(void)
 
     test_texture_mem();
 
+    /* ##################################### 纹理导入01 ##################################### */
     std::string test_texture_path = "../Pic/textures/texture.png";
     // std::string test_texture_path = "../Pic/textures/sky0_cube.png";
     uchar4 *texture_host; // = new u_char[TEXTURE_WIDTH * TEXTURE_HEIGHT];
@@ -389,6 +391,30 @@ __host__ void init_and_render(void)
     // 将显存数据和纹理绑定，texRef2D_image 实际上是 cuArray 的一个副本引用
     cudaMemcpyToArray(cuArray, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
+    /* ##################################### 纹理导入02 ##################################### */
+    
+    // std::string test_texture_path = "../Pic/textures/texture.png";
+    test_texture_path = "../Pic/textures/sky0_cube.png";
+
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+
+    pixel_num = texWidth * texHeight;
+
+    std::cout << "image size = [" << texWidth << "," << texHeight << "]" << std::endl;
+    std::cout << "image channels = " << texChannels << std::endl;
+
+    cudaArray *cuArray_sky_test;                                                  // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_sky_test = cudaCreateChannelDesc<uchar4>(); // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_sky_test, &channelDesc_sky_test, texWidth, texHeight);        // 为array申请显存空间
+    // 申请显存空间应该是以往的三倍（四通道应该是四倍）
+    // 我们应该先对读到的数据进行转PPM验证，从而得出读取到的图像的RGB通道到底是如何排布的
+    cudaBindTextureToArray(texRef2D_skybox_test, cuArray_sky_test);
+    // 将显存数据和纹理绑定，texRef2D_image 实际上是 cuArray 的一个副本引用
+    cudaMemcpyToArray(cuArray_sky_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+
+    
+    
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
     cudaMalloc((void **)&states, sizeof(curandStateXORWOW) * FRAME_WIDTH * FRAME_HEIGHT);
@@ -396,6 +422,8 @@ __host__ void init_and_render(void)
     cudaDeviceSynchronize();
     // curandStateXORWOW *states = init_rand(block_size_width, block_size_height);
 
+    
+    
     /* ##################################### 摄像机初始化 ##################################### */
     int camera_size = sizeof(camera);
     camera *cpu_camera = createCamera();

@@ -22,6 +22,7 @@
 
 texture<float, 2> texRef2D_test;
 texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_image_test;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_skybox_test;
 
 // 贴图类 基类
 // 注意贴图与材质不同, 可以理解为贴图是材质的一种附加属性, 主要展示材质的"颜色"属性
@@ -84,8 +85,19 @@ public:
 		int row_index = v * textureHeight;
 
 		// printf("index = [%d,%d]", col_index, row_index);
+		uchar4 pixel;
+		switch (global_texture_offset)
+		{
+		case 0:
+			pixel = tex2D(texRef2D_image_test, row_index, col_index);
+			break;
+		case 1:
+			pixel = tex2D(texRef2D_skybox_test, row_index, col_index);
+			break;
 
-		uchar4 pixel = tex2D(texRef2D_image_test, row_index, col_index);
+		default:
+			break;
+		}
 
 		vec3 color = vec3((float)(pixel.x) / 256,
 						  (float)(pixel.y) / 256,
