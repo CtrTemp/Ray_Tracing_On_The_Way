@@ -13,7 +13,8 @@
         {
             "name": "CUDA C++: Attach",
             "type": "cuda-gdb",
-            "request": "attach"
+            "request": "attach" 
+            
         }
     ]
 }

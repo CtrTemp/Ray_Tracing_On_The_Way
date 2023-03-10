@@ -6,6 +6,7 @@
 #include "camera/camera.cuh"
 #include "object/geometry/sphere.cuh"
 #include "object/primitive/triangle.cuh"
+#include "object/model/models.cuh"
 #include "material/lambertian.cuh"
 #include "material/mental.cuh"
 #include "material/dielectric.cuh"

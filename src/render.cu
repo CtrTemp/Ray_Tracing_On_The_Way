@@ -6,44 +6,43 @@
 /* #################################### 纹理贴图初始化 #################################### */
 __host__ static void import_tex(void)
 {
-	std::string test_texture_path = "../Pic/textures/texture.png";
-	uchar4 *texture_host;
-	int texWidth;
-	int texHeight;
-	int texChannels;
-	int texSize;
-	size_t pixel_num;
+    std::string test_texture_path = "../Pic/textures/texture.png";
+    uchar4 *texture_host;
+    int texWidth;
+    int texHeight;
+    int texChannels;
+    int texSize;
+    size_t pixel_num;
 
-	texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-	texSize = texWidth * texHeight * texChannels;
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
 
-	pixel_num = texWidth * texHeight;
+    pixel_num = texWidth * texHeight;
 
-	cudaArray *cuArray;													 // CUDA 数组类型定义
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uchar4>(); // 这一步是建立映射？？
-	cudaMallocArray(&cuArray, &channelDesc, texWidth, texHeight);		 // 为array申请显存空间
-	cudaBindTextureToArray(texRef2D_image_test, cuArray);
-	cudaMemcpyToArray(cuArray, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray;                                                  // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uchar4>(); // 这一步是建立映射？？
+    cudaMallocArray(&cuArray, &channelDesc, texWidth, texHeight);        // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_image_test, cuArray);
+    cudaMemcpyToArray(cuArray, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-	/* ##################################### 纹理导入02 ##################################### */
+    /* ##################################### 纹理导入02 ##################################### */
 
-	test_texture_path = "../Pic/textures/sky0_cube.png";
+    test_texture_path = "../Pic/textures/sky0_cube.png";
 
-	texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-	texSize = texWidth * texHeight * texChannels;
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
 
-	pixel_num = texWidth * texHeight;
+    pixel_num = texWidth * texHeight;
 
-	std::cout << "image size = [" << texWidth << "," << texHeight << "]" << std::endl;
-	std::cout << "image channels = " << texChannels << std::endl;
+    std::cout << "image size = [" << texWidth << "," << texHeight << "]" << std::endl;
+    std::cout << "image channels = " << texChannels << std::endl;
 
-	cudaArray *cuArray_sky_test;													// CUDA 数组类型定义
-	cudaChannelFormatDesc channelDesc_sky_test = cudaCreateChannelDesc<uchar4>();	// 这一步是建立映射？？
-	cudaMallocArray(&cuArray_sky_test, &channelDesc_sky_test, texWidth, texHeight); // 为array申请显存空间
-	cudaBindTextureToArray(texRef2D_skybox_test, cuArray_sky_test);
-	cudaMemcpyToArray(cuArray_sky_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_sky_test;                                                    // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_sky_test = cudaCreateChannelDesc<uchar4>();   // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_sky_test, &channelDesc_sky_test, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_skybox_test, cuArray_sky_test);
+    cudaMemcpyToArray(cuArray_sky_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 }
-
 
 /* ##################################### 随机数初始化 ##################################### */
 
@@ -69,8 +68,8 @@ __host__ camera *createCamera(void)
     cameraCreateInfo createCamera{};
     // createCamera.lookfrom = vec3(-2, 2, 1);
     // createCamera.lookat = vec3(0, 0, -1);
-    createCamera.lookfrom = vec3(5, 2, 5);
-    createCamera.lookat = vec3(0, 2, 0);
+    createCamera.lookfrom = vec3(3, 2, 3);
+    createCamera.lookat = vec3(0, 1, 0);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -105,15 +104,10 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
         material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
-        material *image_tex = new diffuse_light(new image_texture(512, 512, 4, image_texture::TextureCategory::SKYBOX_TEST));
+        material *image_tex = new diffuse_light(new image_texture(512, 512, 4, image_texture::TextureCategory::TEX_TEST));
         // material *image_tex = new diffuse_light(new image_texture(512, 512, 4, image_texture::TextureCategory::SKYBOX_TEST));
 
-        // vertex testVertexList[4] = {
-        //     {vec3(5.66, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)},
-        //     {vec3(0.1, 5.66, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-        //     {vec3(0.1, 5.66, 8), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
-        //     {vec3(5.66, 0.1, 8), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)}};
-
+        // 第一种方式创建并导入model
         vertex v1(vec3(0.1, 1.414, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
         vertex v2(vec3(0.1, 0.1, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
         vertex v3(vec3(1.0, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
@@ -121,15 +115,32 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         triangle t1(v1, v2, v3, light_red);
         triangle t2(v1, v4, v3, light_red);
 
+        primitive **prims = new primitive *[2];
+        prims[0] = new triangle(v1, v2, v3, image_tex);
+        prims[1] = new triangle(v1, v3, v4, image_tex);
+        models test_model(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+
+        vertex testVertexList[4] = {
+            {vec3(0.1, 1.414, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
+            {vec3(0.1, 0.1, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
+            {vec3(1.0, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
+            {vec3(1.0, 1.414, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)}};
+
+        uint32_t indList[6] = {0, 1, 2, 0, 2, 3};
+        // uint32_t triIndList[3] = {0, 1, 2};
+
         int obj_index = 0;
 
         list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
-        list[obj_index++] = new triangle(v1, v2, v3, image_tex);
-        list[obj_index++] = new triangle(v1, v3, v4, image_tex);
+        // list[obj_index++] = new triangle(v1, v2, v3, image_tex);
+        // list[obj_index++] = new triangle(v1, v3, v4, image_tex);
+        // list[obj_index++] = new triangle(indList[0], indList[1], indList[2], testVertexList, image_tex);
+        // list[obj_index++] = new models(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(testVertexList, indList, 6, image_tex, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        *world = new hitable_list(list, 3);
+        *world = new hitable_list(list, 2);
     }
 }
 /* ##################################### 光线投射全局渲染 ##################################### */
@@ -251,7 +262,6 @@ __host__ void init_and_render(void)
     /* ##################################### 纹理导入01 ##################################### */
     import_tex();
 
-    
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
     cudaMalloc((void **)&states, sizeof(curandStateXORWOW) * FRAME_WIDTH * FRAME_HEIGHT);
