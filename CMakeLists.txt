@@ -35,6 +35,7 @@ include_directories(./include ./src
 
 
 # add_subdirectory(./src/accel)
+# add_subdirectory(./src/model)
 # add_subdirectory(./src/camera)
 # add_subdirectory(./src/material)
 # add_subdirectory(./src/object)

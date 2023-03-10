@@ -54,7 +54,7 @@ public:
         2/传入顶点列表和索引缓冲区
     */
     // 第一种：传入三个顶点进行构造
-    __device__ triangle(vertex v0, vertex v1, vertex v2, material *mat)
+    __host__ __device__ triangle(vertex v0, vertex v1, vertex v2, material *mat)
     {
         index[0] = 0;
         index[1] = 1;
@@ -85,11 +85,13 @@ public:
     };
 
     // 第二种：传入顶点列表以及索引值
-    __device__ triangle(uint32_t i0, uint32_t i1, uint32_t i2, vertex *vertexList, material *mat)
+    __host__ __device__ triangle(uint32_t i0, uint32_t i1, uint32_t i2, vertex *vertexList, material *mat)
     {
         index[0] = i0;
         index[1] = i1;
         index[2] = i2;
+
+        // printf("print index = [%d,%d,%d]\n", i0, i1, i2);
 
         vertices[0] = vertexList[i0];
         vertices[1] = vertexList[i1];

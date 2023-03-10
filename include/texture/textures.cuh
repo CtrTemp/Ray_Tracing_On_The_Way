@@ -37,8 +37,8 @@ public:
 class constant_texture : public textures
 {
 public:
-	__device__ constant_texture() = default;
-	__device__ constant_texture(vec3 c) : color(c) {}
+	__host__ __device__ constant_texture() = default;
+	__host__ __device__ constant_texture(vec3 c) : color(c) {}
 
 	__device__ virtual vec3 value(float u, float v, const vec3 &p) const
 	{
@@ -127,10 +127,10 @@ __host__ static uchar4 *load_image_texture_host(std::string image_path, int *tex
 	unsigned char *pixels = stbi_load(image_path.c_str(), texWidth, texHeight, texChannels, STBI_rgb_alpha);
 	// size_t imageSize = texWidth * texHeight * 4; // RGB（A） 三（四）通道
 
-	if (!pixels)
-	{
-		throw std::runtime_error("failed to load texture image!");
-	}
+	// if (!pixels)
+	// {
+	// 	throw std::runtime_error("failed to load texture image!");
+	// }
 	std::cout << "image size = [" << *texWidth << "," << *texHeight << "]" << std::endl;
 	std::cout << "image channels = " << *texChannels << std::endl;
 

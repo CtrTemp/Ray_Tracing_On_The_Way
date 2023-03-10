@@ -68,7 +68,9 @@ __host__ camera *createCamera(void)
     cameraCreateInfo createCamera{};
     // createCamera.lookfrom = vec3(-2, 2, 1);
     // createCamera.lookat = vec3(0, 0, -1);
-    createCamera.lookfrom = vec3(3, 2, 3);
+    // createCamera.lookfrom = vec3(3, 2, 3);
+    // createCamera.lookat = vec3(0, 1, 0);
+    createCamera.lookfrom = vec3(10, 8, 10);
     createCamera.lookat = vec3(0, 1, 0);
 
     createCamera.up_dir = vec3(0, 1, 0);
@@ -88,16 +90,18 @@ __host__ camera *createCamera(void)
 }
 
 /* ##################################### 场景初始化 ##################################### */
-
-__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list)
+// 最后一个参数是需要创建的 models，需要时，应该在host端预先对其进行初始化，并在device端进行空间分配/拷贝
+__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list, vertex *vertList, uint32_t *indList)
 {
 
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
+        // printf("test Model = [%f,%f,%f]\n", vertList[0].position.e[0], vertList[0].position.e[1], vertList[0].position.e[2]);
+        // printf("test Model = [%d,%d,%d]\n", indList[0], indList[1], indList[2]);
         material *noise = new lambertian(new noise_texture(2.5, rand_state));
         material *diffuse_steelblue = new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5)));
-        material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.1);
+        material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.001);
         material *glass = new dielectric(1.5);
         material *light = new diffuse_light(new constant_texture(vec3(6, 6, 6)));
         material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
@@ -126,7 +130,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
             {vec3(1.0, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
             {vec3(1.0, 1.414, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)}};
 
-        uint32_t indList[6] = {0, 1, 2, 0, 2, 3};
+        uint32_t indList_local[6] = {0, 1, 2, 0, 2, 3};
         // uint32_t triIndList[3] = {0, 1, 2};
 
         int obj_index = 0;
@@ -134,13 +138,14 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
         // list[obj_index++] = new triangle(v1, v2, v3, image_tex);
         // list[obj_index++] = new triangle(v1, v3, v4, image_tex);
-        // list[obj_index++] = new triangle(indList[0], indList[1], indList[2], testVertexList, image_tex);
-        // list[obj_index++] = new models(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        list[obj_index++] = new models(testVertexList, indList, 6, image_tex, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new triangle(indList_local[0], indList_local[1], indList_local[2], testVertexList, image_tex);
+        list[obj_index++] = new models(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(testVertexList, indList_local, 6, image_tex, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        *world = new hitable_list(list, 2);
+        list[obj_index++] = new models(vertList, indList, 4752, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        *world = new hitable_list(list, 3);
     }
 }
 /* ##################################### 光线投射全局渲染 ##################################### */
@@ -262,6 +267,47 @@ __host__ void init_and_render(void)
     /* ##################################### 纹理导入01 ##################################### */
     import_tex();
 
+    /* ################################### 模型文件导入01 ################################### */
+    vertex *vertList_host;
+    uint32_t *indList_host;
+
+    size_t vert_len, ind_len;
+
+    import_obj_from_file(&vertList_host, &vert_len, &indList_host, &ind_len);
+
+    // for (int i = 0; i < 21; i += 3)
+    // {
+    //     std::cout << indList_host[i + 0] << ","
+    //               << indList_host[i + 1] << ","
+    //               << indList_host[i + 2] << "," << std::endl;
+    // }
+
+    // for (int i = 0; i < 5; i++)
+    // {
+    //     std::cout << vertList_host[i].position.e[0] << ","
+    //               << vertList_host[i].position.e[1] << ","
+    //               << vertList_host[i].position.e[2] << "," << std::endl;
+    // }
+
+    std::cout << "vert_len = " << vert_len << std::endl;
+    std::cout << "ind_len = " << ind_len << std::endl;
+    vertex *vertList_device;
+    uint32_t *indList_device;
+
+    cudaMalloc((void **)&vertList_device, vert_len * sizeof(vertex));
+    cudaMalloc((void **)&indList_device, ind_len * sizeof(uint32_t));
+    cudaMemcpy(vertList_device, vertList_host, vert_len * sizeof(vertex), cudaMemcpyHostToDevice);
+    cudaMemcpy(indList_device, indList_host, ind_len * sizeof(uint32_t), cudaMemcpyHostToDevice);
+
+    // printf("model_size = %d\n", sizeof(models));
+    // printf("size of triangle = %d\n", sizeof(triangle));
+    // printf("size of triangle_ptr = %d\n", sizeof(triangle *));
+    // printf("size of primitive = %d\n", sizeof(primitive));
+    // cudaMalloc((void **)&modelList_device, sizeof(models *) * 1);
+    // cudaMemcpy(&modelList_device, &modelList_host, sizeof(models *) * 1, cudaMemcpyHostToDevice);
+    // printf("vertex size = %d\n", sizeof(vertex));
+    // printf("float size = %d\n", sizeof(float));
+
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
     cudaMalloc((void **)&states, sizeof(curandStateXORWOW) * FRAME_WIDTH * FRAME_HEIGHT);
@@ -281,7 +327,7 @@ __host__ void init_and_render(void)
     hitable **list_device;
     cudaMalloc((void **)&world_device, 15 * sizeof(hitable *));
     cudaMalloc((void **)&list_device, sizeof(hitable *));
-    gen_world<<<1, 1>>>(states, world_device, list_device);
+    gen_world<<<1, 1>>>(states, world_device, list_device, vertList_device, indList_device);
     // hitable **world = init_world(states);
 
     /* ################################## 初始化 CUDA 计时器 ################################## */

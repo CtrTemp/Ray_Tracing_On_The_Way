@@ -12,7 +12,7 @@
 class lambertian : public material
 {
 public:
-    __device__ lambertian(textures *a) : albedo(a) {}
+    __host__ __device__ lambertian(textures *a) : albedo(a) {}
     __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandStateXORWOW_t *rand_state) const
     {
         vec3 target = rec.p + rec.normal + random_in_unit_sphere_device(rand_state); // 获得本次打击后得到的下一个目标点
