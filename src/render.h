@@ -1,5 +1,8 @@
 #ifndef RENDER_H
 #define RENDER_H
+
+
+
 #include "camera/camera.cuh"
 #include "object/geometry/sphere.cuh"
 #include "object/primitive/triangle.cuh"
