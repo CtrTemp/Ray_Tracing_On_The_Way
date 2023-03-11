@@ -1,8 +1,5 @@
 #include "render.h"
 
-// 一定要在源文件中进行引入
-// #include "stb_image.h"
-
 /* #################################### 纹理贴图初始化 #################################### */
 __host__ static void import_tex(void)
 {
@@ -68,10 +65,10 @@ __host__ camera *createCamera(void)
     cameraCreateInfo createCamera{};
     // createCamera.lookfrom = vec3(-2, 2, 1);
     // createCamera.lookat = vec3(0, 0, -1);
-    // createCamera.lookfrom = vec3(3, 2, 3);
+    createCamera.lookfrom = vec3(2, 1, 2);
+    createCamera.lookat = vec3(0, 0, 0);
+    // createCamera.lookfrom = vec3(10, 8, 10);
     // createCamera.lookat = vec3(0, 1, 0);
-    createCamera.lookfrom = vec3(10, 8, 10);
-    createCamera.lookat = vec3(0, 1, 0);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -90,10 +87,9 @@ __host__ camera *createCamera(void)
 }
 
 /* ##################################### 场景初始化 ##################################### */
-// 最后一个参数是需要创建的 models，需要时，应该在host端预先对其进行初始化，并在device端进行空间分配/拷贝
-__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list, vertex *vertList, uint32_t *indList)
+// 最后两个参数是需要创建的 models，需要时，应该在host端预先对其进行初始化，并在device端进行空间分配/拷贝
+__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list, vertex *vertList, uint32_t *indList, size_t ind_len)
 {
-
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
@@ -135,17 +131,17 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
 
         int obj_index = 0;
 
-        list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
+        // list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
         // list[obj_index++] = new triangle(v1, v2, v3, image_tex);
         // list[obj_index++] = new triangle(v1, v3, v4, image_tex);
         // list[obj_index++] = new triangle(indList_local[0], indList_local[1], indList_local[2], testVertexList, image_tex);
-        list[obj_index++] = new models(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(testVertexList, indList_local, 6, image_tex, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        list[obj_index++] = new models(vertList, indList, 4752, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        *world = new hitable_list(list, 3);
+        list[obj_index++] = new models(vertList, indList, ind_len, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        *world = new hitable_list(list, 1);
     }
 }
 /* ##################################### 光线投射全局渲染 ##################################### */
@@ -270,10 +266,14 @@ __host__ void init_and_render(void)
     /* ################################### 模型文件导入01 ################################### */
     vertex *vertList_host;
     uint32_t *indList_host;
+    int *vertex_offset_host;
+    int *ind_offset_host;
 
     size_t vert_len, ind_len;
 
-    import_obj_from_file(&vertList_host, &vert_len, &indList_host, &ind_len);
+    printf("haha\n");
+    import_obj_from_file(&vertList_host, &vert_len, &vertex_offset_host, &indList_host, &ind_len, &ind_offset_host);
+
 
     // for (int i = 0; i < 21; i += 3)
     // {
@@ -327,7 +327,7 @@ __host__ void init_and_render(void)
     hitable **list_device;
     cudaMalloc((void **)&world_device, 15 * sizeof(hitable *));
     cudaMalloc((void **)&list_device, sizeof(hitable *));
-    gen_world<<<1, 1>>>(states, world_device, list_device, vertList_device, indList_device);
+    gen_world<<<1, 1>>>(states, world_device, list_device, vertList_device, indList_device, ind_len);
     // hitable **world = init_world(states);
 
     /* ################################## 初始化 CUDA 计时器 ################################## */

@@ -17,6 +17,10 @@
 #include <string>
 #include <vector>
 
+// struct models_import_info{
+//     std::string path;
+// };
+
 class models : public hitable
 {
 public:
@@ -265,157 +269,182 @@ public:
     PrimType type;
 };
 
-__host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_len, uint32_t **indList_host, size_t *ind_len)
+__host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_len, int **vertex_offset, uint32_t **indList_host, size_t *ind_len, int **ind_offset)
 {
-    std::string module_path = "../Models/basic_geo/cuboid.obj";
-    // std::string module_path = "../Models/basic_geo/dodecahedron.obj"; // 这个是五边形surface，，
 
+    // // 暂时写死，之后要通过参数传入的
+    std::vector<std::string> models_paths;
+    models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
+    models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
+    // models_paths.push_back("../Models/basic_geo/cuboid.obj");
+    // models_paths.push_back("../Models/basic_geo/cuboid.obj");
+    *vertex_offset = new int[models_paths.size() + 1];
+    (*vertex_offset)[0] = 0;
+    *ind_offset = new int[models_paths.size() + 1];
+    (*ind_offset)[0] = 0;
+
+    // /* ##################################### 模型读入初始化参数 ##################################### */
+    // /*
+    //         从我们预定义的文件路径中读入，OBJ 文件由顶点位置信息/顶点法线信息/纹理坐标信息/表面组成，分别
+    //     由v/vn/vt/f几个字段进行标识。
+    //         以下使用 attrib 字段作为v/vn/vt三者的存储器，并使用attrib中的vertices/normals/texcoords
+    //     几个字段分别指示；使用 shapes 字段作为f的存储器。
+    // */
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
-    /*
-        从我们预定义的文件路径中读入，OBJ 文件由顶点位置信息/顶点法线信息/纹理坐标信息/表面组成，分别
-    由v/vn/vt/f几个字段进行标识。
-        以下使用 attrib 字段作为v/vn/vt三者的存储器，并使用attrib中的vertices/normals/texcoords
-    几个字段分别指示；使用 shapes 字段作为f的存储器。
-    */
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, module_path.c_str()))
+
+    // 模型面元索引数量
+    int indices_len = 0;
+    // 模型顶点数
+    int vertices_len = 0;
+
+    // 第一阶段进行预读取，获取整体列表长度，以便之后进行数组空间动态分配内存
+    for (int model_ind = 0; model_ind < models_paths.size(); model_ind++)
     {
-        // 内置报错信息，如果有错误会自动抛出对应提示信息
-        throw std::runtime_error(warn + err);
+        std::string model_path_local = models_paths[model_ind];
+
+        // 模型读取，且失败时报错
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, model_path_local.c_str()))
+        {
+            throw std::runtime_error(warn + err);
+        }
+        indices_len += shapes[0].mesh.indices.size();   // 模型面元数量
+        (*ind_offset)[model_ind + 1] = indices_len;     // 模型面元偏移量
+        vertices_len += attrib.vertices.size() / 3;     // 模型顶点数
+        (*vertex_offset)[model_ind + 1] = vertices_len; // 模型顶点偏移量
     }
 
-    // 我们需要导入到 device 端的应该是一个 modelList
-    // modelList 应该在 host 端进行初始化创建，并分配其位于 device 端的内存
-    // 将数据拷贝到 device 端后，本函数应该返回一个指向 device 端 modelList 的地址
-    // 该指针应为 model ** 类型，并在世界生成时作为 device 端参数传入
+    printf("indices_len = %d\n", indices_len);
+    printf("vertices_len = %d\n\n", vertices_len);
 
-    int primitives_len = shapes[0].mesh.indices.size() / 3; // 有多少个face
-    int vertices_len = attrib.vertices.size() / 3;
-    std::cout << "primitives_len = " << primitives_len << std::endl;
-    std::cout << "vertices_len = " << vertices_len << std::endl;
-    for (int i = 0; i < 21; i += 3)
-    {
-        std::cout << shapes[0].mesh.indices[i + 0].vertex_index << ","
-                  << shapes[0].mesh.indices[i + 1].vertex_index << ","
-                  << shapes[0].mesh.indices[i + 2].vertex_index << "," << std::endl;
-    }
-    for (int i = 0; i < 15; i += 3)
-    {
-        std::cout << attrib.vertices[i + 0] << ","
-                  << attrib.vertices[i + 1] << ","
-                  << attrib.vertices[i + 2] << "," << std::endl;
-    }
-    // uint32_t *indList = new uint32_t[3 * primitives_len];
-    // vertex *vertList = new vertex[vertices_len];
-    *indList_host = new uint32_t[3 * primitives_len];
-    *ind_len = 3 * primitives_len;
+    // 动态内存分配
+    *indList_host = new uint32_t[indices_len];
+    *ind_len = indices_len;
     *vertList_host = new vertex[vertices_len];
     *vert_len = vertices_len;
-
-    // primitive **primList = new primitive *[primitives_len];
-    // models **modelList_host = new models *[10]; // 这里我们暂时只创建一个
-
-    material *diffuse_steelblue = new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5)));
-
-    for (const auto &shape : shapes)
+    printf("indices offset = [%d,%d,%d]\n", (*ind_offset)[0], (*ind_offset)[1], (*ind_offset)[2]);
+    printf("vertices offset = [%d,%d,%d]\n", (*vertex_offset)[0], (*vertex_offset)[1], (*vertex_offset)[2]);
+    /**
+     *  正式导入数据，所有的模型顶点数据/面索引数据都将被统一导入一个相同的列表，
+     * 并通过之前记录的offset列表进行模型之间的分隔
+     * */
+    for (int model_ind = 0; model_ind < models_paths.size(); model_ind++)
     {
-
-        // // 遍历整个三角形列表，为当前列表创建整体的包围盒，能够囊括其中所有的面元
-        // vec3 min_vert = vec3{std::numeric_limits<float>::infinity(),
-        //                      std::numeric_limits<float>::infinity(),
-        //                      std::numeric_limits<float>::infinity()};
-        // vec3 max_vert = vec3{-std::numeric_limits<float>::infinity(),
-        //                      -std::numeric_limits<float>::infinity(),
-        //                      -std::numeric_limits<float>::infinity()};
-
-        int vertex_count = 0;
-        int index_count = 0;
-        int prims_len = shape.mesh.indices.size() / 3;
-
-        for (int i = 0; i < vertices_len; i++)
+        std::string module_path = models_paths[model_ind];
+        // 模型读取，且失败时报错
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, module_path.c_str()))
         {
-            vertex vert{};
-            vert.position = {
-                attrib.vertices[i * 3 + 0],
-                attrib.vertices[i * 3 + 1],
-                attrib.vertices[i * 3 + 2]};
-            (*vertList_host)[i] = vert;
+            throw std::runtime_error(warn + err);
         }
 
-        for (int i = 0; i < prims_len; i++)
-        {
-            int vert_1_ind = shape.mesh.indices[i * 3 + 0].vertex_index;
-            int vert_2_ind = shape.mesh.indices[i * 3 + 1].vertex_index;
-            int vert_3_ind = shape.mesh.indices[i * 3 + 2].vertex_index;
-            (*indList_host)[index_count++] = vert_1_ind;
-            (*indList_host)[index_count++] = vert_2_ind;
-            (*indList_host)[index_count++] = vert_3_ind;
-            // vertex vert1 = {};
-            // vert1.position = {
-            //     attrib.vertices[vert_1_ind + 0],
-            //     attrib.vertices[vert_1_ind + 1],
-            //     attrib.vertices[vert_1_ind + 2]};
-
-            // vertex vert2 = {};
-            // vert2.position = {
-            //     attrib.vertices[vert_2_ind + 0],
-            //     attrib.vertices[vert_2_ind + 1],
-            //     attrib.vertices[vert_3_ind + 2]};
-
-            // vertex vert3 = {};
-            // vert3.position = {
-            //     attrib.vertices[vert_3_ind + 0],
-            //     attrib.vertices[vert_3_ind + 1],
-            //     attrib.vertices[vert_3_ind + 2]};
-
-            // primList[i] = new triangle(vert1, vert2, vert3, diffuse_steelblue);
-            // vertex vert{};
-            // vert.position = {
-            //     attrib.vertices[3 * index.vertex_index + 0],
-            //     attrib.vertices[3 * index.vertex_index + 1],
-            //     attrib.vertices[3 * index.vertex_index + 2]};
-            // vertList[vertex_count++] = vert;
-
-            // min_vert = vec3(std::min(min_vert[0], vert.position.x()),
-            //                 std::min(min_vert[1], vert.position.y()),
-            //                 std::min(min_vert[2], vert.position.z()));
-
-            // max_vert = vec3(std::max(max_vert[0], vert.position.x()),
-            //                 std::max(max_vert[1], vert.position.y()),
-            //                 std::max(max_vert[2], vert.position.z()));
-        }
-
+        // std::cout << "primitives_len = " << primitives_len << std::endl;
+        // std::cout << "vertices_len = " << vertices_len << std::endl;
         // for (int i = 0; i < 21; i += 3)
         // {
-        //     std::cout << indList_host[i + 0] << ","
-        //               << indList_host[i + 1] << ","
-        //               << indList_host[i + 2] << "," << std::endl;
+        //     std::cout << shapes[0].mesh.indices[i + 0].vertex_index << ","
+        //               << shapes[0].mesh.indices[i + 1].vertex_index << ","
+        //               << shapes[0].mesh.indices[i + 2].vertex_index << "," << std::endl;
         // }
-        // for (int i = 0; i < vertList.size(); i += 3)
+        // for (int i = 0; i < 15; i += 3)
         // {
-        //     primitive *prim_unit = new triangle(vertList[i + 0], vertList[i + 1], vertList[i + 2], mat);
-        //     prim_list.push_back(prim_unit);
-        //     if (model_eimssion)
-        //     {
-        //         emit_prim_list.push_back(prim_unit);
-        //     }
+        //     std::cout << attrib.vertices[i + 0] << ","
+        //               << attrib.vertices[i + 1] << ","
+        //               << attrib.vertices[i + 2] << "," << std::endl;
         // }
-        // // 创建包围盒
-        // bounds = aabb(min_vert, max_vert);
+
+        int ind_offset_local = (*ind_offset)[model_ind];
+        int vert_offset_local = (*vertex_offset)[model_ind];
+
+        printf("ind_offset_local = %d\n", ind_offset_local);
+        printf("vert_offset_local = %d\n\n", vert_offset_local);
+
+        for (const auto &shape : shapes)
+        {
+            int index_count = 0;
+            int prims_len_local = shape.mesh.indices.size() / 3;
+            int vert_len_local = attrib.vertices.size() / 3;
+
+
+            for (int i = 0; i < prims_len_local; i++)
+            {
+                int vert_1_ind = shape.mesh.indices[i * 3 + 0].vertex_index;
+                int vert_2_ind = shape.mesh.indices[i * 3 + 1].vertex_index;
+                int vert_3_ind = shape.mesh.indices[i * 3 + 2].vertex_index;
+                (*indList_host)[ind_offset_local + index_count++] = vert_1_ind;
+                (*indList_host)[ind_offset_local + index_count++] = vert_2_ind;
+                (*indList_host)[ind_offset_local + index_count++] = vert_3_ind;
+            }
+
+            for (int i = 0; i < vert_len_local; i++)
+            {
+                vertex vert{};
+                vert.position = {
+                    attrib.vertices[i * 3 + 0],
+                    attrib.vertices[i * 3 + 1],
+                    attrib.vertices[i * 3 + 2]};
+                (*vertList_host)[vert_offset_local + i] = vert;
+            }
+        }
     }
 
-    // modelList_host[0] = new models(vertList, indList, primitives_len * 3, diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-    // modelList_host[0] = new models(primList, primitives_len, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+    // /* #################################### 导入模型01 -- bunny #################################### */
+    // std::string module_path = "../Models/bunny/bunny_low_resolution.obj";
+    // // 模型读取，且失败时报错
+    // if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, module_path.c_str()))
+    // {
+    //     throw std::runtime_error(warn + err);
+    // }
 
-    // return modelList_host;
-    // // models **device_models;
-    // cudaMalloc((void **)&device_models, sizeof(models *) * 1);
-    // cudaMemcpy(device_models, modelList_host, sizeof(models *) * 1, cudaMemcpyHostToDevice);
+    // int primitives_len = shapes[0].mesh.indices.size() / 3; // 模型面元数量
+    // int vertices_len = attrib.vertices.size() / 3;          // 模型顶点数
+    // std::cout << "primitives_len = " << primitives_len << std::endl;
+    // std::cout << "vertices_len = " << vertices_len << std::endl;
+    // // for (int i = 0; i < 21; i += 3)
+    // // {
+    // //     std::cout << shapes[0].mesh.indices[i + 0].vertex_index << ","
+    // //               << shapes[0].mesh.indices[i + 1].vertex_index << ","
+    // //               << shapes[0].mesh.indices[i + 2].vertex_index << "," << std::endl;
+    // // }
+    // // for (int i = 0; i < 15; i += 3)
+    // // {
+    // //     std::cout << attrib.vertices[i + 0] << ","
+    // //               << attrib.vertices[i + 1] << ","
+    // //               << attrib.vertices[i + 2] << "," << std::endl;
+    // // }
+    // *indList_host = new uint32_t[3 * primitives_len];
+    // *ind_len = 3 * primitives_len;
+    // *vertList_host = new vertex[vertices_len];
+    // *vert_len = vertices_len;
 
-    // 最后还是感觉传递 vertex 列表 和 index 列表是最恰当的方法
-    // 传入后再在设备端进行创建
+    // for (const auto &shape : shapes)
+    // {
+
+    //     int vertex_count = 0;
+    //     int index_count = 0;
+    //     int prims_len = shape.mesh.indices.size() / 3;
+
+    //     for (int i = 0; i < vertices_len; i++)
+    //     {
+    //         vertex vert{};
+    //         vert.position = {
+    //             attrib.vertices[i * 3 + 0],
+    //             attrib.vertices[i * 3 + 1],
+    //             attrib.vertices[i * 3 + 2]};
+    //         (*vertList_host)[i] = vert;
+    //     }
+
+    //     for (int i = 0; i < prims_len; i++)
+    //     {
+    //         int vert_1_ind = shape.mesh.indices[i * 3 + 0].vertex_index;
+    //         int vert_2_ind = shape.mesh.indices[i * 3 + 1].vertex_index;
+    //         int vert_3_ind = shape.mesh.indices[i * 3 + 2].vertex_index;
+    //         (*indList_host)[index_count++] = vert_1_ind;
+    //         (*indList_host)[index_count++] = vert_2_ind;
+    //         (*indList_host)[index_count++] = vert_3_ind;
+    //     }
+    // }
 }
 
 #endif
