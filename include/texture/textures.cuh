@@ -24,7 +24,7 @@
 // texture<float, 2> texRef2D_test;
 texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_image_test;
 texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_skybox_test;
-
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_ring_lord_test;
 // 贴图类 基类
 // 注意贴图与材质不同, 可以理解为贴图是材质的一种附加属性, 主要展示材质的"颜色"属性
 class textures
@@ -74,7 +74,8 @@ public:
 	enum class TextureCategory
 	{
 		TEX_TEST,
-		SKYBOX_TEST
+		SKYBOX_TEST,
+		RING_LORD_TEST
 	};
 
 public:
@@ -101,6 +102,9 @@ public:
 			break;
 		case TextureCategory::SKYBOX_TEST:
 			pixel = tex2D(texRef2D_skybox_test, row_index, col_index);
+			break;
+		case TextureCategory::RING_LORD_TEST:
+			pixel = tex2D(texRef2D_ring_lord_test, row_index, col_index);
 			break;
 
 		default:

@@ -39,6 +39,23 @@ __host__ static void import_tex(void)
     cudaMallocArray(&cuArray_sky_test, &channelDesc_sky_test, texWidth, texHeight); // 为array申请显存空间
     cudaBindTextureToArray(texRef2D_skybox_test, cuArray_sky_test);
     cudaMemcpyToArray(cuArray_sky_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+
+    /* ##################################### 纹理导入03 ##################################### */
+    test_texture_path = "../Pic/textures/Lord.png";
+
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+
+    pixel_num = texWidth * texHeight;
+
+    std::cout << "image size = [" << texWidth << "," << texHeight << "]" << std::endl;
+    std::cout << "image channels = " << texChannels << std::endl;
+
+    cudaArray *cuArray_ring_lord_test;                                                          // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_ring_lord_test = cudaCreateChannelDesc<uchar4>();         // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_ring_lord_test, &channelDesc_ring_lord_test, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_ring_lord_test, cuArray_ring_lord_test);
+    cudaMemcpyToArray(cuArray_ring_lord_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 }
 
 /* ##################################### 随机数初始化 ##################################### */
@@ -65,10 +82,14 @@ __host__ camera *createCamera(void)
     cameraCreateInfo createCamera{};
     // createCamera.lookfrom = vec3(-2, 2, 1);
     // createCamera.lookat = vec3(0, 0, -1);
-    createCamera.lookfrom = vec3(2, 1, 2);
-    createCamera.lookat = vec3(0, 0, 0);
     // createCamera.lookfrom = vec3(10, 8, 10);
     // createCamera.lookat = vec3(0, 1, 0);
+    // // 纹理贴图最佳视点
+    // createCamera.lookfrom = vec3(4, 2, 4);
+    // createCamera.lookat = vec3(0, 1, 0);
+    // bunny模型导入最佳视点
+    createCamera.lookfrom = vec3(2, 2, 2);
+    createCamera.lookat = vec3(0.25, 0, 0.25);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -88,13 +109,12 @@ __host__ camera *createCamera(void)
 
 /* ##################################### 场景初始化 ##################################### */
 // 最后两个参数是需要创建的 models，需要时，应该在host端预先对其进行初始化，并在device端进行空间分配/拷贝
-__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list, vertex *vertList, uint32_t *indList, size_t ind_len)
+__global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list, vertex *vertList, uint32_t *indList, int *vertOffset, int *indOffset, int model_counts)
 {
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        // printf("test Model = [%f,%f,%f]\n", vertList[0].position.e[0], vertList[0].position.e[1], vertList[0].position.e[2]);
-        // printf("test Model = [%d,%d,%d]\n", indList[0], indList[1], indList[2]);
+        // 一般表面材质/纹理
         material *noise = new lambertian(new noise_texture(2.5, rand_state));
         material *diffuse_steelblue = new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5)));
         material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.001);
@@ -104,44 +124,49 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
         material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
-        material *image_tex = new diffuse_light(new image_texture(512, 512, 4, image_texture::TextureCategory::TEX_TEST));
-        // material *image_tex = new diffuse_light(new image_texture(512, 512, 4, image_texture::TextureCategory::SKYBOX_TEST));
+        // 纹理贴图
+        material *image_sky_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::SKYBOX_TEST));
+        material *image_statue_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::TEX_TEST));
+        material *image_ring_lord_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::RING_LORD_TEST));
 
-        // 第一种方式创建并导入model
-        vertex v1(vec3(0.1, 1.414, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
-        vertex v2(vec3(0.1, 0.1, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
-        vertex v3(vec3(1.0, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
-        vertex v4(vec3(1.0, 1.414, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
-        triangle t1(v1, v2, v3, light_red);
-        triangle t2(v1, v4, v3, light_red);
+        vertex v1_statue(vec3(0.5, 2.0, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+        vertex v2_statue(vec3(0.5, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
+        vertex v3_statue(vec3(2.5, 0.1, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
+        vertex v4_statue(vec3(2.5, 2.0, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
-        primitive **prims = new primitive *[2];
-        prims[0] = new triangle(v1, v2, v3, image_tex);
-        prims[1] = new triangle(v1, v3, v4, image_tex);
-        models test_model(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-
-        vertex testVertexList[4] = {
-            {vec3(0.1, 1.414, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0)},
-            {vec3(0.1, 0.1, 1.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0)},
-            {vec3(1.0, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0)},
-            {vec3(1.0, 1.414, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0)}};
-
-        uint32_t indList_local[6] = {0, 1, 2, 0, 2, 3};
-        // uint32_t triIndList[3] = {0, 1, 2};
+        vertex v1_ring(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+        vertex v2_ring(vec3(0.1, 0.1, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
+        vertex v3_ring(vec3(0.1, 0.1, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
+        vertex v4_ring(vec3(0.1, 2.0, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
         int obj_index = 0;
 
-        // list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
-        // list[obj_index++] = new triangle(v1, v2, v3, image_tex);
-        // list[obj_index++] = new triangle(v1, v3, v4, image_tex);
-        // list[obj_index++] = new triangle(indList_local[0], indList_local[1], indList_local[2], testVertexList, image_tex);
-        // list[obj_index++] = new models(prims, 2, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(testVertexList, indList_local, 6, image_tex, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
+        // list[obj_index++] = new triangle(v1_statue, v2_statue, v3_statue, image_statue_tex);
+        // list[obj_index++] = new triangle(v1_statue, v3_statue, v4_statue, image_statue_tex);
+        // list[obj_index++] = new triangle(v1_ring, v2_ring, v3_ring, image_ring_lord_tex);
+        // list[obj_index++] = new triangle(v1_ring, v3_ring, v4_ring, image_ring_lord_tex);
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        list[obj_index++] = new models(vertList, indList, ind_len, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        *world = new hitable_list(list, 1);
+        // list[obj_index++] = new models(vertList, indList, 13500, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+
+        // printf("models count = %d\n", model_counts);
+        // for (int models_index = 0; models_index < model_counts; models_index++)
+        // {
+        //     int model_ind_len = indOffset[models_index + 1] - indOffset[models_index + 0];
+        //     printf("modelLen = %d\n", model_ind_len);
+        //     list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), model_ind_len, diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // }
+        int models_index = 0;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        models_index++;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        models_index++;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+
+        *world = new hitable_list(list, obj_index);
+        printf("world generate done\n");
     }
 }
 /* ##################################### 光线投射全局渲染 ##################################### */
@@ -268,12 +293,16 @@ __host__ void init_and_render(void)
     uint32_t *indList_host;
     int *vertex_offset_host;
     int *ind_offset_host;
+    std::vector<std::string> models_paths_host;
 
-    size_t vert_len, ind_len;
+    models_paths_host.push_back("../Models/bunny/bunny_low_resolution.obj");
+    models_paths_host.push_back("../Models/bunny/bunny_x.obj");
+    models_paths_host.push_back("../Models/bunny/bunny_z.obj");
 
-    printf("haha\n");
-    import_obj_from_file(&vertList_host, &vert_len, &vertex_offset_host, &indList_host, &ind_len, &ind_offset_host);
+    import_obj_from_file(&vertList_host, &vertex_offset_host, &indList_host, &ind_offset_host, models_paths_host);
 
+    size_t vert_len = vertex_offset_host[models_paths_host.size()];
+    size_t ind_len = ind_offset_host[models_paths_host.size()];
 
     // for (int i = 0; i < 21; i += 3)
     // {
@@ -289,16 +318,24 @@ __host__ void init_and_render(void)
     //               << vertList_host[i].position.e[2] << "," << std::endl;
     // }
 
-    std::cout << "vert_len = " << vert_len << std::endl;
-    std::cout << "ind_len = " << ind_len << std::endl;
+    // std::cout << "vert_len = " << vert_len << std::endl;
+    // std::cout << "ind_len = " << ind_len << std::endl;
     vertex *vertList_device;
     uint32_t *indList_device;
+    int *vertex_offset_device;
+    int *ind_offset_device;
 
     cudaMalloc((void **)&vertList_device, vert_len * sizeof(vertex));
     cudaMalloc((void **)&indList_device, ind_len * sizeof(uint32_t));
+    cudaMalloc((void **)&vertex_offset_device, (models_paths_host.size() + 1) * sizeof(int));
+    cudaMalloc((void **)&ind_offset_device, (models_paths_host.size() + 1) * sizeof(int));
+
     cudaMemcpy(vertList_device, vertList_host, vert_len * sizeof(vertex), cudaMemcpyHostToDevice);
     cudaMemcpy(indList_device, indList_host, ind_len * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(vertex_offset_device, vertex_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(ind_offset_device, ind_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
 
+    cudaDeviceSynchronize();
     // printf("model_size = %d\n", sizeof(models));
     // printf("size of triangle = %d\n", sizeof(triangle));
     // printf("size of triangle_ptr = %d\n", sizeof(triangle *));
@@ -327,8 +364,9 @@ __host__ void init_and_render(void)
     hitable **list_device;
     cudaMalloc((void **)&world_device, 15 * sizeof(hitable *));
     cudaMalloc((void **)&list_device, sizeof(hitable *));
-    gen_world<<<1, 1>>>(states, world_device, list_device, vertList_device, indList_device, ind_len);
+    gen_world<<<1, 1>>>(states, world_device, list_device, vertList_device, indList_device, vertex_offset_device, ind_offset_device, models_paths_host.size());
     // hitable **world = init_world(states);
+    cudaDeviceSynchronize();
 
     /* ################################## 初始化 CUDA 计时器 ################################## */
     cudaEvent_t start, stop;

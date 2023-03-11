@@ -79,8 +79,8 @@ public:
         method = m;
         type = p;
         list_size = ind_len / 3;
-        printf("prim size = %d\n", list_size);
-        printf("ind_list = [%d,%d,%d]\n", indList[0], indList[1], indList[2]);
+        // printf("prim size = %d\n", list_size);
+        // printf("ind_list = [%d,%d,%d]\n", indList[0], indList[1], indList[2]);
         if (p == PrimType::TRIANGLE)
         {
             prim_list = new primitive *[list_size];
@@ -269,13 +269,13 @@ public:
     PrimType type;
 };
 
-__host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_len, int **vertex_offset, uint32_t **indList_host, size_t *ind_len, int **ind_offset)
+__host__ static void import_obj_from_file(vertex **vertList_host, int **vertex_offset, uint32_t **indList_host, int **ind_offset, std::vector<std::string> models_paths)
 {
 
-    // // 暂时写死，之后要通过参数传入的
-    std::vector<std::string> models_paths;
-    models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
-    models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
+    // // // 暂时写死，之后要通过参数传入的
+    // std::vector<std::string> models_paths;
+    // models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
+    // models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
     // models_paths.push_back("../Models/basic_geo/cuboid.obj");
     // models_paths.push_back("../Models/basic_geo/cuboid.obj");
     *vertex_offset = new int[models_paths.size() + 1];
@@ -308,7 +308,7 @@ __host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_l
         // 模型读取，且失败时报错
         if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, model_path_local.c_str()))
         {
-            throw std::runtime_error(warn + err);
+            // throw std::runtime_error(warn + err);
         }
         indices_len += shapes[0].mesh.indices.size();   // 模型面元数量
         (*ind_offset)[model_ind + 1] = indices_len;     // 模型面元偏移量
@@ -316,16 +316,14 @@ __host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_l
         (*vertex_offset)[model_ind + 1] = vertices_len; // 模型顶点偏移量
     }
 
-    printf("indices_len = %d\n", indices_len);
-    printf("vertices_len = %d\n\n", vertices_len);
+    // printf("indices_len = %d\n", indices_len);
+    // printf("vertices_len = %d\n\n", vertices_len);
 
     // 动态内存分配
     *indList_host = new uint32_t[indices_len];
-    *ind_len = indices_len;
     *vertList_host = new vertex[vertices_len];
-    *vert_len = vertices_len;
-    printf("indices offset = [%d,%d,%d]\n", (*ind_offset)[0], (*ind_offset)[1], (*ind_offset)[2]);
-    printf("vertices offset = [%d,%d,%d]\n", (*vertex_offset)[0], (*vertex_offset)[1], (*vertex_offset)[2]);
+    // printf("indices offset = [%d,%d,%d]\n", (*ind_offset)[0], (*ind_offset)[1], (*ind_offset)[2]);
+    // printf("vertices offset = [%d,%d,%d]\n", (*vertex_offset)[0], (*vertex_offset)[1], (*vertex_offset)[2]);
     /**
      *  正式导入数据，所有的模型顶点数据/面索引数据都将被统一导入一个相同的列表，
      * 并通过之前记录的offset列表进行模型之间的分隔
@@ -357,15 +355,14 @@ __host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_l
         int ind_offset_local = (*ind_offset)[model_ind];
         int vert_offset_local = (*vertex_offset)[model_ind];
 
-        printf("ind_offset_local = %d\n", ind_offset_local);
-        printf("vert_offset_local = %d\n\n", vert_offset_local);
+        // printf("ind_offset_local = %d\n", ind_offset_local);
+        // printf("vert_offset_local = %d\n\n", vert_offset_local);
 
         for (const auto &shape : shapes)
         {
             int index_count = 0;
             int prims_len_local = shape.mesh.indices.size() / 3;
             int vert_len_local = attrib.vertices.size() / 3;
-
 
             for (int i = 0; i < prims_len_local; i++)
             {
@@ -388,63 +385,6 @@ __host__ static void import_obj_from_file(vertex **vertList_host, size_t *vert_l
             }
         }
     }
-
-    // /* #################################### 导入模型01 -- bunny #################################### */
-    // std::string module_path = "../Models/bunny/bunny_low_resolution.obj";
-    // // 模型读取，且失败时报错
-    // if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, module_path.c_str()))
-    // {
-    //     throw std::runtime_error(warn + err);
-    // }
-
-    // int primitives_len = shapes[0].mesh.indices.size() / 3; // 模型面元数量
-    // int vertices_len = attrib.vertices.size() / 3;          // 模型顶点数
-    // std::cout << "primitives_len = " << primitives_len << std::endl;
-    // std::cout << "vertices_len = " << vertices_len << std::endl;
-    // // for (int i = 0; i < 21; i += 3)
-    // // {
-    // //     std::cout << shapes[0].mesh.indices[i + 0].vertex_index << ","
-    // //               << shapes[0].mesh.indices[i + 1].vertex_index << ","
-    // //               << shapes[0].mesh.indices[i + 2].vertex_index << "," << std::endl;
-    // // }
-    // // for (int i = 0; i < 15; i += 3)
-    // // {
-    // //     std::cout << attrib.vertices[i + 0] << ","
-    // //               << attrib.vertices[i + 1] << ","
-    // //               << attrib.vertices[i + 2] << "," << std::endl;
-    // // }
-    // *indList_host = new uint32_t[3 * primitives_len];
-    // *ind_len = 3 * primitives_len;
-    // *vertList_host = new vertex[vertices_len];
-    // *vert_len = vertices_len;
-
-    // for (const auto &shape : shapes)
-    // {
-
-    //     int vertex_count = 0;
-    //     int index_count = 0;
-    //     int prims_len = shape.mesh.indices.size() / 3;
-
-    //     for (int i = 0; i < vertices_len; i++)
-    //     {
-    //         vertex vert{};
-    //         vert.position = {
-    //             attrib.vertices[i * 3 + 0],
-    //             attrib.vertices[i * 3 + 1],
-    //             attrib.vertices[i * 3 + 2]};
-    //         (*vertList_host)[i] = vert;
-    //     }
-
-    //     for (int i = 0; i < prims_len; i++)
-    //     {
-    //         int vert_1_ind = shape.mesh.indices[i * 3 + 0].vertex_index;
-    //         int vert_2_ind = shape.mesh.indices[i * 3 + 1].vertex_index;
-    //         int vert_3_ind = shape.mesh.indices[i * 3 + 2].vertex_index;
-    //         (*indList_host)[index_count++] = vert_1_ind;
-    //         (*indList_host)[index_count++] = vert_2_ind;
-    //         (*indList_host)[index_count++] = vert_3_ind;
-    //     }
-    // }
 }
 
 #endif
