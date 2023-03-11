@@ -129,6 +129,9 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         material *image_statue_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::TEX_TEST));
         material *image_ring_lord_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::RING_LORD_TEST));
 
+
+        // 如果没有这些语句，将会出现很大问题，后面的世界可以生成，但不能正确运行
+        // 将以下的关于纹理贴图的顶点创建注释掉，你将可以复现这个问题
         vertex v1_statue(vec3(0.5, 2.0, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
         vertex v2_statue(vec3(0.5, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
         vertex v3_statue(vec3(2.5, 0.1, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
