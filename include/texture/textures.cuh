@@ -22,9 +22,14 @@
 #define TEXTURE_HEIGHT 3
 
 // texture<float, 2> texRef2D_test;
-texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_image_test;
-texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_skybox_test;
-texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_ring_lord_test;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Front;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Back;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Left;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Right;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Up;
+texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Down;
+// texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_skybox_test;
+// texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_ring_lord_test;
 // 贴图类 基类
 // 注意贴图与材质不同, 可以理解为贴图是材质的一种附加属性, 主要展示材质的"颜色"属性
 class textures
@@ -73,9 +78,12 @@ class image_texture : public textures
 public:
 	enum class TextureCategory
 	{
-		TEX_TEST,
-		SKYBOX_TEST,
-		RING_LORD_TEST
+		SKYBOX_FRONT,
+		SKYBOX_BACK,
+		SKYBOX_LEFT,
+		SKYBOX_RIGHT,
+		SKYBOX_UP,
+		SKYBOX_DOWN
 	};
 
 public:
@@ -89,22 +97,33 @@ public:
 	}
 	__device__ virtual vec3 value(float u, float v, const vec3 &p) const
 	{
-
 		int col_index = u * textureWidth;
 		int row_index = v * textureHeight;
 
-		// printf("index = [%d,%d]", col_index, row_index);
 		uchar4 pixel;
+
 		switch (texChoice)
 		{
-		case TextureCategory::TEX_TEST:
-			pixel = tex2D(texRef2D_image_test, row_index, col_index);
+		case TextureCategory::SKYBOX_FRONT:
+			// printf("front");
+			pixel = tex2D(texRef2D_SkyBox_Front, col_index, row_index);
 			break;
-		case TextureCategory::SKYBOX_TEST:
-			pixel = tex2D(texRef2D_skybox_test, row_index, col_index);
+		case TextureCategory::SKYBOX_BACK:
+			// printf("back");
+			pixel = tex2D(texRef2D_SkyBox_Back, col_index, row_index);
 			break;
-		case TextureCategory::RING_LORD_TEST:
-			pixel = tex2D(texRef2D_ring_lord_test, row_index, col_index);
+		case TextureCategory::SKYBOX_LEFT:
+			// printf("left");
+			pixel = tex2D(texRef2D_SkyBox_Left, col_index, row_index);
+			break;
+		case TextureCategory::SKYBOX_RIGHT:
+			pixel = tex2D(texRef2D_SkyBox_Right, col_index, row_index);
+			break;
+		case TextureCategory::SKYBOX_UP:
+			// pixel = tex2D(texRef2D_SkyBox_Up, col_index, row_index);
+			break;
+		case TextureCategory::SKYBOX_DOWN:
+			// pixel = tex2D(texRef2D_SkyBox_Down,  col_index, row_index);
 			break;
 
 		default:
@@ -170,6 +189,40 @@ __host__ static uchar4 *load_image_texture_host(std::string image_path, int *tex
 	return texHost;
 }
 
+__device__ inline void gen_skybox_vertex_list(vertex **skybox_vert_list, uint32_t **skybox_ind_list, int skybox_half_range)
+{
+	*skybox_vert_list = new vertex[4];
+	*skybox_ind_list = new uint32_t[6];
+
+	vec3 seq_vec_list[6] = {vec3(0, 0, 0),
+							vec3(0, 1, 0),
+							vec3(1, 1, 0),
+							vec3(0, 0, 0),
+							vec3(1, 1, 0),
+							vec3(1, 0, 0)};
+
+	int s = skybox_half_range;
+
+	(*skybox_vert_list)[0] = vertex(vec3(+s, +s, +s));
+	(*skybox_vert_list)[1] = vertex(vec3(+s, +s, -s));
+	(*skybox_vert_list)[2] = vertex(vec3(-s, +s, -s));
+	(*skybox_vert_list)[3] = vertex(vec3(-s, +s, +s));
+
+	(*skybox_ind_list)[0] = 1;
+	(*skybox_ind_list)[1] = 0;
+	(*skybox_ind_list)[2] = 3;
+	(*skybox_ind_list)[3] = 1;
+	(*skybox_ind_list)[4] = 3;
+	(*skybox_ind_list)[5] = 2;
+
+	for (int i = 0; i < 6; i++)
+	{
+		int local_index = (*skybox_ind_list)[i];
+		(*skybox_vert_list)[local_index].tex_coord = seq_vec_list[i];
+	}
+
+	// (*skybox_vert_list)[0].tex_coord = vec3(0,0,0)
+}
 
 #endif
 

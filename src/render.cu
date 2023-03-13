@@ -1,9 +1,10 @@
 #include "render.h"
+#define CUDA_LAUNCH_BLOCKING
 
 /* #################################### 纹理贴图初始化 #################################### */
-__host__ static void import_tex(void)
+__host__ static void import_tex()
 {
-    std::string test_texture_path = "../Pic/textures/texture.png";
+    std::string test_texture_path;
     uchar4 *texture_host;
     int texWidth;
     int texHeight;
@@ -11,51 +12,80 @@ __host__ static void import_tex(void)
     int texSize;
     size_t pixel_num;
 
+    /* ##################################### Skybox-Front ##################################### */
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png";
     texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texWidth = 2048;
+    texHeight = 2048;
+    texChannels = 4;
     texSize = texWidth * texHeight * texChannels;
-
     pixel_num = texWidth * texHeight;
 
-    cudaArray *cuArray;                                                  // CUDA 数组类型定义
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uchar4>(); // 这一步是建立映射？？
-    cudaMallocArray(&cuArray, &channelDesc, texWidth, texHeight);        // 为array申请显存空间
-    cudaBindTextureToArray(texRef2D_image_test, cuArray);
-    cudaMemcpyToArray(cuArray, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_skybox_front;                                                        // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_skybox_front = cudaCreateChannelDesc<uchar4>();       // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_skybox_front, &channelDesc_skybox_front, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_SkyBox_Front, cuArray_skybox_front);
+    cudaMemcpyToArray(cuArray_skybox_front, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    // cudaFreeArray(cuArray_skybox_front);
+    // /* ##################################### Skybox-Back ##################################### */
+    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png";
+    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    // texSize = texWidth * texHeight * texChannels;
+    // pixel_num = texWidth * texHeight;
 
-    /* ##################################### 纹理导入02 ##################################### */
+    // cudaArray *cuArray_skybox_back;                                                       // CUDA 数组类型定义
+    // cudaChannelFormatDesc channelDesc_skybox_back = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
+    // cudaMallocArray(&cuArray_skybox_back, &channelDesc_skybox_back, texWidth, texHeight); // 为array申请显存空间
+    // cudaBindTextureToArray(texRef2D_SkyBox_Back, cuArray_skybox_back);
+    // cudaMemcpyToArray(cuArray_skybox_back, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    test_texture_path = "../Pic/textures/sky0_cube.png";
+    // /* ##################################### Skybox-Left ##################################### */
+    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
+    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    // texSize = texWidth * texHeight * texChannels;
+    // pixel_num = texWidth * texHeight;
 
-    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    texSize = texWidth * texHeight * texChannels;
+    // cudaArray *cuArray_skybox_left;                                                       // CUDA 数组类型定义
+    // cudaChannelFormatDesc channelDesc_skybox_left = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
+    // cudaMallocArray(&cuArray_skybox_left, &channelDesc_skybox_left, texWidth, texHeight); // 为array申请显存空间
+    // cudaBindTextureToArray(texRef2D_SkyBox_Left, cuArray_skybox_left);
+    // cudaMemcpyToArray(cuArray_skybox_left, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    pixel_num = texWidth * texHeight;
+    // /* ##################################### Skybox-Right ##################################### */
+    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png";
+    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    // texSize = texWidth * texHeight * texChannels;
+    // pixel_num = texWidth * texHeight;
 
-    std::cout << "image size = [" << texWidth << "," << texHeight << "]" << std::endl;
-    std::cout << "image channels = " << texChannels << std::endl;
+    // cudaArray *cuArray_skybox_right;                                                        // CUDA 数组类型定义
+    // cudaChannelFormatDesc channelDesc_skybox_right = cudaCreateChannelDesc<uchar4>();       // 这一步是建立映射？？
+    // cudaMallocArray(&cuArray_skybox_right, &channelDesc_skybox_right, texWidth, texHeight); // 为array申请显存空间
+    // cudaBindTextureToArray(texRef2D_SkyBox_Right, cuArray_skybox_right);
+    // cudaMemcpyToArray(cuArray_skybox_right, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    cudaArray *cuArray_sky_test;                                                    // CUDA 数组类型定义
-    cudaChannelFormatDesc channelDesc_sky_test = cudaCreateChannelDesc<uchar4>();   // 这一步是建立映射？？
-    cudaMallocArray(&cuArray_sky_test, &channelDesc_sky_test, texWidth, texHeight); // 为array申请显存空间
-    cudaBindTextureToArray(texRef2D_skybox_test, cuArray_sky_test);
-    cudaMemcpyToArray(cuArray_sky_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    // /* ##################################### Skybox-Up ##################################### */
+    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png";
+    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    // texSize = texWidth * texHeight * texChannels;
+    // pixel_num = texWidth * texHeight;
 
-    /* ##################################### 纹理导入03 ##################################### */
-    test_texture_path = "../Pic/textures/Lord.png";
+    // cudaArray *cuArray_skybox_up;                                                     // CUDA 数组类型定义
+    // cudaChannelFormatDesc channelDesc_skybox_up = cudaCreateChannelDesc<uchar4>();    // 这一步是建立映射？？
+    // cudaMallocArray(&cuArray_skybox_up, &channelDesc_skybox_up, texWidth, texHeight); // 为array申请显存空间
+    // cudaBindTextureToArray(texRef2D_SkyBox_Up, cuArray_skybox_up);
+    // cudaMemcpyToArray(cuArray_skybox_up, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    texSize = texWidth * texHeight * texChannels;
+    // /* ##################################### Skybox-Down ##################################### */
+    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
+    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    // texSize = texWidth * texHeight * texChannels;
+    // pixel_num = texWidth * texHeight;
 
-    pixel_num = texWidth * texHeight;
-
-    std::cout << "image size = [" << texWidth << "," << texHeight << "]" << std::endl;
-    std::cout << "image channels = " << texChannels << std::endl;
-
-    cudaArray *cuArray_ring_lord_test;                                                          // CUDA 数组类型定义
-    cudaChannelFormatDesc channelDesc_ring_lord_test = cudaCreateChannelDesc<uchar4>();         // 这一步是建立映射？？
-    cudaMallocArray(&cuArray_ring_lord_test, &channelDesc_ring_lord_test, texWidth, texHeight); // 为array申请显存空间
-    cudaBindTextureToArray(texRef2D_ring_lord_test, cuArray_ring_lord_test);
-    cudaMemcpyToArray(cuArray_ring_lord_test, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    // cudaArray *cuArray_skybox_down;                                                       // CUDA 数组类型定义
+    // cudaChannelFormatDesc channelDesc_skybox_down = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
+    // cudaMallocArray(&cuArray_skybox_down, &channelDesc_skybox_down, texWidth, texHeight); // 为array申请显存空间
+    // cudaBindTextureToArray(texRef2D_SkyBox_Down, cuArray_skybox_down);
+    // cudaMemcpyToArray(cuArray_skybox_down, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 }
 
 /* ##################################### 随机数初始化 ##################################### */
@@ -87,9 +117,12 @@ __host__ camera *createCamera(void)
     // // 纹理贴图最佳视点
     // createCamera.lookfrom = vec3(4, 2, 4);
     // createCamera.lookat = vec3(0, 1, 0);
-    // bunny模型导入最佳视点
-    createCamera.lookfrom = vec3(2, 2, 2);
-    createCamera.lookat = vec3(0.25, 0, 0.25);
+    // // bunny模型导入最佳视点
+    // createCamera.lookfrom = vec3(2, 2, 2);
+    // createCamera.lookat = vec3(0.25, 0, 0.25);
+    // skybox 测试视点
+    createCamera.lookfrom = vec3(0, -10, 0);
+    createCamera.lookat = vec3(0, 2, 0.1);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -125,10 +158,12 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
         // 纹理贴图
-        material *image_sky_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::SKYBOX_TEST));
-        material *image_statue_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::TEX_TEST));
-        material *image_ring_lord_tex = new lambertian(new image_texture(512, 512, 4, image_texture::TextureCategory::RING_LORD_TEST));
-
+        material *image_sky_tex_front = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_FRONT));
+        material *image_sky_tex_back = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_BACK));
+        material *image_sky_tex_left = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_LEFT));
+        material *image_sky_tex_right = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_RIGHT));
+        material *image_sky_tex_up = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_UP));
+        material *image_sky_tex_down = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_DOWN));
 
         // 如果没有这些语句，将会出现很大问题，后面的世界可以生成，但不能正确运行
         // 将以下的关于纹理贴图的顶点创建注释掉，你将可以复现这个问题
@@ -142,9 +177,15 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         vertex v3_ring(vec3(0.1, 0.1, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
         vertex v4_ring(vec3(0.1, 2.0, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
+        vertex v1_skybox(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+
+        vertex *skybox_vert_list;
+        uint32_t *skybox_ind_list;
+        gen_skybox_vertex_list(&skybox_vert_list, &skybox_ind_list, 5);
+
         int obj_index = 0;
 
-        list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
+        // list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
         // list[obj_index++] = new triangle(v1_statue, v2_statue, v3_statue, image_statue_tex);
         // list[obj_index++] = new triangle(v1_statue, v3_statue, v4_statue, image_statue_tex);
         // list[obj_index++] = new triangle(v1_ring, v2_ring, v3_ring, image_ring_lord_tex);
@@ -152,6 +193,9 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
+        list[obj_index++] = new models(skybox_vert_list, skybox_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list, skybox_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list, skybox_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(vertList, indList, 13500, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         // printf("models count = %d\n", model_counts);
@@ -161,12 +205,12 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         //     printf("modelLen = %d\n", model_ind_len);
         //     list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), model_ind_len, diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // }
-        int models_index = 0;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        models_index++;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        models_index++;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // int models_index = 0;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // models_index++;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // models_index++;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         *world = new hitable_list(list, obj_index);
         printf("world generate done\n");
@@ -298,55 +342,31 @@ __host__ void init_and_render(void)
     int *ind_offset_host;
     std::vector<std::string> models_paths_host;
 
-    models_paths_host.push_back("../Models/bunny/bunny_low_resolution.obj");
-    models_paths_host.push_back("../Models/bunny/bunny_x.obj");
-    models_paths_host.push_back("../Models/bunny/bunny_z.obj");
+    // models_paths_host.push_back("../Models/bunny/bunny_low_resolution.obj");
+    // models_paths_host.push_back("../Models/bunny/bunny_x.obj");
+    // models_paths_host.push_back("../Models/bunny/bunny_z.obj");
 
-    import_obj_from_file(&vertList_host, &vertex_offset_host, &indList_host, &ind_offset_host, models_paths_host);
+    // import_obj_from_file(&vertList_host, &vertex_offset_host, &indList_host, &ind_offset_host, models_paths_host);
 
-    size_t vert_len = vertex_offset_host[models_paths_host.size()];
-    size_t ind_len = ind_offset_host[models_paths_host.size()];
+    // size_t vert_len = vertex_offset_host[models_paths_host.size()];
+    // size_t ind_len = ind_offset_host[models_paths_host.size()];
 
-    // for (int i = 0; i < 21; i += 3)
-    // {
-    //     std::cout << indList_host[i + 0] << ","
-    //               << indList_host[i + 1] << ","
-    //               << indList_host[i + 2] << "," << std::endl;
-    // }
-
-    // for (int i = 0; i < 5; i++)
-    // {
-    //     std::cout << vertList_host[i].position.e[0] << ","
-    //               << vertList_host[i].position.e[1] << ","
-    //               << vertList_host[i].position.e[2] << "," << std::endl;
-    // }
-
-    // std::cout << "vert_len = " << vert_len << std::endl;
-    // std::cout << "ind_len = " << ind_len << std::endl;
     vertex *vertList_device;
     uint32_t *indList_device;
     int *vertex_offset_device;
     int *ind_offset_device;
 
-    cudaMalloc((void **)&vertList_device, vert_len * sizeof(vertex));
-    cudaMalloc((void **)&indList_device, ind_len * sizeof(uint32_t));
-    cudaMalloc((void **)&vertex_offset_device, (models_paths_host.size() + 1) * sizeof(int));
-    cudaMalloc((void **)&ind_offset_device, (models_paths_host.size() + 1) * sizeof(int));
+    // cudaMalloc((void **)&vertList_device, vert_len * sizeof(vertex));
+    // cudaMalloc((void **)&indList_device, ind_len * sizeof(uint32_t));
+    // cudaMalloc((void **)&vertex_offset_device, (models_paths_host.size() + 1) * sizeof(int));
+    // cudaMalloc((void **)&ind_offset_device, (models_paths_host.size() + 1) * sizeof(int));
 
-    cudaMemcpy(vertList_device, vertList_host, vert_len * sizeof(vertex), cudaMemcpyHostToDevice);
-    cudaMemcpy(indList_device, indList_host, ind_len * sizeof(uint32_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(vertex_offset_device, vertex_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(ind_offset_device, ind_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(vertList_device, vertList_host, vert_len * sizeof(vertex), cudaMemcpyHostToDevice);
+    // cudaMemcpy(indList_device, indList_host, ind_len * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    // cudaMemcpy(vertex_offset_device, vertex_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(ind_offset_device, ind_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
 
-    cudaDeviceSynchronize();
-    // printf("model_size = %d\n", sizeof(models));
-    // printf("size of triangle = %d\n", sizeof(triangle));
-    // printf("size of triangle_ptr = %d\n", sizeof(triangle *));
-    // printf("size of primitive = %d\n", sizeof(primitive));
-    // cudaMalloc((void **)&modelList_device, sizeof(models *) * 1);
-    // cudaMemcpy(&modelList_device, &modelList_host, sizeof(models *) * 1, cudaMemcpyHostToDevice);
-    // printf("vertex size = %d\n", sizeof(vertex));
-    // printf("float size = %d\n", sizeof(float));
+    // cudaDeviceSynchronize();
 
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
