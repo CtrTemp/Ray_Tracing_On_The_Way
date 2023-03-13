@@ -26,66 +26,65 @@ __host__ static void import_tex()
     cudaMallocArray(&cuArray_skybox_front, &channelDesc_skybox_front, texWidth, texHeight); // 为array申请显存空间
     cudaBindTextureToArray(texRef2D_SkyBox_Front, cuArray_skybox_front);
     cudaMemcpyToArray(cuArray_skybox_front, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
-    // cudaFreeArray(cuArray_skybox_front);
-    // /* ##################################### Skybox-Back ##################################### */
-    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png";
-    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    // texSize = texWidth * texHeight * texChannels;
-    // pixel_num = texWidth * texHeight;
+    /* ##################################### Skybox-Back ##################################### */
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png";
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+    pixel_num = texWidth * texHeight;
 
-    // cudaArray *cuArray_skybox_back;                                                       // CUDA 数组类型定义
-    // cudaChannelFormatDesc channelDesc_skybox_back = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
-    // cudaMallocArray(&cuArray_skybox_back, &channelDesc_skybox_back, texWidth, texHeight); // 为array申请显存空间
-    // cudaBindTextureToArray(texRef2D_SkyBox_Back, cuArray_skybox_back);
-    // cudaMemcpyToArray(cuArray_skybox_back, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_skybox_back;                                                       // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_skybox_back = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_skybox_back, &channelDesc_skybox_back, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_SkyBox_Back, cuArray_skybox_back);
+    cudaMemcpyToArray(cuArray_skybox_back, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    // /* ##################################### Skybox-Left ##################################### */
-    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
-    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    // texSize = texWidth * texHeight * texChannels;
-    // pixel_num = texWidth * texHeight;
+    /* ##################################### Skybox-Left ##################################### */
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+    pixel_num = texWidth * texHeight;
 
-    // cudaArray *cuArray_skybox_left;                                                       // CUDA 数组类型定义
-    // cudaChannelFormatDesc channelDesc_skybox_left = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
-    // cudaMallocArray(&cuArray_skybox_left, &channelDesc_skybox_left, texWidth, texHeight); // 为array申请显存空间
-    // cudaBindTextureToArray(texRef2D_SkyBox_Left, cuArray_skybox_left);
-    // cudaMemcpyToArray(cuArray_skybox_left, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_skybox_left;                                                       // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_skybox_left = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_skybox_left, &channelDesc_skybox_left, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_SkyBox_Left, cuArray_skybox_left);
+    cudaMemcpyToArray(cuArray_skybox_left, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    // /* ##################################### Skybox-Right ##################################### */
-    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png";
-    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    // texSize = texWidth * texHeight * texChannels;
-    // pixel_num = texWidth * texHeight;
+    /* ##################################### Skybox-Right ##################################### */
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_3_Right-X.png";
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+    pixel_num = texWidth * texHeight;
 
-    // cudaArray *cuArray_skybox_right;                                                        // CUDA 数组类型定义
-    // cudaChannelFormatDesc channelDesc_skybox_right = cudaCreateChannelDesc<uchar4>();       // 这一步是建立映射？？
-    // cudaMallocArray(&cuArray_skybox_right, &channelDesc_skybox_right, texWidth, texHeight); // 为array申请显存空间
-    // cudaBindTextureToArray(texRef2D_SkyBox_Right, cuArray_skybox_right);
-    // cudaMemcpyToArray(cuArray_skybox_right, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_skybox_right;                                                        // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_skybox_right = cudaCreateChannelDesc<uchar4>();       // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_skybox_right, &channelDesc_skybox_right, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_SkyBox_Right, cuArray_skybox_right);
+    cudaMemcpyToArray(cuArray_skybox_right, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    // /* ##################################### Skybox-Up ##################################### */
-    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png";
-    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    // texSize = texWidth * texHeight * texChannels;
-    // pixel_num = texWidth * texHeight;
+    /* ##################################### Skybox-Up ##################################### */
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_4_Up+Y.png";
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+    pixel_num = texWidth * texHeight;
 
-    // cudaArray *cuArray_skybox_up;                                                     // CUDA 数组类型定义
-    // cudaChannelFormatDesc channelDesc_skybox_up = cudaCreateChannelDesc<uchar4>();    // 这一步是建立映射？？
-    // cudaMallocArray(&cuArray_skybox_up, &channelDesc_skybox_up, texWidth, texHeight); // 为array申请显存空间
-    // cudaBindTextureToArray(texRef2D_SkyBox_Up, cuArray_skybox_up);
-    // cudaMemcpyToArray(cuArray_skybox_up, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_skybox_up;                                                     // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_skybox_up = cudaCreateChannelDesc<uchar4>();    // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_skybox_up, &channelDesc_skybox_up, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_SkyBox_Up, cuArray_skybox_up);
+    cudaMemcpyToArray(cuArray_skybox_up, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
-    // /* ##################################### Skybox-Down ##################################### */
-    // test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
-    // texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    // texSize = texWidth * texHeight * texChannels;
-    // pixel_num = texWidth * texHeight;
+    /* ##################################### Skybox-Down ##################################### */
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
+    texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
+    texSize = texWidth * texHeight * texChannels;
+    pixel_num = texWidth * texHeight;
 
-    // cudaArray *cuArray_skybox_down;                                                       // CUDA 数组类型定义
-    // cudaChannelFormatDesc channelDesc_skybox_down = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
-    // cudaMallocArray(&cuArray_skybox_down, &channelDesc_skybox_down, texWidth, texHeight); // 为array申请显存空间
-    // cudaBindTextureToArray(texRef2D_SkyBox_Down, cuArray_skybox_down);
-    // cudaMemcpyToArray(cuArray_skybox_down, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+    cudaArray *cuArray_skybox_down;                                                       // CUDA 数组类型定义
+    cudaChannelFormatDesc channelDesc_skybox_down = cudaCreateChannelDesc<uchar4>();      // 这一步是建立映射？？
+    cudaMallocArray(&cuArray_skybox_down, &channelDesc_skybox_down, texWidth, texHeight); // 为array申请显存空间
+    cudaBindTextureToArray(texRef2D_SkyBox_Down, cuArray_skybox_down);
+    cudaMemcpyToArray(cuArray_skybox_down, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 }
 
 /* ##################################### 随机数初始化 ##################################### */
@@ -121,8 +120,8 @@ __host__ camera *createCamera(void)
     // createCamera.lookfrom = vec3(2, 2, 2);
     // createCamera.lookat = vec3(0.25, 0, 0.25);
     // skybox 测试视点
-    createCamera.lookfrom = vec3(0, -10, 0);
-    createCamera.lookat = vec3(0, 2, 0.1);
+    createCamera.lookfrom = vec3(0, 0, 0);
+    createCamera.lookat = vec3(1, 1, 1);
 
     createCamera.up_dir = vec3(0, 1, 0);
     createCamera.fov = 40;
@@ -182,6 +181,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         vertex *skybox_vert_list;
         uint32_t *skybox_ind_list;
         gen_skybox_vertex_list(&skybox_vert_list, &skybox_ind_list, 5);
+        printf("texture Imported done\n");
 
         int obj_index = 0;
 
@@ -193,9 +193,13 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        list[obj_index++] = new models(skybox_vert_list, skybox_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list, skybox_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list, skybox_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
+        list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(vertList, indList, 13500, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         // printf("models count = %d\n", model_counts);

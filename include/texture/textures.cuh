@@ -30,6 +30,47 @@ texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Up;
 texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_SkyBox_Down;
 // texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_skybox_test;
 // texture<uchar4, cudaTextureType2D, cudaReadModeElementType> texRef2D_ring_lord_test;
+
+__device__ static uchar4 get_tex_val_front(int row, int col)
+{
+	// 又是遇到奇怪问题，这里不定义变量直接返回得到的是一个空值
+	// 反应到像素上得到的就是vec3(0,0,0)??? 为啥
+	uchar4 pixel;
+	pixel = tex2D<uchar4>(texRef2D_SkyBox_Front, col, row);
+	return pixel;
+}
+
+__device__ static uchar4 get_tex_val_back(int row, int col)
+{
+	uchar4 pixel;
+	pixel = tex2D<uchar4>(texRef2D_SkyBox_Back, col, row);
+	return pixel;
+}
+__device__ static uchar4 get_tex_val_left(int row, int col)
+{
+	uchar4 pixel;
+	pixel = tex2D<uchar4>(texRef2D_SkyBox_Left, col, row);
+	return pixel;
+}
+__device__ static uchar4 get_tex_val_right(int row, int col)
+{
+	uchar4 pixel;
+	pixel = tex2D<uchar4>(texRef2D_SkyBox_Right, col, row);
+	return pixel;
+}
+__device__ static uchar4 get_tex_val_up(int row, int col)
+{
+	uchar4 pixel;
+	pixel = tex2D<uchar4>(texRef2D_SkyBox_Up, col, row);
+	return pixel;
+}
+__device__ static uchar4 get_tex_val_down(int row, int col)
+{
+	uchar4 pixel;
+	pixel = tex2D<uchar4>(texRef2D_SkyBox_Down, col, row);
+	return pixel;
+}
+
 // 贴图类 基类
 // 注意贴图与材质不同, 可以理解为贴图是材质的一种附加属性, 主要展示材质的"颜色"属性
 class textures
@@ -105,25 +146,25 @@ public:
 		switch (texChoice)
 		{
 		case TextureCategory::SKYBOX_FRONT:
-			// printf("front");
-			pixel = tex2D(texRef2D_SkyBox_Front, col_index, row_index);
+			pixel = get_tex_val_front(row_index, col_index);
 			break;
 		case TextureCategory::SKYBOX_BACK:
-			// printf("back");
-			pixel = tex2D(texRef2D_SkyBox_Back, col_index, row_index);
+			// 如果这里不使用如下的外部自定义函数嵌套一层，直接使用tex2D的话，超过4次调用则会报错
+			// 即使是在这种switch/if分支语句中
+			pixel = get_tex_val_back(row_index, col_index);
+			// pixel = tex2D(texRef2D_SkyBox_Back, col_index, row_index);
 			break;
 		case TextureCategory::SKYBOX_LEFT:
-			// printf("left");
-			pixel = tex2D(texRef2D_SkyBox_Left, col_index, row_index);
+			pixel = get_tex_val_left(row_index, col_index);
 			break;
 		case TextureCategory::SKYBOX_RIGHT:
-			pixel = tex2D(texRef2D_SkyBox_Right, col_index, row_index);
+			pixel = get_tex_val_right(row_index, col_index);
 			break;
 		case TextureCategory::SKYBOX_UP:
-			// pixel = tex2D(texRef2D_SkyBox_Up, col_index, row_index);
+			pixel = get_tex_val_up(row_index, col_index);
 			break;
 		case TextureCategory::SKYBOX_DOWN:
-			// pixel = tex2D(texRef2D_SkyBox_Down,  col_index, row_index);
+			pixel = get_tex_val_down(row_index, col_index);
 			break;
 
 		default:
@@ -133,8 +174,6 @@ public:
 		vec3 color = vec3((float)(pixel.x) / 256,
 						  (float)(pixel.y) / 256,
 						  (float)(pixel.z) / 256);
-
-		// printf(" vec = [%d,%d,%d,%d] ", pixel.x, pixel.y, pixel.z, pixel.w);
 
 		return color;
 	}
@@ -191,34 +230,68 @@ __host__ static uchar4 *load_image_texture_host(std::string image_path, int *tex
 
 __device__ inline void gen_skybox_vertex_list(vertex **skybox_vert_list, uint32_t **skybox_ind_list, int skybox_half_range)
 {
-	*skybox_vert_list = new vertex[4];
-	*skybox_ind_list = new uint32_t[6];
+	*skybox_vert_list = new vertex[24];	 // 顶点在每个面都会被复用
+	*skybox_ind_list = new uint32_t[36]; // 每个面都有2个三角形，由6个坐标顺序索引指示
 
+	// 顺序索引指示，imageTexture相对uv坐标值
 	vec3 seq_vec_list[6] = {vec3(0, 0, 0),
 							vec3(0, 1, 0),
 							vec3(1, 1, 0),
+							vec3(1, 0, 0),
 							vec3(0, 0, 0),
-							vec3(1, 1, 0),
-							vec3(1, 0, 0)};
+							vec3(1, 1, 0)};
 
+	uint32_t sky_box_front[] = {1, 5, 8, 4, 1, 8};
+	uint32_t sky_box_back[] = {3, 7, 6, 2, 3, 6};
+	// 左右居然是反过来的？！
+	uint32_t sky_box_left[] = {4, 8, 7, 3, 4, 7};
+	// uint32_t sky_box_left[] = {2, 6, 5, 1, 2, 5};
+	uint32_t sky_box_right[] = {2, 6, 5, 1, 2, 5};
+	// uint32_t sky_box_right[] = {4, 8, 7, 3, 4, 7};
+	uint32_t sky_box_up[] = {2, 1, 4, 3, 2, 4};
+	uint32_t sky_box_down[] = {5, 6, 7, 8, 5, 7};
+
+	skybox_ind_list[0] = sky_box_front;
+	skybox_ind_list[6] = sky_box_back;
+	skybox_ind_list[12] = sky_box_left;
+	skybox_ind_list[18] = sky_box_right;
+	skybox_ind_list[24] = sky_box_up;
+	skybox_ind_list[30] = sky_box_down;
+
+	for (int i = 0; i < 12; i++)
+	{
+		printf("seq = %d\n", (*skybox_ind_list)[i]);
+	}
+
+	// skybox半径
 	int s = skybox_half_range;
+	// 八个实际顶点位置坐标
+	vertex real_vert_list[8] = {
+		vertex(vec3(+s, +s, +s)),
+		vertex(vec3(+s, +s, -s)),
+		vertex(vec3(-s, +s, -s)),
+		vertex(vec3(-s, +s, +s)),
+		vertex(vec3(+s, -s, +s)),
+		vertex(vec3(+s, -s, -s)),
+		vertex(vec3(-s, -s, -s)),
+		vertex(vec3(-s, -s, +s))};
 
-	(*skybox_vert_list)[0] = vertex(vec3(+s, +s, +s));
-	(*skybox_vert_list)[1] = vertex(vec3(+s, +s, -s));
-	(*skybox_vert_list)[2] = vertex(vec3(-s, +s, -s));
-	(*skybox_vert_list)[3] = vertex(vec3(-s, +s, +s));
-
-	(*skybox_ind_list)[0] = 1;
-	(*skybox_ind_list)[1] = 0;
-	(*skybox_ind_list)[2] = 3;
-	(*skybox_ind_list)[3] = 1;
-	(*skybox_ind_list)[4] = 3;
-	(*skybox_ind_list)[5] = 2;
+	// (*skybox_ind_list)[0] = 1;
+	// (*skybox_ind_list)[1] = 0;
+	// (*skybox_ind_list)[2] = 3;
+	// (*skybox_ind_list)[3] = 1;
+	// (*skybox_ind_list)[4] = 3;
+	// (*skybox_ind_list)[5] = 2;
 
 	for (int i = 0; i < 6; i++)
 	{
-		int local_index = (*skybox_ind_list)[i];
-		(*skybox_vert_list)[local_index].tex_coord = seq_vec_list[i];
+		for (int j = 0; j < 4; j++)
+		{
+			printf("i = %d, j = %d, index = %d", i, j, i * 6 + j);
+			printf("hah = %d\n", (*skybox_ind_list)[(i * 6 + j)] - 1);
+			(*skybox_vert_list)[i * 4 + j] = real_vert_list[(*skybox_ind_list)[i * 6 + j] - 1];
+			(*skybox_vert_list)[i * 4 + j].tex_coord = seq_vec_list[j];
+		}
 	}
 
 	// (*skybox_vert_list)[0].tex_coord = vec3(0,0,0)

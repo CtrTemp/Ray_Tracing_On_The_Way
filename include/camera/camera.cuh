@@ -17,7 +17,7 @@
 #include "object/hitable.cuh"
 #include "object/group/hitable_list.cuh"
 
-#define FRAME_WIDTH 1000
+#define FRAME_WIDTH 500
 #define FRAME_HEIGHT 500
 
 #define BOUNCE_DEPTH 50
