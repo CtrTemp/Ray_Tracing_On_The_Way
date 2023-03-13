@@ -149,10 +149,7 @@ public:
 			pixel = get_tex_val_front(row_index, col_index);
 			break;
 		case TextureCategory::SKYBOX_BACK:
-			// 如果这里不使用如下的外部自定义函数嵌套一层，直接使用tex2D的话，超过4次调用则会报错
-			// 即使是在这种switch/if分支语句中
 			pixel = get_tex_val_back(row_index, col_index);
-			// pixel = tex2D(texRef2D_SkyBox_Back, col_index, row_index);
 			break;
 		case TextureCategory::SKYBOX_LEFT:
 			pixel = get_tex_val_left(row_index, col_index);
@@ -185,24 +182,16 @@ public:
 
 __host__ static uchar4 *load_image_texture_host(std::string image_path, int *texWidth, int *texHeight, int *texChannels)
 {
-	// int texWidth, texHeight, texChannels;
 	unsigned char *pixels = stbi_load(image_path.c_str(), texWidth, texHeight, texChannels, STBI_rgb_alpha);
-	// size_t imageSize = texWidth * texHeight * 4; // RGB（A） 三（四）通道
 
-	// if (!pixels)
-	// {
-	// 	throw std::runtime_error("failed to load texture image!");
-	// }
+	if (!pixels)
+	{
+		throw std::runtime_error("failed to load texture image!");
+	}
 	std::cout << "image size = [" << *texWidth << "," << *texHeight << "]" << std::endl;
 	std::cout << "image channels = " << *texChannels << std::endl;
 
-	std::string local_confirm_path = "./test_texture_channel.ppm";
-
-	std::ofstream OutputImage;
-	OutputImage.open(local_confirm_path);
-	OutputImage << "P3\n"
-				<< *texWidth << " " << *texHeight << "\n255\n";
-
+	// 这里规定写死就是四通道
 	// size_t global_size = (*texWidth) * (*texHeight) * (*texChannels);
 	size_t global_size = (*texWidth) * (*texHeight) * (4);
 	size_t pixel_num = (*texWidth) * (*texHeight);
@@ -217,13 +206,6 @@ __host__ static uchar4 *load_image_texture_host(std::string image_path, int *tex
 		texHost[global_index].w = pixels[global_index * 4 + 3];
 	}
 
-	for (int global_index = 0; global_index < pixel_num; global_index++)
-	{
-		const int R = static_cast<int>(texHost[global_index].x);
-		const int G = static_cast<int>(texHost[global_index].y);
-		const int B = static_cast<int>(texHost[global_index].z);
-		OutputImage << R << " " << G << " " << B << "\n";
-	}
 
 	return texHost;
 }
@@ -249,6 +231,7 @@ __device__ inline void gen_skybox_vertex_list(vertex **skybox_vert_list, uint32_
 	uint32_t sky_box_right[] = {2, 6, 5, 1, 2, 5};
 	// uint32_t sky_box_right[] = {4, 8, 7, 3, 4, 7};
 	uint32_t sky_box_up[] = {2, 1, 4, 3, 2, 4};
+	// 对于下方 texture 也需要左右顶点互换
 	uint32_t sky_box_down[] = {5, 6, 7, 8, 5, 7};
 
 	skybox_ind_list[0] = sky_box_front;
@@ -258,10 +241,6 @@ __device__ inline void gen_skybox_vertex_list(vertex **skybox_vert_list, uint32_
 	skybox_ind_list[24] = sky_box_up;
 	skybox_ind_list[30] = sky_box_down;
 
-	for (int i = 0; i < 12; i++)
-	{
-		printf("seq = %d\n", (*skybox_ind_list)[i]);
-	}
 
 	// skybox半径
 	int s = skybox_half_range;
@@ -276,25 +255,15 @@ __device__ inline void gen_skybox_vertex_list(vertex **skybox_vert_list, uint32_
 		vertex(vec3(-s, -s, -s)),
 		vertex(vec3(-s, -s, +s))};
 
-	// (*skybox_ind_list)[0] = 1;
-	// (*skybox_ind_list)[1] = 0;
-	// (*skybox_ind_list)[2] = 3;
-	// (*skybox_ind_list)[3] = 1;
-	// (*skybox_ind_list)[4] = 3;
-	// (*skybox_ind_list)[5] = 2;
-
 	for (int i = 0; i < 6; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			printf("i = %d, j = %d, index = %d", i, j, i * 6 + j);
-			printf("hah = %d\n", (*skybox_ind_list)[(i * 6 + j)] - 1);
 			(*skybox_vert_list)[i * 4 + j] = real_vert_list[(*skybox_ind_list)[i * 6 + j] - 1];
 			(*skybox_vert_list)[i * 4 + j].tex_coord = seq_vec_list[j];
 		}
 	}
 
-	// (*skybox_vert_list)[0].tex_coord = vec3(0,0,0)
 }
 
 #endif

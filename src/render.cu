@@ -1,6 +1,9 @@
 #include "render.h"
 #define CUDA_LAUNCH_BLOCKING
 
+// 写图像文件
+__host__ static void write_file(std::string file_path, vec3 *frame_buffer);
+
 /* #################################### 纹理贴图初始化 #################################### */
 __host__ static void import_tex()
 {
@@ -15,9 +18,6 @@ __host__ static void import_tex()
     /* ##################################### Skybox-Front ##################################### */
     test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_0_Front+Z.png";
     texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
-    texWidth = 2048;
-    texHeight = 2048;
-    texChannels = 4;
     texSize = texWidth * texHeight * texChannels;
     pixel_num = texWidth * texHeight;
 
@@ -26,6 +26,7 @@ __host__ static void import_tex()
     cudaMallocArray(&cuArray_skybox_front, &channelDesc_skybox_front, texWidth, texHeight); // 为array申请显存空间
     cudaBindTextureToArray(texRef2D_SkyBox_Front, cuArray_skybox_front);
     cudaMemcpyToArray(cuArray_skybox_front, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
+
     /* ##################################### Skybox-Back ##################################### */
     test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_1_Back-Z.png";
     texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
@@ -75,7 +76,7 @@ __host__ static void import_tex()
     cudaMemcpyToArray(cuArray_skybox_up, 0, 0, texture_host, sizeof(uchar4) * texWidth * texHeight, cudaMemcpyHostToDevice);
 
     /* ##################################### Skybox-Down ##################################### */
-    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_2_Left+X.png";
+    test_texture_path = "../Pic/skybox_sunset/Sky_FantasySky_Fire_Cam_5_Down-Y.png";
     texture_host = load_image_texture_host(test_texture_path, &texWidth, &texHeight, &texChannels);
     texSize = texWidth * texHeight * texChannels;
     pixel_num = texWidth * texHeight;
@@ -106,39 +107,6 @@ __global__ void initialize_device_random(curandStateXORWOW *states, unsigned lon
 
 /* ##################################### 摄像机初始化 ##################################### */
 
-__host__ camera *createCamera(void)
-{
-    cameraCreateInfo createCamera{};
-    // createCamera.lookfrom = vec3(-2, 2, 1);
-    // createCamera.lookat = vec3(0, 0, -1);
-    // createCamera.lookfrom = vec3(10, 8, 10);
-    // createCamera.lookat = vec3(0, 1, 0);
-    // // 纹理贴图最佳视点
-    // createCamera.lookfrom = vec3(4, 2, 4);
-    // createCamera.lookat = vec3(0, 1, 0);
-    // // bunny模型导入最佳视点
-    // createCamera.lookfrom = vec3(2, 2, 2);
-    // createCamera.lookat = vec3(0.25, 0, 0.25);
-    // skybox 测试视点
-    createCamera.lookfrom = vec3(0, 0, 0);
-    createCamera.lookat = vec3(1, 1, 1);
-
-    createCamera.up_dir = vec3(0, 1, 0);
-    createCamera.fov = 40;
-    createCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
-    createCamera.focus_dist = 10.0; // 这里是焦距
-    createCamera.aperture = 1;
-    createCamera.t0 = 0.0;
-    createCamera.t1 = 1.0;
-    createCamera.frame_width = FRAME_WIDTH;
-    createCamera.frame_height = FRAME_HEIGHT;
-
-    createCamera.spp = 1;
-
-    // 学会像vulkan那样构建
-    return new camera(createCamera);
-}
-
 /* ##################################### 场景初始化 ##################################### */
 // 最后两个参数是需要创建的 models，需要时，应该在host端预先对其进行初始化，并在device端进行空间分配/拷贝
 __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitable **list, vertex *vertList, uint32_t *indList, int *vertOffset, int *indOffset, int model_counts)
@@ -150,6 +118,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         material *noise = new lambertian(new noise_texture(2.5, rand_state));
         material *diffuse_steelblue = new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5)));
         material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.001);
+        material *mental_steel = new mental(vec3(0.99, 0.99, 0.99), 0.001);
         material *glass = new dielectric(1.5);
         material *light = new diffuse_light(new constant_texture(vec3(6, 6, 6)));
         material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
@@ -166,26 +135,27 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
 
         // 如果没有这些语句，将会出现很大问题，后面的世界可以生成，但不能正确运行
         // 将以下的关于纹理贴图的顶点创建注释掉，你将可以复现这个问题
-        vertex v1_statue(vec3(0.5, 2.0, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
-        vertex v2_statue(vec3(0.5, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
-        vertex v3_statue(vec3(2.5, 0.1, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
-        vertex v4_statue(vec3(2.5, 2.0, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
+        // vertex v1_statue(vec3(0.5, 2.0, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+        // vertex v2_statue(vec3(0.5, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
+        // vertex v3_statue(vec3(2.5, 0.1, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
+        // vertex v4_statue(vec3(2.5, 2.0, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
-        vertex v1_ring(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
-        vertex v2_ring(vec3(0.1, 0.1, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
-        vertex v3_ring(vec3(0.1, 0.1, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
-        vertex v4_ring(vec3(0.1, 2.0, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
+        // vertex v1_ring(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+        // vertex v2_ring(vec3(0.1, 0.1, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
+        // vertex v3_ring(vec3(0.1, 0.1, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
+        // vertex v4_ring(vec3(0.1, 2.0, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
         vertex v1_skybox(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
 
         vertex *skybox_vert_list;
         uint32_t *skybox_ind_list;
-        gen_skybox_vertex_list(&skybox_vert_list, &skybox_ind_list, 5);
+        gen_skybox_vertex_list(&skybox_vert_list, &skybox_ind_list, 15);
         printf("texture Imported done\n");
 
         int obj_index = 0;
 
         // list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
+        list[obj_index++] = new sphere(vec3(0, 0, 0), 0.7, mental_steel); // zero point reference
         // list[obj_index++] = new triangle(v1_statue, v2_statue, v3_statue, image_statue_tex);
         // list[obj_index++] = new triangle(v1_statue, v3_statue, v4_statue, image_statue_tex);
         // list[obj_index++] = new triangle(v1_ring, v2_ring, v3_ring, image_ring_lord_tex);
@@ -210,7 +180,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         //     list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), model_ind_len, diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // }
         // int models_index = 0;
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_steel, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // models_index++;
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // models_index++;
@@ -286,6 +256,7 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandSt
     }
     return vec3(0.90, 0.0, 0.0);
 }
+
 __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW *rand_state)
 {
     int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
@@ -346,31 +317,31 @@ __host__ void init_and_render(void)
     int *ind_offset_host;
     std::vector<std::string> models_paths_host;
 
-    // models_paths_host.push_back("../Models/bunny/bunny_low_resolution.obj");
-    // models_paths_host.push_back("../Models/bunny/bunny_x.obj");
-    // models_paths_host.push_back("../Models/bunny/bunny_z.obj");
+    models_paths_host.push_back("../Models/bunny/bunny_low_resolution.obj");
+    models_paths_host.push_back("../Models/bunny/bunny_x.obj");
+    models_paths_host.push_back("../Models/bunny/bunny_z.obj");
 
-    // import_obj_from_file(&vertList_host, &vertex_offset_host, &indList_host, &ind_offset_host, models_paths_host);
+    import_obj_from_file(&vertList_host, &vertex_offset_host, &indList_host, &ind_offset_host, models_paths_host);
 
-    // size_t vert_len = vertex_offset_host[models_paths_host.size()];
-    // size_t ind_len = ind_offset_host[models_paths_host.size()];
+    size_t vert_len = vertex_offset_host[models_paths_host.size()];
+    size_t ind_len = ind_offset_host[models_paths_host.size()];
 
     vertex *vertList_device;
     uint32_t *indList_device;
     int *vertex_offset_device;
     int *ind_offset_device;
 
-    // cudaMalloc((void **)&vertList_device, vert_len * sizeof(vertex));
-    // cudaMalloc((void **)&indList_device, ind_len * sizeof(uint32_t));
-    // cudaMalloc((void **)&vertex_offset_device, (models_paths_host.size() + 1) * sizeof(int));
-    // cudaMalloc((void **)&ind_offset_device, (models_paths_host.size() + 1) * sizeof(int));
+    cudaMalloc((void **)&vertList_device, vert_len * sizeof(vertex));
+    cudaMalloc((void **)&indList_device, ind_len * sizeof(uint32_t));
+    cudaMalloc((void **)&vertex_offset_device, (models_paths_host.size() + 1) * sizeof(int));
+    cudaMalloc((void **)&ind_offset_device, (models_paths_host.size() + 1) * sizeof(int));
 
-    // cudaMemcpy(vertList_device, vertList_host, vert_len * sizeof(vertex), cudaMemcpyHostToDevice);
-    // cudaMemcpy(indList_device, indList_host, ind_len * sizeof(uint32_t), cudaMemcpyHostToDevice);
-    // cudaMemcpy(vertex_offset_device, vertex_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
-    // cudaMemcpy(ind_offset_device, ind_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(vertList_device, vertList_host, vert_len * sizeof(vertex), cudaMemcpyHostToDevice);
+    cudaMemcpy(indList_device, indList_host, ind_len * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(vertex_offset_device, vertex_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(ind_offset_device, ind_offset_host, (models_paths_host.size() + 1) * sizeof(int), cudaMemcpyHostToDevice);
 
-    // cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
 
     /* ##################################### 随机数初始化 ##################################### */
     curandStateXORWOW *states;
@@ -380,8 +351,22 @@ __host__ void init_and_render(void)
     // curandStateXORWOW *states = init_rand(block_size_width, block_size_height);
 
     /* ##################################### 摄像机初始化 ##################################### */
+    cameraCreateInfo primaryCamera{};
+    primaryCamera.lookfrom = vec3(0, 0, 3);
+    primaryCamera.lookat = vec3(0, 0, 0);
+    primaryCamera.up_dir = vec3(0, 1, 0);
+    primaryCamera.fov = 40;
+    primaryCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
+    primaryCamera.focus_dist = 10.0; // 这里是焦距
+    primaryCamera.aperture = 1;
+    primaryCamera.t0 = 0.0;
+    primaryCamera.t1 = 1.0;
+    primaryCamera.frame_width = FRAME_WIDTH;
+    primaryCamera.frame_height = FRAME_HEIGHT;
+
+    primaryCamera.spp = 10;
+    camera *cpu_camera = new camera(primaryCamera);
     int camera_size = sizeof(camera);
-    camera *cpu_camera = createCamera();
     cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
     cudaDeviceSynchronize();
     // init_camera();
@@ -402,29 +387,56 @@ __host__ void init_and_render(void)
     cudaEventCreate(&stop);
 
     /* ##################################### 全局渲染入口 ##################################### */
+    
+    /**
+     *  以下将渲染改为一个loop，在这个loop中，我们可以对渲染中的某些参数进行修改，从而使得在实时渲染过程中
+     * 拥有一些可交互的效果，比如目前将要实现的相机参数修改，这使得我们可以在场景中进行“游历”。
+     *
+     * */
+
     // 初始化帧缓存
     vec3 *frame_buffer_device;
     int size = FRAME_WIDTH * FRAME_HEIGHT * sizeof(vec3);
     cudaMalloc((void **)&frame_buffer_device, size);
-    cudaEventRecord(start); // device端 开始计时
-    cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
-    cudaEventRecord(stop); // device端 计时结束
-    cudaDeviceSynchronize();
-    cudaEventSynchronize(stop); // 计时同步
-
-    cudaEventElapsedTime(&time_cost, start, stop); // 计算用时，单位为ms
-    // 停止计时
-    std::cout << ": The total time of the pirmary loop is: " << time_cost << "ms" << std::endl;
-
-    /* #################################### host端写图像文件 #################################### */
-
-    // 在主机开辟 framebuffer 空间
+    size_t loop_count = 0;
+    // 主机开辟帧缓存
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
-    cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-    // vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
-    // render(block_size_height, block_size_height, states, world, frame_buffer_host);
+    while (++loop_count)
+    {
 
-    std::string file_path = "./any.ppm";
+        // 首先使用当前参数进行渲染当前帧
+        cudaEventRecord(start); // device端 开始计时
+        cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+        cudaEventRecord(stop); // device端 计时结束
+        cudaDeviceSynchronize();
+        cudaEventSynchronize(stop); // 计时同步
+
+        cudaEventElapsedTime(&time_cost, start, stop); // 计算用时，单位为ms
+        std::cout << "This is " << loop_count << " frame, current render loop cost = " << time_cost << "ms" << std::endl;
+
+        // 数据拷贝 & 本地写文件
+        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
+        write_file(path, frame_buffer_host);
+
+        // 在 host 端更改相机参数
+        cpu_camera = modifyCamera(primaryCamera, loop_count);
+
+        // 将更改好的相机参数传递给device端的常量内存
+        cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+        cudaDeviceSynchronize();
+
+        // 断出条件
+        if (loop_count >= 1)
+        {
+            break;
+        }
+    }
+
+}
+
+__host__ static void write_file(std::string file_path, vec3 *frame_buffer)
+{
     std::ofstream OutputImage;
     OutputImage.open(file_path);
     OutputImage << "P3\n"
@@ -435,13 +447,11 @@ __host__ void init_and_render(void)
         for (int col = 0; col < FRAME_WIDTH; col++)
         {
             const int global_index = row * FRAME_WIDTH + col;
-            vec3 pixelVal = frame_buffer_host[global_index];
+            vec3 pixelVal = frame_buffer[global_index];
             int ir = int(255.99 * pixelVal[0]);
             int ig = int(255.99 * pixelVal[1]);
             int ib = int(255.99 * pixelVal[2]);
             OutputImage << ir << " " << ig << " " << ib << "\n";
         }
     }
-
-    std::cout << "Render Loop ALL DONE" << std::endl;
 }

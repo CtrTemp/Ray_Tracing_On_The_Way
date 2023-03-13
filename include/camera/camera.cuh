@@ -17,7 +17,7 @@
 #include "object/hitable.cuh"
 #include "object/group/hitable_list.cuh"
 
-#define FRAME_WIDTH 500
+#define FRAME_WIDTH 1000
 #define FRAME_HEIGHT 500
 
 #define BOUNCE_DEPTH 50
@@ -83,7 +83,6 @@ public:
 		horizontal = 2 * half_width * createInfo.focus_dist * u;
 		vertical = 2 * half_height * createInfo.focus_dist * v;
 
-
 		spp = createInfo.spp;
 	};
 	// __host__ void renderFrame(PresentMethod present, std::string file_path); //
@@ -113,6 +112,47 @@ __constant__ camera PRIMARY_CAMERA;
 // extern "C" __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size);
 // extern "C" __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandStateXORWOW_t *rand_state);
 // extern "C" __global__ void gen_world(curandStateXORWOW_t *rand_state, hitable **world, hitable **list);
+
+__host__ static camera *createCamera(cameraCreateInfo camInfo)
+{
+	// createCamera.lookfrom = vec3(-2, 2, 1);
+	// createCamera.lookat = vec3(0, 0, -1);
+	// createCamera.lookfrom = vec3(10, 8, 10);
+	// createCamera.lookat = vec3(0, 1, 0);
+	// // 纹理贴图最佳视点
+	// createCamera.lookfrom = vec3(4, 2, 4);
+	// createCamera.lookat = vec3(0, 1, 0);
+	// // bunny模型导入最佳视点
+	// createCamera.lookfrom = vec3(2, 2, 2);
+	// createCamera.lookat = vec3(0.25, 0, 0.25);
+	// skybox 测试视点
+
+	// 学会像vulkan那样构建
+	// return new camera(createCamera);
+}
+
+// __host__ static void modifyCamera(camera *cam, cameraCreateInfo camInfo, size_t frame_counts)
+__host__ static camera *modifyCamera(cameraCreateInfo camInfo, size_t frame_counts)
+{
+	int frame_yaw_period = 100;	  // 圆周 偏航角(yaw) 周期
+	int frame_pitch_period = 50; // 圆周 俯仰角(pitch) 周期
+	float cam_yaw_range = 3;
+	float cam_pitch_range = 3;
+	float x_coord = cam_yaw_range * sin(frame_counts * 2 * M_PI / frame_yaw_period);
+	float z_coord = cam_yaw_range * cos(frame_counts * 2 * M_PI / frame_yaw_period);
+	float y_coord = cam_pitch_range * sin(frame_counts * 2 * M_PI / frame_pitch_period);
+
+	camInfo.lookfrom = vec3(x_coord, y_coord, z_coord);
+
+	// camera *new_cam = new camera(camInfo);
+	// cam = new_cam;
+	return new camera(camInfo);
+
+	// cam->origin = vec3(x_coord, y_coord, z_coord);
+	// cam->w = unit_vector(camInfo.lookat - camInfo.lookfrom); // view_ray direction
+	// cam->u = unit_vector(cross(cam->w, camInfo.up_dir));	 // camera plane horizontal direction vec
+	// cam->v = cross(cam->w, cam->u);
+}
 
 #endif // !1
 
