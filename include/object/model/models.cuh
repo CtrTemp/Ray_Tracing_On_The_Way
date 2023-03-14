@@ -3,11 +3,10 @@
 #define TRIANGLE_LIST_H
 
 #include "object/primitive/triangle.cuh"
-#include "object/primitive/primitive.cuh"
 #include "material/material.cuh"
 #include "material/lambertian.cuh"
 #include "texture/textures.cuh"
-// #include "accel/bvh.h"
+#include "accel/bvh.cuh"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 // 我对该库进行了一些修改，在其头文件中加入了一些 static/inline 关键字
@@ -42,28 +41,28 @@ public:
 
     __host__ __device__ models() = default;
     // 第一种方式通过传入一个面元列表来构建
-    __host__ __device__ models(primitive **prims, int n, HitMethod m, PrimType p)
+    __host__ __device__ models(triangle **tris, int n, HitMethod m, PrimType p)
     {
         model_eimssion = false;
         list_size = n;
         method = m;
         type = p;
-        prim_list = prims;
+        tri_list = tris;
         // for (int i = 0; i < list_size; i++)
         // {
         //     // 如果是自发光基元，则应该将其倒入发光基元列表
         //     // if (prims[i]->hasEmission())
         //     // {
-        //     //     emit_prim_list.push_back(prims[i]);
+        //     //     emit_tri_list.push_back(prims[i]);
         //     // }
         // }
-        // if (emit_prim_list.size() >= 1)
+        // if (emit_tri_list.size() >= 1)
         // {
         //     model_eimssion = true;
         // }
         // if (m == HitMethod::BVH_TREE)
         // {
-        //     tree = new bvh_tree(prim_list);
+        //     tree = new bvh_tree(tri_list);
         // }
         // else
         // {
@@ -72,7 +71,7 @@ public:
         // bounding_box(0, 0, bounds);
     }
     // 第二种方式通过传入顶点数组以及索引数组来构建
-    __host__ __device__ models(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m, PrimType p)
+    __device__ models(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m, PrimType p)
     {
         // model_eimssion = mat->hasEmission(); // 为啥这句执行会报错？！
         model_eimssion = false;
@@ -83,18 +82,18 @@ public:
         // printf("ind_list = [%d,%d,%d]\n", indList[0], indList[1], indList[2]);
         if (p == PrimType::TRIANGLE)
         {
-            prim_list = new primitive *[list_size];
+            tri_list = new triangle *[list_size];
             for (int i = 0; i < list_size; i += 1)
             {
                 // printf("print index = [%d,%d,%d]\n", indList[i * 3 + 0], indList[i * 3 + 1], indList[i * 3 + 2]);
-                primitive *prim_unit = new triangle(
+                triangle *tir_unit = new triangle(
                     indList[i * 3 + 0], indList[i * 3 + 1], indList[i * 3 + 2],
                     vertList,
                     mat);
-                prim_list[i] = prim_unit;
+                tri_list[i] = tir_unit;
                 // if (model_eimssion)
                 // {
-                //     emit_prim_list.push_back(prim_unit);
+                //     emit_tri_list.push_back(prim_unit);
                 // }
             }
         }
@@ -102,7 +101,7 @@ public:
         {
             // for (int i = 0; i < ind_len; i += 4)
             // {
-            //     prim_list.push_back(new triangle(
+            //     tri_list.push_back(new triangle(
             //         indList[i + 0], indList[i + 1], indList[i + 2],
             //         vertList,
             //         mat));
@@ -110,15 +109,14 @@ public:
             // throw std::runtime_error("still not support QUADRANGLE primitives");
         }
 
-        // list_size = prim_list.size();
-        // if (m == HitMethod::BVH_TREE)
-        // {
-        //     tree = new bvh_tree(prim_list);
-        // }
-        // else
-        // {
-        //     tree = nullptr;
-        // }
+        if (m == HitMethod::BVH_TREE)
+        {
+            tree = new bvh_tree(tri_list, 1, list_size);
+        }
+        else
+        {
+            tree = nullptr;
+        }
         // bounding_box(0, 0, bounds);
     }
     // 第三种方式直接从模型地址导入构建（暂时不支持这种）
@@ -179,10 +177,10 @@ public:
         //         for (int i = 0; i < vertList.size(); i += 3)
         //         {
         //             primitive *prim_unit = new triangle(vertList[i + 0], vertList[i + 1], vertList[i + 2], mat);
-        //             prim_list.push_back(prim_unit);
+        //             tri_list.push_back(prim_unit);
         //             if (model_eimssion)
         //             {
-        //                 emit_prim_list.push_back(prim_unit);
+        //                 emit_tri_list.push_back(prim_unit);
         //             }
         //         }
         //         // // 创建包围盒
@@ -194,11 +192,11 @@ public:
         //     // throw std::runtime_error("still not support QUADRANGLE primitives");
         // }
 
-        // list_size = prim_list.size();
+        // list_size = tri_list.size();
 
         // if (m == HitMethod::BVH_TREE)
         // {
-        //     tree = new bvh_tree(prim_list);
+        //     tree = new bvh_tree(tri_list);
         // }
         // else
         // {
@@ -220,7 +218,7 @@ public:
         case HitMethod::NAIVE:
             for (int i = 0; i < list_size; i++)
             {
-                if (prim_list[i]->hit(r, t_min, closest_so_far, temp_rec))
+                if (tri_list[i]->hit(r, t_min, closest_so_far, temp_rec))
                 {
                     hit_anything = true;
                     closest_so_far = temp_rec.t;
@@ -259,12 +257,12 @@ public:
     // void Sample(hit_record &pos, float &probability);
     // float getArea();
 
-    primitive **prim_list;
-    // primitive ** emit_prim_list;
+    triangle **tri_list;
+    // primitive ** emit_tri_list;
     bool model_eimssion;
     int list_size;
-    // aabb bounds;
-    // bvh_tree *tree;
+    aabb bounds;
+    bvh_tree *tree;
     HitMethod method;
     PrimType type;
 };

@@ -135,15 +135,15 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
 
         // 如果没有这些语句，将会出现很大问题，后面的世界可以生成，但不能正确运行
         // 将以下的关于纹理贴图的顶点创建注释掉，你将可以复现这个问题
-        // vertex v1_statue(vec3(0.5, 2.0, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
-        // vertex v2_statue(vec3(0.5, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
-        // vertex v3_statue(vec3(2.5, 0.1, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
-        // vertex v4_statue(vec3(2.5, 2.0, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
+        vertex v1_statue(vec3(0.5, 2.0, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+        vertex v2_statue(vec3(0.5, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
+        vertex v3_statue(vec3(2.5, 0.1, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
+        vertex v4_statue(vec3(2.5, 2.0, 0.0), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
-        // vertex v1_ring(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
-        // vertex v2_ring(vec3(0.1, 0.1, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
-        // vertex v3_ring(vec3(0.1, 0.1, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
-        // vertex v4_ring(vec3(0.1, 2.0, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
+        vertex v1_ring(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
+        vertex v2_ring(vec3(0.1, 0.1, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 0, 0));
+        vertex v3_ring(vec3(0.1, 0.1, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(1, 1, 0));
+        vertex v4_ring(vec3(0.1, 2.0, 2.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 1, 0));
 
         vertex v1_skybox(vec3(0.1, 2.0, 0.5), vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0));
 
@@ -155,7 +155,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         int obj_index = 0;
 
         // list[obj_index++] = new sphere(vec3(0, -100.5, -1), 100, noise); // ground
-        list[obj_index++] = new sphere(vec3(0, 0, 0), 0.7, mental_steel); // zero point reference
+        // list[obj_index++] = new sphere(vec3(0, 0, 0), 0.7, mental_steel); // zero point reference
         // list[obj_index++] = new triangle(v1_statue, v2_statue, v3_statue, image_statue_tex);
         // list[obj_index++] = new triangle(v1_statue, v3_statue, v4_statue, image_statue_tex);
         // list[obj_index++] = new triangle(v1_ring, v2_ring, v3_ring, image_ring_lord_tex);
@@ -165,11 +165,11 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
         uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
         list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(vertList, indList, 13500, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         // printf("models count = %d\n", model_counts);
@@ -377,6 +377,11 @@ __host__ void init_and_render(void)
     cudaMalloc((void **)&world_device, 15 * sizeof(hitable *));
     cudaMalloc((void **)&list_device, sizeof(hitable *));
     gen_world<<<1, 1>>>(states, world_device, list_device, vertList_device, indList_device, vertex_offset_device, ind_offset_device, models_paths_host.size());
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess)
+    {
+        printf("CUDA Error: %s\n", cudaGetErrorString(err));
+    }
     // hitable **world = init_world(states);
     cudaDeviceSynchronize();
 
@@ -387,7 +392,7 @@ __host__ void init_and_render(void)
     cudaEventCreate(&stop);
 
     /* ##################################### 全局渲染入口 ##################################### */
-    
+
     /**
      *  以下将渲染改为一个loop，在这个loop中，我们可以对渲染中的某些参数进行修改，从而使得在实时渲染过程中
      * 拥有一些可交互的效果，比如目前将要实现的相机参数修改，这使得我们可以在场景中进行“游历”。
@@ -433,6 +438,14 @@ __host__ void init_and_render(void)
         }
     }
 
+    cudaFree(frame_buffer_device);
+    cudaFree(world_device);
+    cudaFree(list_device);
+    cudaFree(states);
+    cudaFree(vertList_device);
+    cudaFree(indList_device);
+    cudaFree(vertex_offset_device);
+    cudaFree(ind_offset_device);
 }
 
 __host__ static void write_file(std::string file_path, vec3 *frame_buffer)

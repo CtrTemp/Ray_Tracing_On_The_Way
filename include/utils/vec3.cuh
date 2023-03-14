@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include "math/common_math_device.cuh"
 
 // 添加cuda库
 #include <cuda_runtime.h>
@@ -64,18 +65,6 @@ public:
 	__host__ __device__ inline float squared_length() const
 	{
 		return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
-	}
-
-	static vec3 Min(const vec3 &p1, const vec3 &p2)
-	{
-		return vec3(fmin(p1.x(), p2.x()), fmin(p1.y(), p2.y()),
-					fmin(p1.z(), p2.z()));
-	}
-
-	static vec3 Max(const vec3 &p1, const vec3 &p2)
-	{
-		return vec3(fmax(p1.x(), p2.x()), fmax(p1.y(), p2.y()),
-					fmax(p1.z(), p2.z()));
 	}
 
 	__host__ __device__ inline void make_unit_vector();
@@ -253,6 +242,20 @@ __host__ inline vec3 random_in_unit_disk()
 	} while (dot(p, p) >= 1.0);
 	// 模拟在方格中撒点，掉入圆圈的点被收录返回
 	return p;
+}
+
+__device__ inline vec3 Min(const vec3 &p1, const vec3 &p2)
+{
+	return vec3(p1.x() < p2.x() ? p1.x() : p2.x(),
+				p1.y() < p2.y() ? p1.y() : p2.y(),
+				p1.z() < p2.z() ? p1.z() : p2.z());
+}
+
+__device__ inline vec3 Max(const vec3 &p1, const vec3 &p2)
+{
+	return vec3(p1.x() > p2.x() ? p1.x() : p2.x(),
+				p1.y() > p2.y() ? p1.y() : p2.y(),
+				p1.z() > p2.z() ? p1.z() : p2.z());
 }
 
 #endif

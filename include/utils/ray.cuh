@@ -41,6 +41,7 @@ public:
 	{
 		A = a;
 		B = b;
+		inv_dir = vec3(1. / B.x(), 1. / B.y(), 1. / B.z());
 	}
 	__device__ vec3 origin() const { return A; }
 	__device__ vec3 direction() const { return B; }
@@ -48,6 +49,7 @@ public:
 
 	vec3 A;
 	vec3 B;
+	vec3 inv_dir;
 };
 
 #endif

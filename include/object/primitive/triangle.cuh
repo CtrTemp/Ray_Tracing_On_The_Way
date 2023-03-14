@@ -3,10 +3,21 @@
 #define TRIANGLE_H
 
 #include "object/hitable.cuh"
-#include "primitive.cuh"
 #include "utils/vertex.cuh"
 #include "material/material.cuh"
-// #include "accel/bounds.cuh"
+#include "accel/bounds.cuh"
+#include "math/common_math_device.cuh"
+
+
+__device__ __host__ inline float get_max_float_val_triangle(float val1, float val2)
+{
+    return val1 > val2 ? val1 : val2;
+}
+__device__ __host__ inline float get_min_float_val_triangle(float val1, float val2)
+{
+    return val1 > val2 ? val2 : val1;
+}
+
 
 // 质心计算 这次我们使用莱布尼茨公式进行求解
 __device__ static void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float *alpha, float *beta, float *gamma)
@@ -33,17 +44,8 @@ __device__ static void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float
     //           << std::endl;
 }
 
-__device__ inline float get_max_float_val(float val1, float val2)
-{
-    return val1 > val2 ? val1 : val2;
-}
-__device__ inline float get_min_float_val(float val1, float val2)
-{
-    return val1 > val2 ? val2 : val1;
-}
-
 // 对于 triangle 类型，重新定义关于 hitable 的派生类
-class triangle : public primitive
+class triangle : public hitable
 {
 public:
     __device__ triangle() = default;
@@ -199,10 +201,47 @@ public:
     /*
         返回包围盒
     */
-    // bool bounding_box(float t0, float t1, aabb &box) const;
-    // virtual aabb getBound(void) const;
-    __device__ virtual bool hasEmission(void) const { return mat_ptr->hasEmission(); };
+    __device__ bool bounding_box(float t0, float t1, aabb &box) const
+    {
+        vec3 v0 = vertices[0].position;
+        vec3 v1 = vertices[1].position;
+        vec3 v2 = vertices[2].position;
 
+        // 这里应该是一个优化点
+        float max_x = get_max_float_val_triangle(get_max_float_val_triangle(v0[0], v1[0]), v2[0]);
+        float max_y = get_max_float_val_triangle(get_max_float_val_triangle(v0[1], v1[1]), v2[1]);
+        float max_z = get_max_float_val_triangle(get_max_float_val_triangle(v0[2], v1[2]), v2[2]);
+
+        float min_x = get_min_float_val_triangle(get_min_float_val_triangle(v0[0], v1[0]), v2[0]);
+        float min_y = get_min_float_val_triangle(get_min_float_val_triangle(v0[1], v1[1]), v2[1]);
+        float min_z = get_min_float_val_triangle(get_min_float_val_triangle(v0[2], v1[2]), v2[2]);
+
+        vec3 min_point(min_x, min_y, min_z);
+        vec3 max_point(max_x, max_y, max_z);
+        box = aabb(min_point, max_point);
+
+        return true;
+    }
+    __device__ aabb getBound(void) const
+    {
+        vec3 v0 = vertices[0].position;
+        vec3 v1 = vertices[1].position;
+        vec3 v2 = vertices[2].position;
+
+        float max_x = get_max_float_val_triangle(get_max_float_val_triangle(v0[0], v1[0]), v2[0]);
+        float max_y = get_max_float_val_triangle(get_max_float_val_triangle(v0[1], v1[1]), v2[1]);
+        float max_z = get_max_float_val_triangle(get_max_float_val_triangle(v0[2], v1[2]), v2[2]);
+
+        float min_x = get_min_float_val_triangle(get_min_float_val_triangle(v0[0], v1[0]), v2[0]);
+        float min_y = get_min_float_val_triangle(get_min_float_val_triangle(v0[1], v1[1]), v2[1]);
+        float min_z = get_min_float_val_triangle(get_min_float_val_triangle(v0[2], v1[2]), v2[2]);
+
+        vec3 min_point(min_x, min_y, min_z);
+        vec3 max_point(max_x, max_y, max_z);
+
+        return aabb(min_point, max_point);
+    }
+    __device__ virtual bool hasEmission(void) const { return mat_ptr->hasEmission(); };
     // void Sample(hit_record &pos, float &probability);
     // float getArea();
 
@@ -223,7 +262,7 @@ public:
 
     material *mat_ptr;
 
-    // aabb bounds;
+    aabb bounds;
 };
 
 #endif
