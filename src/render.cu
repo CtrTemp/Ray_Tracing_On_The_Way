@@ -164,7 +164,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
         uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
-        list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);

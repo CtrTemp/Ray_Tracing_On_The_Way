@@ -6,11 +6,57 @@
 #include "object/primitive/triangle.cuh"
 #include <vector>
 
+/* ########################### 迭代构建 bvh_tree 所需的辅助函数 ###########################*/
+__device__ static int *stack_init(uint32_t len)
+{
+    int *ret_stack = new int[len];
+    for (int i = 0; i < len; i++)
+    {
+        ret_stack[i] = -1;
+    }
+    return ret_stack;
+}
+
+__device__ static bool *mark_list_init(uint32_t len)
+{
+    bool *ret_mark_list = new bool[len];
+    for (int i = 0; i < len; i++)
+    {
+        ret_mark_list[i] = false;
+    }
+    return ret_mark_list;
+}
+
+// 模拟出栈
+__device__ static int pop_stack(int *stack, uint32_t *simu_ptr)
+{
+    if (*simu_ptr == -1)
+    {
+        printf("current stack is empty, cannot pop\n");
+        return -1;
+    }
+
+    int ret_val = stack[*simu_ptr];
+    stack[*simu_ptr] = -1;
+    *simu_ptr -= 1;
+
+    return ret_val;
+}
+
+// 模拟入栈
+__device__ static void push_stack(int *stack, uint32_t *simu_ptr, int val)
+{
+    if (*simu_ptr == -1)
+    {
+        printf("current stack is empty, ready to push\n");
+    }
+    *simu_ptr += 1;
+    stack[*simu_ptr] = val;
+}
+
 // 最简单的冒泡排序，之后再作优化
 __device__ static void prims_sort(triangle **prims_begin, triangle **prims_end, int mode)
 {
-    size_t prims_size = prims_end - prims_begin;
-
     for (triangle **i = prims_begin; i != prims_end; i++)
     {
         for (triangle **j = i; j != prims_end; j++)
@@ -59,9 +105,11 @@ public:
         // time(&start);
         // if (prim_list.empty())
         //     return;
+        printf("bvh construct function\n");
 
         // 递归构造 : 传入总体的片元列表(当前网格的所有多边形面片列表)
         // root = recursiveConstructTree(prim_list, prims_size);
+        root = iterativeConstructTree(prim_list);
 
         // time(&stop);
 
@@ -76,39 +124,74 @@ public:
 
         // std::cout << "max prims in nodes = " << maxPrimsInNode << std::endl;
     }
+
+    // 选用全新的迭代构建 bvh_tree
+    __device__ bvh_node *iterativeConstructTree(triangle **prim_list)
+    {
+        int *simu_stack = stack_init(prims_size);
+        uint32_t simu_ptr = -1;
+        bool *mark_list = mark_list_init(prims_size);
+        bvh_node *node_list = new bvh_node[prims_size]; // 这个最后是不是可以free掉？？ 不行，坚决不行
+
+        aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
+        for (int i = 0; i < prims_size; ++i)
+            global_bound = Union(global_bound, prim_list[i]->getBound()); // 得到总体包围盒
+
+        int dim = global_bound.maxExtent();
+        prims_sort(&(prim_list[0]), &(prim_list[prims_size]), dim);
+
+        mark_list[prims_size / 2] = true;
+        push_stack(simu_stack, &simu_ptr, prims_size / 2);
+
+        // 以上迭代的启动条件设置完毕
+
+        return &(node_list[0]);
+    }
+    // CUDA 中不允许函数递归
     __device__ bvh_node *recursiveConstructTree(triangle **prim_list, size_t current_size)
     {
         // bvh_root_node 创建根节点
         bvh_node *node = new bvh_node();
 
-        // // 通过归并, 将得到一个包围住当前多边形片元列表的一个大包围盒
-        // // aabb bounds; // 这种创建方式绝对有问题！你默认构建了一个无穷大的包围盒，于是以下做merge一直是无穷大
-        // aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
+        // 通过归并, 将得到一个包围住当前多边形片元列表的一个大包围盒
+        // aabb bounds; // 这种创建方式绝对有问题！你默认构建了一个无穷大的包围盒，于是以下做merge一直是无穷大
+        aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
 
-        // for (int i = 0; i < current_size; ++i)
-        //     global_bound = Union(global_bound, prim_list[i]->getBound());
+        for (int i = 0; i < current_size; ++i)
+            global_bound = Union(global_bound, prim_list[i]->getBound());
 
-        // // 最终递归返回情况01: 我们已经递归到了树的叶子节点,当前列表中只有一个元素了
-        // if (current_size == 1)
-        // {
-        //     // 那么我们创建这个叶子节点, 并将其左右子树指针置为空
-        //     node->bound = prim_list[0]->getBound();
-        //     node->object = prim_list[0];
-        //     node->left = nullptr;
-        //     node->right = nullptr;
-        //     return node;
-        // }
+        printf("recursive Construct Tree \n");
 
-        // // 情况02: 叶子节点的上一层, 当前节点中有两个多边形片元, 刚好够劈开成两半
-        // else if (current_size == 2)
-        // {
-        //     // 那么, 为当前节点的左右孩子节点分别分配指针, 传入这两个元素(构造叶子节点)
-        //     node->left = recursiveConstructTree(&prim_list[0], 1);
-        //     node->right = recursiveConstructTree(&prim_list[1], 1);
-        //     // 当前节点的包围盒为下属两个叶子节点的包围盒的并集
-        //     node->bound = Union(node->left->bound, node->right->bound);
-        //     return node;
-        // }
+        // 最终递归返回情况01: 我们已经递归到了树的叶子节点,当前列表中只有一个元素了
+        if (current_size == 1)
+        {
+            printf("current size = 1\n");
+            // 那么我们创建这个叶子节点, 并将其左右子树指针置为空
+            node->bound = prim_list[0]->getBound();
+            node->object = prim_list[0];
+            node->left = nullptr;
+            node->right = nullptr;
+            return node;
+        }
+
+        // 情况02: 叶子节点的上一层, 当前节点中有两个多边形片元, 刚好够劈开成两半
+        else if (current_size == 2)
+        {
+            printf("current size = 2\n");
+            for (int i = 0; i < current_size; i++)
+            {
+                printf("watch its list val [%f,%f,%f]\n",
+                       prim_list[i]->vertices->position.e[0],
+                       prim_list[i]->vertices->position.e[1],
+                       prim_list[i]->vertices->position.e[2]);
+            }
+            // // 那么, 为当前节点的左右孩子节点分别分配指针, 传入这两个元素(构造叶子节点)
+            node->left = recursiveConstructTree(prim_list, 1);
+            // node->right = recursiveConstructTree(&prim_list[1], 1);
+            // // 当前节点的包围盒为下属两个叶子节点的包围盒的并集
+            // node->bound = Union(node->left->bound, node->right->bound);
+            // return node;
+        }
 
         // // 情况03: 最为广泛出现的一种情形, 当前节点包括3个及以上的多边形面片,
         // // 这里将体现我们的 bvh_node_tree 的划分准则

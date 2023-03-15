@@ -109,8 +109,18 @@ public:
             // throw std::runtime_error("still not support QUADRANGLE primitives");
         }
 
+        printf("judging~\n");
+
         if (m == HitMethod::BVH_TREE)
         {
+            printf("start to generating bvh tree......\n");
+            // for (int i = 0; i < list_size; i++)
+            // {
+            //     printf("watch its list val [%f,%f,%f]\n",
+            //            tri_list[i]->vertices->position.e[0],
+            //            tri_list[i]->vertices->position.e[1],
+            //            tri_list[i]->vertices->position.e[2]);
+            // }
             tree = new bvh_tree(tri_list, 1, list_size);
         }
         else
