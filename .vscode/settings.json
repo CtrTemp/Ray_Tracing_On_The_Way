@@ -70,6 +70,7 @@
         "__split_buffer": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "__bit_reference": "cpp"
+        "__bit_reference": "cpp",
+        "ios": "cpp"
     }
 }

@@ -163,8 +163,8 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
-        list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
+        // list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
@@ -179,8 +179,8 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         //     printf("modelLen = %d\n", model_ind_len);
         //     list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), model_ind_len, diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // }
-        // int models_index = 0;
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_steel, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        int models_index = 0;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
         // models_index++;
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // models_index++;
@@ -364,7 +364,7 @@ __host__ void init_and_render(void)
     primaryCamera.frame_width = FRAME_WIDTH;
     primaryCamera.frame_height = FRAME_HEIGHT;
 
-    primaryCamera.spp = 10;
+    primaryCamera.spp = 1;
     camera *cpu_camera = new camera(primaryCamera);
     int camera_size = sizeof(camera);
     cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
