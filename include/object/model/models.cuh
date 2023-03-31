@@ -237,16 +237,18 @@ public:
             }
             break;
 
-        // 使用树装加速结构求解交点
+        // 使用树状加速结构求解交点
         case HitMethod::BVH_TREE:
             // std::cout << "tree hit" << std::endl;
-            // temp_rec = tree->getHitpoint(tree->root, r);
-            // if (temp_rec.happened)
-            // {
-            //     hit_anything = true;
-            //     closest_so_far = temp_rec.t;
-            //     rec = temp_rec;
-            // }
+            // printf("start to get model bvh hitpoint!\n");
+            temp_rec = tree->iterativeGetHitPoint(tree->root, r);
+            // printf("get bvh struct hitpoint Done!\n");
+            if (temp_rec.happened)
+            {
+                hit_anything = true;
+                closest_so_far = temp_rec.t;
+                rec = temp_rec;
+            }
             // throw std::runtime_error("not support currently");
             break;
 

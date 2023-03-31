@@ -340,6 +340,33 @@ public:
             }
         }
 
+        // // 这里简单做一个深度测试
+        // int depth_counter = 0;
+        // bvh_node *current_node = root_node;
+        // while (current_node->left != nullptr && current_node->right != nullptr)
+        // {
+        //     current_node = current_node->left;
+        //     depth_counter++;
+        // }
+
+        // printf("bvh node tree left depth = %d\n", depth_counter);
+
+        // depth_counter = 0;
+        // current_node = root_node;
+        // while (current_node->left != nullptr && current_node->right != nullptr)
+        // {
+        //     current_node = current_node->right;
+        //     depth_counter++;
+        // }
+
+        // printf("bvh node tree right depth = %d\n", depth_counter);
+
+        /**
+         *  验证结果是，左边到11层，右边到10层，由于我们创建的 bvh_tree 是一棵完全二叉树，
+         * 所以可以推断其叶子节点包含的面元应该在1024～2048之间。
+         *  事实的确如此，我们的 bunny 面元为1500片
+         * */
+
         return root_node;
     }
     // CUDA 中不允许函数递归
@@ -433,9 +460,10 @@ public:
 
     // 传入一个树状结构的根节点，返回光线与树中叶子节点obj的交点
     // 实质上是 bvh_tree 的遍历，但不允许用递归算法，必须迭代
-
+    // 注意，所构建的 bvh_tree 中的分支节点均不存在 object 实体，都是抽象化的包围盒，只有叶子节点中存放 prims 实体
     __device__ hit_record iterativeGetHitPoint(bvh_node *node, const ray &ray) const
     {
+        // 交点记录
         hit_record intersectionRecord;
         intersectionRecord.happened = false;
 
@@ -457,9 +485,10 @@ public:
             // 左右子树均存在的情况
             if ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
             {
+                // printf("left and right\n");
                 hit_record intersectionRecordLeft = (*current_node)->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 hit_record intersectionRecordRight = (*current_node)->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-
+                // printf("left and right pair end\n\n");
                 // 两个子树的包围盒均有交点
                 if (intersectionRecordLeft.happened == true && intersectionRecordRight.happened == true)
                 {
@@ -496,6 +525,7 @@ public:
             // 仅左子树存在
             else if ((*current_node)->left != nullptr)
             {
+                // printf("left branch only\n");
                 hit_record intersectionRecordLeft = (*current_node)->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 if (intersectionRecordLeft.happened == true)
                 {
@@ -510,6 +540,7 @@ public:
             // 仅右子树存在
             else if ((*current_node)->right != nullptr)
             {
+                // printf("right branch only\n");
                 hit_record intersectionRecordRight = (*current_node)->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 if (intersectionRecordRight.happened == true)
                 {
@@ -524,12 +555,22 @@ public:
             // 左右子树均空，那么此时访问到的是一个叶子节点
             else if ((*current_node)->left == nullptr && (*current_node)->right == nullptr)
             {
+                // printf("left right void\n");
                 // 直接访问节点中的object对象
+                // 这里出了问题，因为 object 不一定存在！ 这是你构建的时候存在的一个错误
+                // 最底层节点的上层节点虽然有一部分也是叶子节点但没有分配object给它 2023-03-31
                 (*current_node)->object->hit(ray, 0.0001, 999999, intersectionRecord);
+                printf("left right void end??\n");
+                // printf("hit point = [%f,%f,%f]\n",
+                //        intersectionRecord.p.e[0],
+                //        intersectionRecord.p.e[1],
+                //        intersectionRecord.p.e[2]);
                 // 断出
                 break;
             }
         }
+        // printf("hello? ready to printf intersect result\n");
+
         return intersectionRecord;
     }
 
@@ -558,6 +599,7 @@ public:
         if (current_bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == true)
         {
             // std::cout << "bound intersected" << std::endl;
+            // printf("hello?\n");
 
             // 感觉左右子树要么全空,要么都不空,,,
             // 如果左右子树为空, 那么说明当前节点中有且只有一个Object, 我们应该针对该Object进行射线求交测试
@@ -574,6 +616,8 @@ public:
                 ray iteratively bounce and intersect to itself and return an vec(0,0,0) as black
                 shading point.
                 */
+                //    目前的问题就是，根本没有遍历到叶子节点 2023-03-31
+                // printf("get leaf node intersection\n");
                 node->object->hit(ray, 0.01, 999999, intersectionRecord);
                 // 第一次这里逻辑错误, 少了一个return!!!?
                 // std::cout << "hit something: " << intersectionRecord.happened << std::endl;
@@ -625,6 +669,11 @@ public:
         // std::cout << "final ret hit rec.t = " << intersectionRecord.t << std::endl;
         // std::cout << std::endl;
         // std::cout << std::endl;
+
+        // printf("hit point = [%f,%f,%f]\n",
+        //        intersectionRecord.p.e[0],
+        //        intersectionRecord.p.e[1],
+        //        intersectionRecord.p.e[2]);
 
         return intersectionRecord;
     }
