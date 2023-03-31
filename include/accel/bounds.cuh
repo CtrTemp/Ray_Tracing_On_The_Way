@@ -5,7 +5,6 @@
 #include "utils/ray.cuh"
 #include "math/common_math_device.cuh"
 
-
 __device__ __host__ inline float get_max_float_val_bounds(float val1, float val2)
 {
     return val1 > val2 ? val1 : val2;
@@ -14,7 +13,6 @@ __device__ __host__ inline float get_min_float_val_bounds(float val1, float val2
 {
     return val1 > val2 ? val2 : val1;
 }
-
 
 // aabb是包围盒基类, 这里的包围盒用于之后的 BVH_node 加速算法
 // 基本算法不需要包围盒
@@ -91,8 +89,12 @@ public:
     }
 
     // 声明一个射线与包围盒的相交判断函数
-    __device__ bool IntersectP(const ray &ray, const vec3 &invDir, const int *dirIsNeg) const
+    __device__ hit_record IntersectP(const ray &ray, const vec3 &invDir, const int *dirIsNeg) const
     {
+
+        hit_record intersectPoint;
+        intersectPoint.happened = false;
+
         float x_min = this->_min.x(), y_min = this->_min.y(), z_min = this->_min.z();
         float x_max = this->_max.x(), y_max = this->_max.y(), z_max = this->_max.z();
 
@@ -116,10 +118,23 @@ public:
         const float t_global_min = get_min_float_val_bounds(t_x_max, get_min_float_val_bounds(t_y_max, t_z_max));
         const float t_global_max = get_max_float_val_bounds(t_x_min, get_max_float_val_bounds(t_y_min, t_z_min));
 
+        // if (t_global_max <= t_global_min && t_global_min >= 0)
+
+        //     return true;
+        // else
+        //     return false;
+
         if (t_global_max <= t_global_min && t_global_min >= 0)
-            return true;
+        {
+            intersectPoint.t = t_global_min;
+            intersectPoint.happened = true;
+        }
         else
-            return false;
+        {
+            intersectPoint.happened = false;
+        }
+
+        return intersectPoint;
     }
 
     // 包围盒的两个顶点

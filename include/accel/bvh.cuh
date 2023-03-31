@@ -32,7 +32,7 @@ __device__ static int pop_stack(int *stack, uint32_t *simu_ptr)
 {
     if (*simu_ptr == -1)
     {
-        printf("current stack is empty, cannot pop\n");
+        // printf("current stack is empty, cannot pop\n");
         return -1;
     }
 
@@ -48,7 +48,7 @@ __device__ static void push_stack(int *stack, uint32_t *simu_ptr, int val)
 {
     if (*simu_ptr == -1)
     {
-        printf("current stack is empty, ready to push\n");
+        // printf("current stack is empty, ready to push\n");
     }
     *simu_ptr += 1;
     stack[*simu_ptr] = val;
@@ -56,8 +56,12 @@ __device__ static void push_stack(int *stack, uint32_t *simu_ptr, int val)
 
 /* ########################### 迭代快速排序 所需的辅助函数 ###########################*/
 
+// 第一轮循环就出错了，回来看这个问题 2023-03-30
 __device__ static int prims_sort_fast_single_ride(triangle **prims_begin, triangle **prims_end, int mode)
 {
+
+    // printf("access bounds test in single_ride = %f\n", (*(prims_end - 1))->getBound().center().e[0]);
+
     if (prims_begin >= prims_end)
     {
         return 0;
@@ -66,32 +70,39 @@ __device__ static int prims_sort_fast_single_ride(triangle **prims_begin, triang
     triangle **right_cursor = prims_end;
     triangle key = **prims_begin;
 
+    // printf("begin single ride loop\n");
     while (left_cursor != right_cursor)
     {
         // right_cursor--;
         // float comp_key = key.getBound().center().e[mode];
         // float comp_left = (*left_cursor)->getBound().center().e[mode];
         // float comp_right = (*right_cursor)->getBound().center().e[mode];
+        // (*right_cursor)->getBound().center().e[mode];
+        // printf("access test passed %f\n", (*right_cursor)->getBound().center().e[mode]);
         while (left_cursor != right_cursor && (*right_cursor)->getBound().center().e[mode] >= key.getBound().center().e[mode])
         {
             right_cursor--;
         }
+        // printf("single ride mark1\n");
         if (left_cursor < right_cursor)
         {
             triangle temp_loop = **left_cursor;
             **left_cursor = **right_cursor;
             **right_cursor = temp_loop;
         }
+        // printf("single ride mark2\n");
         while (left_cursor != right_cursor && (*left_cursor)->getBound().center().e[mode] <= key.getBound().center().e[mode])
         {
             left_cursor++;
         }
+        // printf("single ride mark3\n");
         if (left_cursor < right_cursor)
         {
             triangle temp_loop = **left_cursor;
             **left_cursor = **right_cursor;
             **right_cursor = temp_loop;
         }
+        // printf("single ride mark4\n");
     }
     if ((*prims_begin)->getBound().center().e[mode] > (*left_cursor)->getBound().center().e[mode])
     {
@@ -104,22 +115,31 @@ __device__ static int prims_sort_fast_single_ride(triangle **prims_begin, triang
 
 __device__ static void prims_sort_fast(triangle **prims_begin, triangle **prims_end, int mode)
 {
+    // printf("access bounds test in prims_sort_fast = %f\n", (*prims_begin)->getBound().center().e[0]);
+
     size_t size = prims_end - prims_begin + 1;
     int *simu_stack = new int[size];
     uint32_t simu_ptr = -1;
     int global_left_index = 0;
     int global_right_index = size - 1;
+    // printf("func prims_sort_fast begin push stack\n");
     push_stack(simu_stack, &simu_ptr, global_left_index);
     push_stack(simu_stack, &simu_ptr, global_right_index);
+    // printf("func prims_sort_fast begin loop\n");
     while (simu_ptr != -1)
     {
+
+        // printf("loop test mark 1\n");
         int right_index = pop_stack(simu_stack, &simu_ptr);
         int left_index = pop_stack(simu_stack, &simu_ptr);
         triangle **left_cursor = &(prims_begin[left_index]);
         triangle **right_cursor = &(prims_begin[right_index]);
 
+        // printf("loop test mark 2\n");
+
         int middle_index = prims_sort_fast_single_ride(left_cursor, right_cursor, mode);
         middle_index += left_index;
+        // printf("loop test mark 3\n");
 
         if (middle_index - 1 > left_index)
         {
@@ -131,10 +151,11 @@ __device__ static void prims_sort_fast(triangle **prims_begin, triangle **prims_
             push_stack(simu_stack, &simu_ptr, middle_index + 1);
             push_stack(simu_stack, &simu_ptr, right_index);
         }
+        // printf("loop test mark 4\n");
     }
 }
 
-// 最简单的冒泡排序，之后再作优化
+// 最简单的冒泡排序，之后再作优化 （事实证明过于低效，弃用）
 __device__ static void prims_sort_bubble(triangle **prims_begin, triangle **prims_end, int mode)
 {
     for (triangle **i = prims_begin; i != prims_end; i++)
@@ -178,6 +199,43 @@ public:
     size_t index;
 };
 
+// 模拟 node 出栈
+__device__ static bvh_node *pop_stack(bvh_node **stack, uint32_t *simu_node_ptr)
+{
+    if (*simu_node_ptr == -1)
+    {
+        printf("current node stack is empty, cannot pop\n");
+        return nullptr;
+    }
+
+    bvh_node *ret_val = stack[*simu_node_ptr];
+    stack[*simu_node_ptr] = nullptr;
+    *simu_node_ptr -= 1;
+
+    return ret_val;
+}
+
+// 模拟 node 入栈
+__device__ static void push_stack(bvh_node **stack, uint32_t *simu_node_ptr, bvh_node *node)
+{
+    if (*simu_node_ptr == -1)
+    {
+        printf("current node stack is empty, ready to push\n");
+    }
+    *simu_node_ptr += 1;
+    stack[*simu_node_ptr] = node;
+}
+
+__device__ static bvh_node **node_stack_init(uint32_t len)
+{
+    bvh_node **ret_node_stack = new bvh_node *[len];
+    for (int i = 0; i < len; i++)
+    {
+        ret_node_stack[i] = nullptr;
+    }
+    return ret_node_stack;
+}
+
 class bvh_tree
 {
 public:
@@ -193,6 +251,8 @@ public:
         // 递归构造 : 传入总体的片元列表(当前网格的所有多边形面片列表)
         // root = recursiveConstructTree(prim_list, prims_size);
         root = iterativeConstructTree(prim_list);
+
+        printf("bvh tree constructed done");
 
         // time(&stop);
 
@@ -212,111 +272,75 @@ public:
     __device__ bvh_node *iterativeConstructTree(triangle **prim_list)
     {
 
+        // 初始化数字索引栈，栈中的元素值将是要排序列表的索引，这个栈用作快速排序
         int *simu_stack = stack_init(prims_size);
-        uint32_t simu_ptr = -1;
-        bool *mark_list = mark_list_init(prims_size);
-        bvh_node *node_list = new bvh_node[prims_size]; // 这个最后是不是可以free掉？？ 不行，坚决不行
+        // 初始化节点栈，栈中元素为指向树中节点的指针，这个栈用作 bvh_tree 的构建
+        bvh_node **simu_node_stack = node_stack_init(prims_size);
+        uint32_t simu_ptr = -1;      // 初始化栈为空
+        uint32_t simu_node_ptr = -1; // 初始化栈为空
 
-        aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
-        for (int i = 0; i < prims_size; ++i)
-            global_bound = Union(global_bound, prim_list[i]->getBound()); // 得到总体包围盒
-
-        int dim = global_bound.maxExtent();
-        printf("start to prims sort\n");
-        prims_sort_fast(&(prim_list[0]), &(prim_list[prims_size]), dim);
-        printf("prims sort end\n");
-        int root_index = prims_size / 2;
-        mark_list[root_index] = true;
-        push_stack(simu_stack, &simu_ptr, root_index);
-        // bound在元素压栈时赋值，之后的主构建循环中也是如此
-        node_list[root_index].bound = global_bound;
+        // 初始化根节点并入栈
+        bvh_node *root_node = new bvh_node;
+        push_stack(simu_node_stack, &simu_node_ptr, root_node);
+        // 列表左右端点索引入栈，两个端点之间的值将被排序，push 的时候记得先右后左
+        push_stack(simu_stack, &simu_ptr, prims_size - 1);
+        push_stack(simu_stack, &simu_ptr, 0);
 
         // 以上迭代的启动条件设置完毕
         // 开启构建循环，当栈不为空时一直执行
         printf("ready to jump in main construct bvh_tree loop\n");
         while (simu_ptr != -1)
         {
-            int middle_index = pop_stack(simu_stack, &simu_ptr);
-            printf("current stack size = %d\n", simu_ptr);
-            node_list[middle_index].object = prim_list[middle_index];
-            node_list[middle_index].index = middle_index;
-            // node_list[middle_index].bound = ???
-            mark_list[middle_index] = true; // 标记为已找到正确位置
 
-            if (middle_index == 0 || middle_index == prims_size - 1) // 这一定是一个叶子节点了
+            // 第一步 pop 得到当前要排序的部分
+            int left_index = pop_stack(simu_stack, &simu_ptr);
+            int right_index = pop_stack(simu_stack, &simu_ptr);
+
+            // pop 得到当前节点
+            bvh_node *current_node = pop_stack(simu_node_stack, &simu_node_ptr);
+
+            // 第二步 获取当前的包围盒，并
+            aabb global_bound = prim_list[left_index]->getBound();
+            for (int i = left_index; i <= right_index; ++i)
+                global_bound = Union(global_bound, prim_list[i]->getBound()); // 得到总体包围盒
+
+            // 为当前节点的 bound 进行赋值
+            current_node->bound = global_bound;
+            // 仅当叶子节点时才会赋值其 object
+            if (left_index == right_index)
             {
-                node_list[middle_index].left == nullptr;
-                node_list[middle_index].right == nullptr;
-                continue;
+                current_node->object = prim_list[left_index];
             }
 
-            int forward_sort_index = middle_index - 1;
-            int backward_sort_index = middle_index + 1;
-
-            /* ############################## 前向序遍历 ##############################*/
-            while (true)
-            {
-                // 遇到第一个 mark 为 true 的则断出，当遍历到 index = 0 的位置也会断出
-                if (mark_list[forward_sort_index] == true || forward_sort_index <= 0)
-                {
-                    break;
-                }
-                forward_sort_index--;
-            }
-
-            if ((middle_index - forward_sort_index) == 1 && (forward_sort_index != 0)) // 这个节点没有左子树，不必进行 sort 操作
-            {
-                node_list[middle_index].left == nullptr;
-            }
             else
             {
-                // 计算左子树当前bound
-                aabb left_bound = prim_list[forward_sort_index]->getBound(); // 左树列表第一个面元的 bound
-                for (int i = forward_sort_index; i < middle_index; ++i)
-                    left_bound = Union(left_bound, prim_list[i]->getBound()); // 得到左子树总体包围盒
-                int left_dim = left_bound.maxExtent();
-                prims_sort_fast(&(prim_list[forward_sort_index]), &(prim_list[middle_index]), left_dim);
-                int front_sort_size = middle_index - forward_sort_index;
-                int front_middle = forward_sort_index + front_sort_size / 2;
-                push_stack(simu_stack, &simu_ptr, front_middle);
-                // printf("left push %d\n", front_middle + 1);
-                node_list[front_middle].bound = left_bound;              // 为左子树根节点添加 bound
-                node_list[middle_index].left = &node_list[front_middle]; // 将左子树根节点链接到当前节点
-            }
+                // 得到当前包围盒的最大跨度轴，并根据最大轴跨度进行排序
+                int dim = global_bound.maxExtent();
+                prims_sort_fast(&(prim_list[left_index]), &(prim_list[right_index]), dim);
 
-            /* ############################## 后向序遍历 ##############################*/
-            while (true)
-            {
-                // 遇到第一个 mark 为 true 的则断出，当遍历到 list 末尾也会断出
-                if (mark_list[backward_sort_index] == true || backward_sort_index >= prims_size)
-                {
-                    break;
-                }
-                backward_sort_index++;
-            }
+                // 第三步 给出当前部分的 middle_index
+                int middle_index = left_index + (right_index - left_index) / 2;
 
-            if (backward_sort_index - middle_index == 1) // 这个节点没有右子树，不必进行 sort 操作
-            {
-                node_list[middle_index].right == nullptr;
-            }
-            else
-            {
-                // 计算右子树当前bound
-                aabb right_bound = prim_list[middle_index + 1]->getBound(); // 右树列表第一个面元的 bound
-                for (int i = middle_index + 1; i < backward_sort_index; ++i)
-                    right_bound = Union(right_bound, prim_list[i]->getBound()); // 得到右子树总体包围盒
-                int right_dim = right_bound.maxExtent();
-                prims_sort_fast(&(prim_list[middle_index + 1]), &(prim_list[backward_sort_index]), right_dim);
-                int back_sort_size = backward_sort_index - middle_index;
-                int back_middle = middle_index + back_sort_size / 2;
-                push_stack(simu_stack, &simu_ptr, back_middle);
-                printf("right push %d\n", back_middle + 1);
-                node_list[back_middle].bound = right_bound;              // 为右子树根节点添加 bound
-                node_list[middle_index].right = &node_list[back_middle]; // 将右子树根节点链接到当前节点
+                int middleLeft_index_next_round = middle_index;
+                int middleRight_index_next_round = middle_index + 1;
+
+                // 第四步 右子树处理
+                push_stack(simu_stack, &simu_ptr, right_index);
+                push_stack(simu_stack, &simu_ptr, middleRight_index_next_round);
+                bvh_node *right_node = new bvh_node;
+                current_node->right = right_node;
+                push_stack(simu_node_stack, &simu_node_ptr, right_node);
+
+                // 第五步 左子树处理
+                push_stack(simu_stack, &simu_ptr, middleLeft_index_next_round);
+                push_stack(simu_stack, &simu_ptr, left_index);
+                bvh_node *left_node = new bvh_node;
+                current_node->left = left_node;
+                push_stack(simu_node_stack, &simu_node_ptr, left_node);
             }
         }
 
-        return &(node_list[root_index]);
+        return root_node;
     }
     // CUDA 中不允许函数递归
     __device__ bvh_node *recursiveConstructTree(triangle **prim_list, size_t current_size)
@@ -406,6 +430,109 @@ public:
     }
 
     // hit_record Intersect(const ray &ray) const; // 目前这个函数并没有被定义，，，
+
+    // 传入一个树状结构的根节点，返回光线与树中叶子节点obj的交点
+    // 实质上是 bvh_tree 的遍历，但不允许用递归算法，必须迭代
+
+    __device__ hit_record iterativeGetHitPoint(bvh_node *node, const ray &ray) const
+    {
+        hit_record intersectionRecord;
+        intersectionRecord.happened = false;
+
+        aabb current_bound = node->bound;
+        int dirIsNeg[3] = {
+            int(ray.direction().x() < 0),
+            int(ray.direction().y() < 0),
+            int(ray.direction().z() < 0)};
+
+        bvh_node **current_node = &node;
+        // 如果根节点没有交点，则直接返回
+        if ((*current_node)->bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == false)
+        {
+            return intersectionRecord;
+        }
+        // 开始进行遍历
+        while (true)
+        {
+            // 左右子树均存在的情况
+            if ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
+            {
+                hit_record intersectionRecordLeft = (*current_node)->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                hit_record intersectionRecordRight = (*current_node)->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+
+                // 两个子树的包围盒均有交点
+                if (intersectionRecordLeft.happened == true && intersectionRecordRight.happened == true)
+                {
+                    // 如果两者都有交点,那么我们应该取更近的一个交点
+                    if (intersectionRecordLeft.t > intersectionRecordRight.t)
+                    {
+                        intersectionRecord = intersectionRecordRight;
+                        current_node = &((*current_node)->right);
+                    }
+                    else
+                    {
+                        intersectionRecord = intersectionRecordLeft;
+                        current_node = &((*current_node)->left);
+                    }
+                }
+                // 仅左子树包围盒存在交点
+                else if (intersectionRecordLeft.happened == true)
+                {
+                    intersectionRecord = intersectionRecordLeft;
+                    current_node = &((*current_node)->left);
+                }
+                // 仅右子树包围盒存在交点
+                else if (intersectionRecordRight.happened == true)
+                {
+                    intersectionRecord = intersectionRecordRight;
+                    current_node = &((*current_node)->right);
+                }
+                // 均无交点，可以直接返回了
+                else
+                {
+                    return intersectionRecord;
+                }
+            }
+            // 仅左子树存在
+            else if ((*current_node)->left != nullptr)
+            {
+                hit_record intersectionRecordLeft = (*current_node)->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                if (intersectionRecordLeft.happened == true)
+                {
+                    intersectionRecord = intersectionRecordLeft;
+                    current_node = &((*current_node)->left);
+                }
+                else
+                {
+                    return intersectionRecord;
+                }
+            }
+            // 仅右子树存在
+            else if ((*current_node)->right != nullptr)
+            {
+                hit_record intersectionRecordRight = (*current_node)->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                if (intersectionRecordRight.happened == true)
+                {
+                    intersectionRecord = intersectionRecordRight;
+                    current_node = &((*current_node)->right);
+                }
+                else
+                {
+                    return intersectionRecord;
+                }
+            }
+            // 左右子树均空，那么此时访问到的是一个叶子节点
+            else if ((*current_node)->left == nullptr && (*current_node)->right == nullptr)
+            {
+                // 直接访问节点中的object对象
+                (*current_node)->object->hit(ray, 0.0001, 999999, intersectionRecord);
+                // 断出
+                break;
+            }
+        }
+        return intersectionRecord;
+    }
+
     __device__ hit_record getHitpoint(bvh_node *node, const ray &ray) const
     {
         hit_record intersectionRecord;
@@ -428,7 +555,7 @@ public:
         //           << ray.inv_dir.y() << "; "
         //           << ray.inv_dir.z() << "; "
         //           << std::endl;
-        if (current_bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
+        if (current_bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == true)
         {
             // std::cout << "bound intersected" << std::endl;
 
@@ -546,3 +673,117 @@ public:
 // };
 
 #endif
+
+// 选用全新的迭代构建 bvh_tree
+// __device__ bvh_node *iterativeConstructTree(triangle **prim_list)
+// {
+
+//     int *simu_stack = stack_init(prims_size);
+//     uint32_t simu_ptr = -1;
+//     bool *mark_list = mark_list_init(prims_size);
+//     bvh_node *node_list = new bvh_node[prims_size]; // 这个最后是不是可以free掉？？ 不行，坚决不行
+
+//     aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
+//     for (int i = 0; i < prims_size; ++i)
+//         global_bound = Union(global_bound, prim_list[i]->getBound()); // 得到总体包围盒
+
+//     int dim = global_bound.maxExtent();
+//     printf("start to prims sort, dim = %d\n", dim);
+//     printf("access bounds test = %f\n", (*prim_list)->getBound().center().e[0]);
+//     prims_sort_fast(&(prim_list[0]), &(prim_list[prims_size - 1]), dim); // 首次排序出错了！！！
+//     printf("prims sort end\n");
+//     int root_index = prims_size / 2;
+//     mark_list[root_index] = true;
+//     push_stack(simu_stack, &simu_ptr, root_index);
+//     // bound在元素压栈时赋值，之后的主构建循环中也是如此
+//     node_list[root_index].bound = global_bound;
+
+//     // 以上迭代的启动条件设置完毕
+//     // 开启构建循环，当栈不为空时一直执行
+//     printf("ready to jump in main construct bvh_tree loop\n");
+//     while (simu_ptr != -1)
+//     {
+//         int middle_index = pop_stack(simu_stack, &simu_ptr);
+//         printf("current stack size = %d\n", simu_ptr);
+//         // 这里有一个问题，分支节点不应该有object值
+//         node_list[middle_index].object = prim_list[middle_index];
+//         node_list[middle_index].index = middle_index;
+//         // node_list[middle_index].bound = ???
+//         mark_list[middle_index] = true; // 标记为已找到正确位置
+
+//         if (middle_index == 0 || middle_index == prims_size - 1) // 这一定是一个叶子节点了
+//         {
+//             node_list[middle_index].left == nullptr;
+//             node_list[middle_index].right == nullptr;
+//             continue;
+//         }
+
+//         int forward_sort_index = middle_index - 1;
+//         int backward_sort_index = middle_index + 1;
+
+//         /* ############################## 前向序遍历 ##############################*/
+//         while (true)
+//         {
+//             // 遇到第一个 mark 为 true 的则断出，当遍历到 index = 0 的位置也会断出
+//             if (mark_list[forward_sort_index] == true || forward_sort_index <= 0)
+//             {
+//                 break;
+//             }
+//             forward_sort_index--;
+//         }
+
+//         if ((middle_index - forward_sort_index) == 1 && (forward_sort_index != 0)) // 这个节点没有左子树，不必进行 sort 操作
+//         {
+//             node_list[middle_index].left == nullptr;
+//         }
+//         else
+//         {
+//             // 计算左子树当前bound
+//             aabb left_bound = prim_list[forward_sort_index]->getBound(); // 左树列表第一个面元的 bound
+//             for (int i = forward_sort_index; i < middle_index; ++i)
+//                 left_bound = Union(left_bound, prim_list[i]->getBound()); // 得到左子树总体包围盒
+//             int left_dim = left_bound.maxExtent();
+//             // sort 被排序列表中的元素是左闭右闭的
+//             prims_sort_fast(&(prim_list[forward_sort_index]), &(prim_list[middle_index - 1]), left_dim);
+//             int front_sort_size = middle_index - forward_sort_index;
+//             int front_middle = forward_sort_index + front_sort_size / 2;
+//             push_stack(simu_stack, &simu_ptr, front_middle);
+//             // printf("left push %d\n", front_middle + 1);
+//             node_list[front_middle].bound = left_bound;              // 为左子树根节点添加 bound
+//             node_list[middle_index].left = &node_list[front_middle]; // 将左子树根节点链接到当前节点
+//         }
+
+//         /* ############################## 后向序遍历 ##############################*/
+//         while (true)
+//         {
+//             // 遇到第一个 mark 为 true 的则断出，当遍历到 list 末尾也会断出
+//             if (mark_list[backward_sort_index] == true || backward_sort_index >= prims_size - 1)
+//             {
+//                 break;
+//             }
+//             backward_sort_index++;
+//         }
+
+//         if (backward_sort_index - middle_index == 1) // 这个节点没有右子树，不必进行 sort 操作
+//         {
+//             node_list[middle_index].right == nullptr;
+//         }
+//         else
+//         {
+//             // 计算右子树当前bound
+//             aabb right_bound = prim_list[middle_index + 1]->getBound(); // 右树列表第一个面元的 bound
+//             for (int i = middle_index + 1; i < backward_sort_index; ++i)
+//                 right_bound = Union(right_bound, prim_list[i]->getBound()); // 得到右子树总体包围盒
+//             int right_dim = right_bound.maxExtent();
+//             prims_sort_fast(&(prim_list[middle_index + 1]), &(prim_list[backward_sort_index - 1]), right_dim);
+//             int back_sort_size = backward_sort_index - middle_index;
+//             int back_middle = middle_index + back_sort_size / 2;
+//             push_stack(simu_stack, &simu_ptr, back_middle);
+//             printf("right push %d\n", back_middle + 1);
+//             node_list[back_middle].bound = right_bound;              // 为右子树根节点添加 bound
+//             node_list[middle_index].right = &node_list[back_middle]; // 将右子树根节点链接到当前节点
+//         }
+//     }
+
+//     return &(node_list[root_index]);
+// }
