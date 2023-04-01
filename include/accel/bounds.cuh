@@ -92,9 +92,6 @@ public:
     __device__ hit_record IntersectP(const ray &ray, const vec3 &invDir, const int *dirIsNeg) const
     {
 
-        hit_record intersectPoint;
-        intersectPoint.happened = false;
-
         float x_min = this->_min.x(), y_min = this->_min.y(), z_min = this->_min.z();
         float x_max = this->_max.x(), y_max = this->_max.y(), z_max = this->_max.z();
 
@@ -124,14 +121,24 @@ public:
         // else
         //     return false;
 
+        hit_record intersectPoint;
+        intersectPoint.happened = false;
+
+        // intersectPoint.t = t_global_min;
+        // intersectPoint.mat_ptr = nullptr;
+        // intersectPoint.p = vec3(0.5, 0.5, -0.5);
+
         if (t_global_max <= t_global_min && t_global_min >= 0)
         {
             intersectPoint.t = t_global_min;
             intersectPoint.happened = true;
+            // printf("true interection\n");
         }
         else
         {
+            intersectPoint.t = -0.1;
             intersectPoint.happened = false;
+            // printf("false interection\n");
         }
 
         return intersectPoint;

@@ -8,7 +8,6 @@
 #include "accel/bounds.cuh"
 #include "math/common_math_device.cuh"
 
-
 __device__ __host__ inline float get_max_float_val_triangle(float val1, float val2)
 {
     return val1 > val2 ? val1 : val2;
@@ -17,7 +16,6 @@ __device__ __host__ inline float get_min_float_val_triangle(float val1, float va
 {
     return val1 > val2 ? val2 : val1;
 }
-
 
 // 质心计算 这次我们使用莱布尼茨公式进行求解
 __device__ static void getBarycentricCoord(vec3 P, vec3 A, vec3 B, vec3 C, float *alpha, float *beta, float *gamma)

@@ -340,26 +340,26 @@ public:
             }
         }
 
-        // // 这里简单做一个深度测试
-        // int depth_counter = 0;
-        // bvh_node *current_node = root_node;
-        // while (current_node->left != nullptr && current_node->right != nullptr)
-        // {
-        //     current_node = current_node->left;
-        //     depth_counter++;
-        // }
+        // 这里简单做一个深度测试
+        int depth_counter = 0;
+        bvh_node **current_node = &root_node;
+        while ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
+        {
+            current_node = &((*current_node)->left);
+            depth_counter++;
+        }
 
-        // printf("bvh node tree left depth = %d\n", depth_counter);
+        printf("bvh node tree left depth = %d\n", depth_counter);
 
-        // depth_counter = 0;
-        // current_node = root_node;
-        // while (current_node->left != nullptr && current_node->right != nullptr)
-        // {
-        //     current_node = current_node->right;
-        //     depth_counter++;
-        // }
+        depth_counter = 0;
+        current_node = &root_node;
+        while ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
+        {
+            current_node = &((*current_node)->right);
+            depth_counter++;
+        }
 
-        // printf("bvh node tree right depth = %d\n", depth_counter);
+        printf("bvh node tree right depth = %d\n", depth_counter);
 
         /**
          *  验证结果是，左边到11层，右边到10层，由于我们创建的 bvh_tree 是一棵完全二叉树，
@@ -477,6 +477,7 @@ public:
         // 如果根节点没有交点，则直接返回
         if ((*current_node)->bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == false)
         {
+            intersectionRecord.happened = false;
             return intersectionRecord;
         }
         // 开始进行遍历
@@ -486,34 +487,49 @@ public:
             if ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
             {
                 // printf("left and right\n");
+                // 这里出了问题！！！ 2023-04-01
                 hit_record intersectionRecordLeft = (*current_node)->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                // hit_record intersectionRecordLeft = intersectionRecord;
                 hit_record intersectionRecordRight = (*current_node)->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+
+                // printf("left,right = [%d,%d]\n", intersectionRecordLeft.happened, intersectionRecordRight.happened);
+                // printf("left,right = [%f,%f]\n\n", intersectionRecordLeft.t, intersectionRecordRight.t);
+                // hit_record intersectionRecordRight = intersectionRecord;
+                // intersectionRecordLeft.happened = false;
+                // intersectionRecordRight.happened = true;
+
                 // printf("left and right pair end\n\n");
                 // 两个子树的包围盒均有交点
                 if (intersectionRecordLeft.happened == true && intersectionRecordRight.happened == true)
                 {
+                    // printf("left,right = [%f,%f]\n\n", intersectionRecordLeft.t, intersectionRecordRight.t);
+                    // printf("t = %f\n", intersectionRecordLeft.t);
                     // 如果两者都有交点,那么我们应该取更近的一个交点
+
                     if (intersectionRecordLeft.t > intersectionRecordRight.t)
                     {
-                        intersectionRecord = intersectionRecordRight;
+                        // printf("left larger\n");
+                        // intersectionRecord = intersectionRecordRight;
                         current_node = &((*current_node)->right);
                     }
                     else
                     {
-                        intersectionRecord = intersectionRecordLeft;
+                        // printf("right larger\n");
+                        // intersectionRecord = intersectionRecordLeft;
                         current_node = &((*current_node)->left);
                     }
                 }
                 // 仅左子树包围盒存在交点
                 else if (intersectionRecordLeft.happened == true)
                 {
-                    intersectionRecord = intersectionRecordLeft;
+                    // printf("in");
+                    // intersectionRecord = intersectionRecordLeft;
                     current_node = &((*current_node)->left);
                 }
                 // 仅右子树包围盒存在交点
                 else if (intersectionRecordRight.happened == true)
                 {
-                    intersectionRecord = intersectionRecordRight;
+                    // intersectionRecord = intersectionRecordRight;
                     current_node = &((*current_node)->right);
                 }
                 // 均无交点，可以直接返回了
@@ -525,7 +541,7 @@ public:
             // 仅左子树存在
             else if ((*current_node)->left != nullptr)
             {
-                // printf("left branch only\n");
+                printf("left branch only\n");
                 hit_record intersectionRecordLeft = (*current_node)->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 if (intersectionRecordLeft.happened == true)
                 {
@@ -540,7 +556,7 @@ public:
             // 仅右子树存在
             else if ((*current_node)->right != nullptr)
             {
-                // printf("right branch only\n");
+                printf("right branch only\n");
                 hit_record intersectionRecordRight = (*current_node)->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 if (intersectionRecordRight.happened == true)
                 {
@@ -553,14 +569,18 @@ public:
                 }
             }
             // 左右子树均空，那么此时访问到的是一个叶子节点
-            else if ((*current_node)->left == nullptr && (*current_node)->right == nullptr)
+            else
+            // else if ((*current_node)->left == nullptr && (*current_node)->right == nullptr)
             {
-                // printf("left right void\n");
+                // printf("leaves node\n");
                 // 直接访问节点中的object对象
                 // 这里出了问题，因为 object 不一定存在！ 这是你构建的时候存在的一个错误
                 // 最底层节点的上层节点虽然有一部分也是叶子节点但没有分配object给它 2023-03-31
+                // 并非这个错误！！！目前的构造方法的确保证了每个叶子节点上都有一个object
+
+                // printf("prims normal = [%f,%f,%f]\n", (*current_node)->object->normal.e[0], (*current_node)->object->normal.e[1], (*current_node)->object->normal.e[2]);
                 (*current_node)->object->hit(ray, 0.0001, 999999, intersectionRecord);
-                printf("left right void end??\n");
+                // printf("left right void end??\n");
                 // printf("hit point = [%f,%f,%f]\n",
                 //        intersectionRecord.p.e[0],
                 //        intersectionRecord.p.e[1],
