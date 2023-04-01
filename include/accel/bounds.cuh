@@ -89,7 +89,7 @@ public:
     }
 
     // 声明一个射线与包围盒的相交判断函数
-    __device__ hit_record IntersectP(const ray &ray, const vec3 &invDir, const int *dirIsNeg) const
+    __device__ bool IntersectP(const ray &ray, const vec3 &invDir, const int *dirIsNeg) const
     {
 
         float x_min = this->_min.x(), y_min = this->_min.y(), z_min = this->_min.z();
@@ -115,33 +115,33 @@ public:
         const float t_global_min = get_min_float_val_bounds(t_x_max, get_min_float_val_bounds(t_y_max, t_z_max));
         const float t_global_max = get_max_float_val_bounds(t_x_min, get_max_float_val_bounds(t_y_min, t_z_min));
 
-        // if (t_global_max <= t_global_min && t_global_min >= 0)
-
-        //     return true;
-        // else
-        //     return false;
-
-        hit_record intersectPoint;
-        intersectPoint.happened = false;
-
-        // intersectPoint.t = t_global_min;
-        // intersectPoint.mat_ptr = nullptr;
-        // intersectPoint.p = vec3(0.5, 0.5, -0.5);
-
         if (t_global_max <= t_global_min && t_global_min >= 0)
-        {
-            intersectPoint.t = t_global_min;
-            intersectPoint.happened = true;
-            // printf("true interection\n");
-        }
-        else
-        {
-            intersectPoint.t = -0.1;
-            intersectPoint.happened = false;
-            // printf("false interection\n");
-        }
 
-        return intersectPoint;
+            return true;
+        else
+            return false;
+
+        // hit_record intersectPoint;
+        // intersectPoint.happened = false;
+
+        // // intersectPoint.t = t_global_min;
+        // // intersectPoint.mat_ptr = nullptr;
+        // // intersectPoint.p = vec3(0.5, 0.5, -0.5);
+
+        // if (t_global_max <= t_global_min && t_global_min >= 0)
+        // {
+        //     intersectPoint.t = t_global_min;
+        //     intersectPoint.happened = true;
+        //     // printf("true interection\n");
+        // }
+        // else
+        // {
+        //     intersectPoint.t = -0.1;
+        //     intersectPoint.happened = false;
+        //     // printf("false interection\n");
+        // }
+
+        // return intersectPoint;
     }
 
     // 包围盒的两个顶点
