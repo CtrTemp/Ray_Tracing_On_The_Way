@@ -4,7 +4,6 @@
 
 #include "accel/bounds.cuh"
 #include "object/primitive/triangle.cuh"
-#include <vector>
 
 /* ########################### 迭代构建 bvh_tree 所需的辅助函数 ###########################*/
 __device__ static int *stack_init(uint32_t len)
@@ -462,31 +461,51 @@ public:
     // 实质上是 bvh_tree 的遍历，但不允许用递归算法，必须迭代
     // 注意，所构建的 bvh_tree 中的分支节点均不存在 object 实体，都是抽象化的包围盒，只有叶子节点中存放 prims 实体
     // 必须借助栈的方式进行查找遍历，才能保证不会丢失 prims 2023-04-01-noon
-    __device__ hit_record iterativeGetHitPoint(bvh_node *node, const ray &ray) const
+    // 当前函数不允许使用 new 关键字进行内存分配！
+    __device__ hit_record iterativeGetHitPoint(const ray &ray) const
     {
 
+        // bvh_node **bvh0 = new bvh_node *[1000];
+        // a[99] = 0;
+        // malloc(100);
+        // char* ptr = (char*)malloc(size);
+        // bvh_node *node_temp = (bvh_node *)malloc(100);
+        // node_temp[0].bound._max = vec3(4, 4, 4);
+        // node_temp[0].bound._min = vec3(0, 0, 0);
+        // printf("node_temp0 bound max = [%f,%f,%f]",
+        //        node_temp[0].bound.center().e[0],
+        //        node_temp[0].bound.center().e[1],
+        //        node_temp[0].bound.center().e[2]);
 
+        // 总结：这个遍历，不能使用 new 关键字，不能开静态大数组
+        // 还要遍历整个bvh_tree
+        // 这种情况下如何解决使用stack的问题？？？
+
+        // printf("sh");
+        // bvh_node *node_stack = new bvh_node;
         // 交点记录
         hit_record intersectionRecord;
         intersectionRecord.happened = false;
 
-        aabb current_bound = node->bound;
+        aabb current_bound = root->bound;
         int dirIsNeg[3] = {
             int(ray.direction().x() < 0),
             int(ray.direction().y() < 0),
             int(ray.direction().z() < 0)};
 
-        bvh_node *root_node = node;
-
         // 初始化节点栈，栈中元素为指向树中节点的指针，这个栈用作 bvh_tree 的构建
-        bvh_node **simu_node_stack = node_stack_init(prims_size);
-        uint32_t simu_node_ptr = -1; // 初始化栈为空
+        // bvh_node **simu_node_stack = new bvh_node *[100];
+        // delete simu_node_stack;
 
-        // 这个栈只用于存放存在交点的叶子节点
+        // uint32_t simu_node_ptr = -1; // 初始化栈为空
+
+        // // 这个栈只用于存放存在交点的叶子节点
         bvh_node **simu_leaf_node_stack = node_stack_init(prims_size);
         uint32_t simu_leaf_node_ptr = -1; // 初始化栈为空
 
-        push_stack(simu_node_stack, &simu_node_ptr, root_node);
+        // push_stack(simu_node_stack, &simu_node_ptr, root_node);
+
+        return intersectionRecord;
 
         // // 如果根节点没有交点，则直接返回
         // if (root_node->bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == false)
@@ -495,122 +514,122 @@ public:
         //     return intersectionRecord;
         // }
 
-        // 开始进行遍历
-        while (simu_node_ptr != -1)
-        {
-            printf("current simu node len = %d\n", simu_node_ptr);
-            // 说明没有push进入!!!
-            if (simu_node_ptr != 0)
-            {
-                printf("current simu node len = %d\n", simu_node_ptr);
-            }
-            bvh_node *current_node = pop_stack(simu_node_stack, &simu_node_ptr);
-
-            // printf("whether you poped?\n");
-            // printf("current node bound val = [%f,%f,%f]\n",
-            //        root_node->bound.center().e[0],
-            //        root_node->bound.center().e[1],
-            //        root_node->bound.center().e[2]);
-
-            // 左右子树均存在的情况
-            if (current_node->left != nullptr && current_node->right != nullptr)
-            {
-                // printf("left and right\n");
-                // 这里出了问题！！！ 2023-04-01
-                // hit_record intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                // hit_record intersectionRecordLeft = intersectionRecord;
-                // hit_record intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                // hit_record intersectionRecordRight = intersectionRecord;
-
-                // intersectionRecordLeft.happened = false;
-                // intersectionRecordRight.happened = true;
-                // printf("left,right = [%d,%d]\n", intersectionRecordLeft.happened, intersectionRecordRight.happened);
-                // printf("left,right = [%f,%f]\n\n", intersectionRecordLeft.t, intersectionRecordRight.t);
-
-                bool left_Intersect = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                bool right_Intersect = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                // printf("left,right = [%d,%d]\n", left_Intersect, right_Intersect);
-                // 左子树包围盒存在交点
-                if (left_Intersect)
-                {
-                    printf("push left\n");
-                    push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
-                }
-                // 仅右子树包围盒存在交点
-                if (right_Intersect)
-                {
-                    printf("push right\n");
-                    push_stack(simu_node_stack, &simu_node_ptr, current_node->right);
-                }
-            }
-            // 仅左子树存在
-            else if (current_node->left != nullptr)
-            {
-                // hit_record intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                if (current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
-                {
-                    push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
-                }
-            }
-            // 仅右子树存在
-            else if (current_node->right != nullptr)
-            {
-                // hit_record intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                if (current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
-                {
-                    push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
-                }
-            }
-            // 左右子树均空，那么此时访问到的是一个叶子节点
-            else
-            {
-                // printf("leaves node\n");
-                // 直接访问节点中的object对象
-                // 这里出了问题，因为 object 不一定存在！ 这是你构建的时候存在的一个错误
-                // 最底层节点的上层节点虽然有一部分也是叶子节点但没有分配object给它 2023-03-31
-                // 并非这个错误！！！目前的构造方法的确保证了每个叶子节点上都有一个object
-                // 没有进来？！
-                printf("prims normal = [%f,%f,%f]\n", current_node->object->normal.e[0], current_node->object->normal.e[1], current_node->object->normal.e[2]);
-                current_node->object->hit(ray, 0.0001, 999999, intersectionRecord);
-                if (intersectionRecord.happened == true)
-                {
-                    push_stack(simu_leaf_node_stack, &simu_leaf_node_ptr, current_node);
-                }
-                printf("left right void end??\n");
-                // printf("hit point = [%f,%f,%f]\n",
-                //        intersectionRecord.p.e[0],
-                //        intersectionRecord.p.e[1],
-                //        intersectionRecord.p.e[2]);
-                // 断出
-                // break;
-            }
-        }
-
-        // printf("leaf_node len = %d/n", simu_leaf_node_ptr);
-        // 没有交点
-        if (simu_leaf_node_ptr == -1)
-        {
-            return intersectionRecord;
-        }
-
-        //
-        hit_record nearest_rec;
-        bvh_node *first_leaf_node = pop_stack(simu_leaf_node_stack, &simu_leaf_node_ptr);
-        first_leaf_node->object->hit(ray, 0.0001, 999999, nearest_rec);
-        // // 对存在交点的叶子节点进行遍历
-        // while (simu_leaf_node_ptr != -1)
+        // // 开始进行遍历
+        // while (simu_node_ptr != -1)
         // {
-        //     /* code */
-        //     hit_record rec_temp;
-        //     bvh_node *leaf_node = pop_stack(simu_leaf_node_stack, &simu_leaf_node_ptr);
-        //     leaf_node->object->hit(ray, 0.0001, 999999, rec_temp);
-        //     if (rec_temp.t < nearest_rec.t)
+        //     printf("current simu node len = %d\n", simu_node_ptr);
+        //     // 说明没有push进入!!!
+        //     if (simu_node_ptr != 0)
         //     {
-        //         nearest_rec = rec_temp;
+        //         printf("current simu node len = %d\n", simu_node_ptr);
+        //     }
+        //     bvh_node *current_node = pop_stack(simu_node_stack, &simu_node_ptr);
+
+        //     // printf("whether you poped?\n");
+        //     // printf("current node bound val = [%f,%f,%f]\n",
+        //     //        root_node->bound.center().e[0],
+        //     //        root_node->bound.center().e[1],
+        //     //        root_node->bound.center().e[2]);
+
+        //     // 左右子树均存在的情况
+        //     if (current_node->left != nullptr && current_node->right != nullptr)
+        //     {
+        //         // printf("left and right\n");
+        //         // 这里出了问题！！！ 2023-04-01
+        //         // hit_record intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+        //         // hit_record intersectionRecordLeft = intersectionRecord;
+        //         // hit_record intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+        //         // hit_record intersectionRecordRight = intersectionRecord;
+
+        //         // intersectionRecordLeft.happened = false;
+        //         // intersectionRecordRight.happened = true;
+        //         // printf("left,right = [%d,%d]\n", intersectionRecordLeft.happened, intersectionRecordRight.happened);
+        //         // printf("left,right = [%f,%f]\n\n", intersectionRecordLeft.t, intersectionRecordRight.t);
+
+        //         bool left_Intersect = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+        //         bool right_Intersect = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+        //         // printf("left,right = [%d,%d]\n", left_Intersect, right_Intersect);
+        //         // 左子树包围盒存在交点
+        //         if (left_Intersect)
+        //         {
+        //             printf("push left\n");
+        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
+        //         }
+        //         // 仅右子树包围盒存在交点
+        //         if (right_Intersect)
+        //         {
+        //             printf("push right\n");
+        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->right);
+        //         }
+        //     }
+        //     // 仅左子树存在
+        //     else if (current_node->left != nullptr)
+        //     {
+        //         // hit_record intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+        //         if (current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
+        //         {
+        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
+        //         }
+        //     }
+        //     // 仅右子树存在
+        //     else if (current_node->right != nullptr)
+        //     {
+        //         // hit_record intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+        //         if (current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
+        //         {
+        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
+        //         }
+        //     }
+        //     // 左右子树均空，那么此时访问到的是一个叶子节点
+        //     else
+        //     {
+        //         // printf("leaves node\n");
+        //         // 直接访问节点中的object对象
+        //         // 这里出了问题，因为 object 不一定存在！ 这是你构建的时候存在的一个错误
+        //         // 最底层节点的上层节点虽然有一部分也是叶子节点但没有分配object给它 2023-03-31
+        //         // 并非这个错误！！！目前的构造方法的确保证了每个叶子节点上都有一个object
+        //         // 没有进来？！
+        //         printf("prims normal = [%f,%f,%f]\n", current_node->object->normal.e[0], current_node->object->normal.e[1], current_node->object->normal.e[2]);
+        //         current_node->object->hit(ray, 0.0001, 999999, intersectionRecord);
+        //         if (intersectionRecord.happened == true)
+        //         {
+        //             push_stack(simu_leaf_node_stack, &simu_leaf_node_ptr, current_node);
+        //         }
+        //         printf("left right void end??\n");
+        //         // printf("hit point = [%f,%f,%f]\n",
+        //         //        intersectionRecord.p.e[0],
+        //         //        intersectionRecord.p.e[1],
+        //         //        intersectionRecord.p.e[2]);
+        //         // 断出
+        //         // break;
         //     }
         // }
 
-        return nearest_rec;
+        // // printf("leaf_node len = %d/n", simu_leaf_node_ptr);
+        // // 没有交点
+        // if (simu_leaf_node_ptr == -1)
+        // {
+        //     return intersectionRecord;
+        // }
+
+        // //
+        // hit_record nearest_rec;
+        // bvh_node *first_leaf_node = pop_stack(simu_leaf_node_stack, &simu_leaf_node_ptr);
+        // first_leaf_node->object->hit(ray, 0.0001, 999999, nearest_rec);
+        // // // 对存在交点的叶子节点进行遍历
+        // // while (simu_leaf_node_ptr != -1)
+        // // {
+        // //     /* code */
+        // //     hit_record rec_temp;
+        // //     bvh_node *leaf_node = pop_stack(simu_leaf_node_stack, &simu_leaf_node_ptr);
+        // //     leaf_node->object->hit(ray, 0.0001, 999999, rec_temp);
+        // //     if (rec_temp.t < nearest_rec.t)
+        // //     {
+        // //         nearest_rec = rec_temp;
+        // //     }
+        // // }
+
+        // return nearest_rec;
     }
 
     __device__ hit_record getHitpoint(bvh_node *node, const ray &ray) const

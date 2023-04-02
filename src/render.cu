@@ -102,6 +102,11 @@ __global__ void initialize_device_random(curandStateXORWOW *states, unsigned lon
     // int col_len = FRAME_HEIGHT;                 // 列高（行数）
     int global_index = (row_len * row_index + col_index); // 全局索引
 
+    // int *i = new int;
+    // *i = 0;
+    // printf("i=%d,", *i);
+    // delete i; // 这里如果不delete的话会导致显存溢出的错误？？
+    // // 这里应该得到启发，之前的一些错误可能是内存/显存栈溢出造成的
     curand_init(seed, global_index, 0, &states[global_index]);
 }
 
@@ -411,7 +416,8 @@ __host__ void init_and_render(void)
 
         // 首先使用当前参数进行渲染当前帧
         cudaEventRecord(start); // device端 开始计时
-        cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+        // 真正占用时间的渲染口
+        cuda_shading_unit<<<500, 505>>>(frame_buffer_device, world_device, states);
         cudaEventRecord(stop); // device端 计时结束
         cudaDeviceSynchronize();
         cudaEventSynchronize(stop); // 计时同步
