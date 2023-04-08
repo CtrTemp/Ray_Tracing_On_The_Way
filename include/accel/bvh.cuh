@@ -513,7 +513,7 @@ public:
         hit_record intersectionRecord;
         intersectionRecord.happened = false;
 
-        aabb current_bound = root->bound;
+        // aabb current_bound = root->bound;
         int dirIsNeg[3] = {
             int(ray.direction().x() < 0),
             int(ray.direction().y() < 0),
@@ -543,8 +543,11 @@ public:
 
         // printf("hitted!!\n");
 
+        // int counter = 0;
+
         while (simu_node_ptr != -1) // 当节点栈不为空时一直遍历
         {
+            // counter++;
             // printf("simu_node_ptr = %d\n", simu_node_ptr);
             bvh_node current_node = simu_node_stack[simu_node_ptr];
             simu_node_ptr -= 1; // 节点出栈
@@ -565,22 +568,30 @@ public:
             if (current_node.left != nullptr)
             {
                 bool intersectionRecordLeft = current_node.left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                simu_node_ptr += 1;
-                simu_node_stack[simu_node_ptr] = *(current_node.left); // 左子树跟节点入栈
+                if (intersectionRecordLeft == true)
+                {
+                    simu_node_ptr += 1;
+                    simu_node_stack[simu_node_ptr] = *(current_node.left); // 左子树跟节点入栈
+                }
             }
             // 右子树非空
             if (current_node.left != nullptr)
             {
                 bool intersectionRecordRight = current_node.right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-                simu_node_ptr += 1;
-                simu_node_stack[simu_node_ptr] = *(current_node.right); // 右子树跟节点入栈
+                if (intersectionRecordRight == true)
+                {
+                    simu_node_ptr += 1;
+                    simu_node_stack[simu_node_ptr] = *(current_node.right); // 右子树跟节点入栈
+                }
             }
         }
+
+        // printf("loop counter = %d\n", counter);
 
         // return intersectionRecord;
 
         // // 这里可以先free掉节点栈
-        // // free(simu_node_stack);
+        free(simu_node_stack);
 
         // 如果整个叶子节点栈为空，说明当前射线和整个树状结构都没有交点，直接返回即可
         if (simu_leaf_node_ptr == -1)
