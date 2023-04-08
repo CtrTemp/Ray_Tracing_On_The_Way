@@ -185,6 +185,9 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         //     list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), model_ind_len, diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // }
         int models_index = 0;
+        // 无加速结构构造 Object
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        // BVH_Tree 加速结构
         list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
         // models_index++;
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
@@ -300,13 +303,26 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable **world, curandSta
 
 __host__ void init_and_render(void)
 {
+
+    printf("size of bvh node = %d\n", sizeof(bvh_node));
+    printf("size of aabb = %d\n", sizeof(aabb));
+    printf("size of vec3 = %d\n", sizeof(vec3));
+    printf("size of bvh node * = %d\n", sizeof(bvh_node *));
+    printf("size of triangle * = %d\n", sizeof(triangle *));
+    printf("size of int = %d\n", sizeof(int));
+    printf("size of float = %d\n", sizeof(float));
+
+    bvh_node a[10];
+
+    // printf("address of a[0] = %ld, addredd of a[1] = %ld\n", a, a + 1);
+
     int device = 0;        // 设置使用第0块GPU进行运算
     cudaSetDevice(device); // 设置运算显卡
     cudaDeviceProp devProp;
     cudaGetDeviceProperties(&devProp, device); // 获取对应设备属性
 
-    unsigned int block_size_width = 32;
-    unsigned int block_size_height = 32;
+    unsigned int block_size_width = 8;
+    unsigned int block_size_height = 8;
     unsigned int grid_size_width = FRAME_WIDTH / block_size_width + 1;
     unsigned int grid_size_height = FRAME_HEIGHT / block_size_height + 1;
     dim3 dimBlock(block_size_width, block_size_height);
@@ -417,7 +433,14 @@ __host__ void init_and_render(void)
         // 首先使用当前参数进行渲染当前帧
         cudaEventRecord(start); // device端 开始计时
         // 真正占用时间的渲染口
-        cuda_shading_unit<<<500, 505>>>(frame_buffer_device, world_device, states);
+        // cuda_shading_unit<<<dim3(64, 32), dim3(8, 8)>>>(frame_buffer_device, world_device, states);
+        cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess)
+        {
+            printf("CUDA Error: %s\n", cudaGetErrorString(err));
+            // Possibly: exit(-1) if program cannot continue....
+        }
         cudaEventRecord(stop); // device端 计时结束
         cudaDeviceSynchronize();
         cudaEventSynchronize(stop); // 计时同步

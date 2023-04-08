@@ -109,8 +109,6 @@ public:
             // throw std::runtime_error("still not support QUADRANGLE primitives");
         }
 
-        printf("judging~\n");
-
         if (m == HitMethod::BVH_TREE)
         {
             printf("start to generating bvh tree......\n");

@@ -481,9 +481,35 @@ public:
         // 还要遍历整个bvh_tree
         // 这种情况下如何解决使用stack的问题？？？
 
-        // printf("sh");
+        // // printf("sh");
         // bvh_node *node_stack = new bvh_node;
-        // 交点记录
+        // int *a = new int;
+        // int a[100];
+        // for (int i = 0; i < 100; i++)
+        // {
+        //     a[i] = i;
+        // }
+        // 使用 new 的方法，无论是new int 还是 new bvh_node 都会造成大量时间占用
+
+        // 分配数组的方法是可以的，但随着数组分配的越来越大，耗时明显增加，且分配一个非常大的数组时，kernel 启动直接失败！
+        // bvh_node node_arr[30];
+        // int a[400];
+
+        // 2023-04-08
+        // 根据 CUDA documentation 中所描述：当一个SM没有足够的Register资源或Shared Memory资源来处理至少一个Block时
+        // 那么其 kernel 将启动失败，这可能是我的 kernel 启动失败的原因
+        // 现在开始搜索一下当前显卡 RTX 3080 的SM资源情况，并分析当前启动的kernel中的每个block到底占用了多少存储资源
+        // （如果当前分配的block申请占用的存储资源已经超出了一个SM当前所能提供的资源，则这个启动失败是可以接受的）
+        // 测试结果：尝试减小每个block中thread的大小似乎没有作用，说明导致崩溃的并非 SM 中总的Memory限制
+        // 而后转而想到是否是因为每个thread中分配memory超出了某些限制导致程序崩溃！！
+
+        // 2023-04-08
+        // 关于为什么使用new关键字在devie端进行创建使得程序异常缓慢的问题似乎有了解释（malloc同理）：
+        // 这是因为以上的操作将会使在Device端创建一个Global Memory，这是异常缓慢的
+        // 也就是说，你新创建的这个变量，无论它大小如何，都会被放在 global memory 中，而非Register或LoaclMemory
+
+        // printf("a 22 = %d", a[22]);
+        // // 交点记录
         hit_record intersectionRecord;
         intersectionRecord.happened = false;
 
@@ -494,25 +520,95 @@ public:
             int(ray.direction().z() < 0)};
 
         // 初始化节点栈，栈中元素为指向树中节点的指针，这个栈用作 bvh_tree 的构建
-        // bvh_node **simu_node_stack = new bvh_node *[100];
-        // delete simu_node_stack;
-
-        // uint32_t simu_node_ptr = -1; // 初始化栈为空
+        bvh_node simu_node_stack[12];
+        uint32_t simu_node_ptr = -1; // 初始化栈为空
 
         // // 这个栈只用于存放存在交点的叶子节点
-        bvh_node **simu_leaf_node_stack = node_stack_init(prims_size);
+        bvh_node simu_leaf_node_stack[6];
         uint32_t simu_leaf_node_ptr = -1; // 初始化栈为空
 
         // push_stack(simu_node_stack, &simu_node_ptr, root_node);
+        simu_node_ptr += 1;
+        simu_node_stack[simu_node_ptr] = *root; // 根节点入栈
 
-        return intersectionRecord;
+        // 如果根节点没有交点，则直接返回
+        if (root->bound.IntersectP(ray, ray.inv_dir, dirIsNeg) == false)
+        // if (root->bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == false)
+        {
+            // printf("Not Hit!!\n");
 
-        // // 如果根节点没有交点，则直接返回
-        // if (root_node->bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == false)
-        // {
-        //     intersectionRecord.happened = false;
-        //     return intersectionRecord;
-        // }
+            intersectionRecord.happened = false;
+            return intersectionRecord;
+        }
+
+        // printf("hitted!!\n");
+
+        while (simu_node_ptr != -1) // 当节点栈不为空时一直遍历
+        {
+            // printf("simu_node_ptr = %d\n", simu_node_ptr);
+            bvh_node current_node = simu_node_stack[simu_node_ptr];
+            simu_node_ptr -= 1; // 节点出栈
+
+            // 左右子树均为空，叶子节点情况
+            if (current_node.left == nullptr && current_node.right == nullptr)
+            {
+                // 直接访问叶子节点中的 object 对象，并将相交信息传递给 intersectionRecord
+                current_node.object->hit(ray, 0.0001, 999999, intersectionRecord);
+                // 如果当前射线和叶子节点中的 object 有交点就入栈
+                if (intersectionRecord.happened == true)
+                {
+                    simu_leaf_node_ptr += 1;
+                    simu_leaf_node_stack[simu_leaf_node_ptr] = current_node;
+                }
+            }
+            // 左子树非空
+            if (current_node.left != nullptr)
+            {
+                bool intersectionRecordLeft = current_node.left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                simu_node_ptr += 1;
+                simu_node_stack[simu_node_ptr] = *(current_node.left); // 左子树跟节点入栈
+            }
+            // 右子树非空
+            if (current_node.left != nullptr)
+            {
+                bool intersectionRecordRight = current_node.right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                simu_node_ptr += 1;
+                simu_node_stack[simu_node_ptr] = *(current_node.right); // 右子树跟节点入栈
+            }
+        }
+
+        // return intersectionRecord;
+
+        // // 这里可以先free掉节点栈
+        // // free(simu_node_stack);
+
+        // 如果整个叶子节点栈为空，说明当前射线和整个树状结构都没有交点，直接返回即可
+        if (simu_leaf_node_ptr == -1)
+        {
+            return intersectionRecord;
+        }
+
+        // 否则遍历叶子节点栈，并找到最近交点
+        hit_record nearest_rec;
+        bvh_node first_leaf_node = simu_leaf_node_stack[simu_leaf_node_ptr];
+        simu_leaf_node_ptr -= 1; // 首个叶子节点出栈
+        first_leaf_node.object->hit(ray, 0.0001, 999999, nearest_rec);
+        hit_record rec_temp;
+
+        while (simu_leaf_node_ptr != -1) // 叶子节点栈非空则遍历整个栈，寻找最近的射线交点
+        {
+
+            // printf("simu_leaf_node_ptr = %d\n", simu_leaf_node_ptr);
+            bvh_node leaf_node = simu_leaf_node_stack[simu_leaf_node_ptr];
+            simu_leaf_node_ptr -= 1; // 叶子节点出栈
+            leaf_node.object->hit(ray, 0.0001, 999999, rec_temp);
+            if (rec_temp.t < nearest_rec.t) // 若当前叶子节点更近，则进行替换
+            {
+                nearest_rec = rec_temp;
+            }
+        }
+
+        return nearest_rec;
 
         // // 开始进行遍历
         // while (simu_node_ptr != -1)
