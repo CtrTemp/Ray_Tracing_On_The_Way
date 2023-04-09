@@ -54,7 +54,7 @@ public:
         2/传入顶点列表和索引缓冲区
     */
     // 第一种：传入三个顶点进行构造
-    __host__ __device__ triangle(vertex v0, vertex v1, vertex v2, material *mat)
+    __device__ triangle(vertex v0, vertex v1, vertex v2, material *mat)
     {
         index[0] = 0;
         index[1] = 1;
@@ -85,7 +85,7 @@ public:
     };
 
     // 第二种：传入顶点列表以及索引值
-    __host__ __device__ triangle(uint32_t i0, uint32_t i1, uint32_t i2, vertex *vertexList, material *mat)
+    __device__ triangle(uint32_t i0, uint32_t i1, uint32_t i2, vertex *vertexList, material *mat)
     {
         index[0] = i0;
         index[1] = i1;
@@ -240,8 +240,39 @@ public:
         return aabb(min_point, max_point);
     }
     __device__ virtual bool hasEmission(void) const { return mat_ptr->hasEmission(); };
-    // void Sample(hit_record &pos, float &probability);
-    // float getArea();
+
+    // 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
+    __device__ virtual void Sample(hit_record &pos, float &probability, curandStateXORWOW *states)
+    {
+        // 这里的sqrt要进行修改
+        // std::sqrt 对应 cuda 中的 sqrt 函数
+        float x = sqrt(random_float_device(states));
+
+        float y = random_float_device(states);
+        pos.p = vertices[0].position * (1.0f - x) +
+                vertices[1].position * (x * (1.0f - y)) +
+                vertices[2].position * (x * y);
+        pos.normal = this->normal;
+        probability = 1.0f / area;
+
+        pos.mat_ptr = this->mat_ptr;
+
+        /*
+            这里要补充记录 uv 值，从三角形的三个顶点出发，获取三个顶点的uv值，最终插值得到当前点的uv值
+        */
+        float alpha, beta, gamma;
+        getBarycentricCoord(pos.p, vertices[0].position, vertices[1].position, vertices[2].position, &alpha, &beta, &gamma);
+
+        float u_temp = vertices[0].tex_coord[0] * alpha + vertices[1].tex_coord[0] * beta + vertices[2].tex_coord[0] * gamma;
+        float v_temp = vertices[0].tex_coord[1] * alpha + vertices[1].tex_coord[1] * beta + vertices[2].tex_coord[1] * gamma;
+
+        pos.u = u_temp;
+        pos.v = v_temp;
+
+        pos.happened = true;
+    }
+    // 得到目标物体的总面积
+    __device__ virtual float getArea() { return area; }
 
     // 三角形索引缓冲区
     uint8_t index[3];

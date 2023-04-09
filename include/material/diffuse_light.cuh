@@ -24,11 +24,11 @@ public:
     __device__ virtual vec3 computeBRDF(const vec3 wi, const vec3 wo, const hit_record p) { return vec3(0, 0, 0); };
 
     __device__ float pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal) { return 1.0f; }
-    // SelfMaterialType getMaterialType() { return self_type; }
+    __device__ SelfMaterialType getMaterialType() { return self_type; }
 
     textures *emit;
-    // vec3 BRDF;
-    // SelfMaterialType self_type = SelfMaterialType::LIGHT;
+    vec3 BRDF;
+    SelfMaterialType self_type = SelfMaterialType::LIGHT;
 };
 
 #endif

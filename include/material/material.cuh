@@ -15,6 +15,14 @@ struct hit_record;
 // 基类material有两个函数
 class material
 {
+public:
+	enum class SelfMaterialType
+	{
+		LAMBERTAIN,
+		MENTAL,
+		DIELECTRIC,
+		LIGHT
+	};
 
 public:
 	// 散射参数(二次/间接光源参数): 即给出入射光线参数, 打击点参数, 衰减参数, 针对当前的材料, 给出一条出射光
@@ -22,6 +30,13 @@ public:
 	// 发光参数(一次/直接光源参数): 如果是发光体材质, 还应具有发光参数, 传入
 	__device__ virtual vec3 emitted(float u, float v, const vec3 &p) const = 0;
 	__device__ virtual bool hasEmission(void) const = 0;
+
+	// BRDF 计算函数，为纯虚函数，每个继承类必须提供实现
+	__device__ virtual vec3 computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p) = 0;
+	// 表面采样计算函数，为纯虚函数，每个继承类必须提供实现
+	__device__ virtual float pdf(vec3 r_in_dir, vec3 r_out_dir, vec3 normal) = 0;
+	// 返回表面材质，为纯虚函数，每个继承类必须提供实现
+	__device__ virtual SelfMaterialType getMaterialType() = 0;
 };
 
 static __device__ vec3 reflect(const vec3 &v, const vec3 &n)

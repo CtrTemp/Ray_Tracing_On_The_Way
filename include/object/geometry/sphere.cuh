@@ -60,6 +60,21 @@ public:
 		return mat_ptr->hasEmission();
 	}
 
+	// 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
+	__device__ virtual void Sample(hit_record &pos, float &probability,curandStateXORWOW *states)
+	{
+		float theta = 2.0 * M_PI * random_float_device(states), phi = M_PI * random_float_device(states);
+		vec3 dir(std::cos(phi), std::sin(phi) * std::cos(theta), std::sin(phi) * std::sin(theta));
+		pos.p = center + radius * dir;
+		pos.normal = dir;
+		// pos.emit = mat_ptr->emitted();
+		probability = 1.0f / area;
+		pos.happened = true;
+		pos.mat_ptr = this->mat_ptr;
+	}
+	// 得到目标物体的总面积
+	__device__ virtual float getArea() { return area; };
+
 	vec3 center;
 	float radius;
 	float area;

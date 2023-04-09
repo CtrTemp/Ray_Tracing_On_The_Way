@@ -268,6 +268,30 @@ public:
     // virtual bool hasEmission(void) const { return false; };
     __device__ virtual bool hasEmission(void) const { return model_eimssion; };
 
+    // 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
+    __device__ virtual void Sample(hit_record &pos, float &probability, curandStateXORWOW *states)
+    {
+        // const int rand_index = (int)(random_float_device(states) * emit_prim_list.size());
+
+        // emit_prim_list[rand_index]->Sample(pos, probability);
+        printf("目前一般情况下不会执行到这个函数，看到我说明你的程序出错了\n");
+		printf("目前执行的是 models 的采样函数\n");
+    }
+
+    // 得到目标物体的总面积
+    __device__ virtual float getArea()
+    {
+        float ret_area = 0.0f;
+        // for (size_t i = 0; i < emit_prim_list.size(); i++)
+        // {
+        //     ret_area += emit_prim_list[i]->getArea();
+        // }
+		printf("目前一般情况下不会执行到这个函数，看到我说明你的程序出错了\n");
+		printf("目前执行的是 models 的面积获取函数\n");
+
+        return ret_area;
+    }
+
     // void Sample(hit_record &pos, float &probability);
     // float getArea();
 

@@ -17,7 +17,7 @@
 #include "object/hitable.cuh"
 #include "object/group/hitable_list.cuh"
 
-#define FRAME_WIDTH 1024
+#define FRAME_WIDTH 512
 #define FRAME_HEIGHT 512
 
 #define BOUNCE_DEPTH 50
@@ -31,6 +31,7 @@ typedef struct
 	float aspect;
 	float aperture;
 	float focus_dist;
+	float RussianRoulette;
 	float t0;
 	float t1;
 	uint16_t frame_width;
@@ -62,6 +63,7 @@ public:
 		frame_height = createInfo.frame_height;
 		time0 = createInfo.t0;
 		time1 = createInfo.t1;
+		RussianRoulette = createInfo.RussianRoulette;
 		lens_radius = createInfo.aperture / 2;
 		float theta = createInfo.fov * M_PI / 180;
 		float half_height = tan(theta / 2);
@@ -93,6 +95,46 @@ public:
 	// __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state);
 	// __device__ vec3 shading_device(int depth, ray &r, hitable **world, curandStateXORWOW_t *rand_state);
 
+	__device__ void sampleLight(hit_record &pos, float &pdf, hitable_list **world, curandStateXORWOW *rand_state)
+	{
+		float emit_area_sum = 0;
+		for (uint32_t k = 0; k < (*world)->list_size; k++)
+		{
+			if ((*world)->list[k]->hasEmission())
+			{
+				emit_area_sum += (*world)->list[k]->getArea();
+				// std::cout << "get an emission" << std::endl;
+			}
+			// std::cout << "k = " << k << std::endl;
+		}
+
+		// 2023/02/06
+		// 现在问题已经很明确了：没有光源或者只有一个光源的情况都不适用！！！你的系统无法兼容这种情况
+		if (emit_area_sum == 0)
+		{
+			printf("there is no light source in this scene! please check your world construction！\n");
+		}
+
+		// std::cout << "total area = " << emit_area_sum << std::endl;
+
+		float p = random_float_device(rand_state) * emit_area_sum;
+		// std::cout << "p = " << p << std::endl;
+		emit_area_sum = 0;
+		for (uint32_t k = 0; k < (*world)->list_size; k++)
+		{
+			if ((*world)->list[k]->hasEmission())
+			{
+				emit_area_sum += (*world)->list[k]->getArea();
+				if (p <= emit_area_sum)
+				{
+					// std::cout << "current kk = " << k << std::endl;
+					(*world)->list[k]->Sample(pos, pdf, rand_state);
+					break;
+				}
+			}
+		}
+	}
+
 	vec3 upper_left_conner;
 	vec3 horizontal;
 	vec3 vertical;
@@ -100,6 +142,7 @@ public:
 	vec3 u, v, w;
 	float lens_radius;
 	float time0, time1;
+	float RussianRoulette;
 
 	uint16_t frame_width;
 	uint16_t frame_height;
@@ -134,7 +177,7 @@ __host__ static camera *createCamera(cameraCreateInfo camInfo)
 // __host__ static void modifyCamera(camera *cam, cameraCreateInfo camInfo, size_t frame_counts)
 __host__ static camera *modifyCamera(cameraCreateInfo camInfo, size_t frame_counts)
 {
-	int frame_yaw_period = 100;	  // 圆周 偏航角(yaw) 周期
+	int frame_yaw_period = 100;	 // 圆周 偏航角(yaw) 周期
 	int frame_pitch_period = 50; // 圆周 俯仰角(pitch) 周期
 	float cam_yaw_range = 3;
 	float cam_pitch_range = 3;

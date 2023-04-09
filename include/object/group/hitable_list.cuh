@@ -47,6 +47,21 @@ public:
 		return false;
 	}
 
+	// 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
+	__device__ virtual void Sample(hit_record &pos, float &probability, curandStateXORWOW *states)
+	{
+		printf("目前一般情况下不会执行到这个函数，看到我说明你的程序出错了\n");
+		printf("目前执行的是 hitable_list 的采样函数\n");
+	}
+	// 得到目标物体的总面积
+	__device__ virtual float getArea()
+	{
+        float ret_area = 0.0f;
+		printf("目前一般情况下不会执行到这个函数，看到我说明你的程序出错了\n");
+		printf("目前执行的是 hitable_list 的面积获取函数\n");
+        return ret_area;
+	}
+
 public:
 	hitable **list;
 	int list_size;
