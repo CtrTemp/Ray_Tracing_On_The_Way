@@ -244,10 +244,10 @@ public:
             temp_rec = tree->iterativeGetHitPoint(r);
             // // int *stack = new int;
             // // printf("get bvh struct hitpoint Done!\n");
-            if (temp_rec.happened)
+            if (temp_rec.happened && t_max > temp_rec.t)
             {
                 hit_anything = true;
-                closest_so_far = temp_rec.t;
+                // closest_so_far = temp_rec.t;
                 rec = temp_rec;
             }
             // throw std::runtime_error("not support currently");

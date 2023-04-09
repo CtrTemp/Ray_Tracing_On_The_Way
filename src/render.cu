@@ -168,13 +168,13 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        // uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
-        // list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
+        list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(vertList, indList, 13500, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         // printf("models count = %d\n", model_counts);
@@ -189,10 +189,10 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable **world, hitabl
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // BVH_Tree 加速结构
         list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        // models_index++;
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // models_index++;
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        models_index++;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        models_index++;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         *world = new hitable_list(list, obj_index);
         printf("world generate done\n");
@@ -424,11 +424,16 @@ __host__ void init_and_render(void)
     vec3 *frame_buffer_device;
     int size = FRAME_WIDTH * FRAME_HEIGHT * sizeof(vec3);
     cudaMalloc((void **)&frame_buffer_device, size);
-    size_t loop_count = 0;
+    size_t loop_count = 95;
     // 主机开辟帧缓存
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
     while (++loop_count)
     {
+        // 在 host 端更改相机参数
+        cpu_camera = modifyCamera(primaryCamera, loop_count);
+        // 将更改好的相机参数传递给device端的常量内存
+        cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+        cudaDeviceSynchronize();
 
         // 首先使用当前参数进行渲染当前帧
         cudaEventRecord(start); // device端 开始计时
@@ -453,15 +458,9 @@ __host__ void init_and_render(void)
         std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
         write_file(path, frame_buffer_host);
 
-        // 在 host 端更改相机参数
-        cpu_camera = modifyCamera(primaryCamera, loop_count);
-
-        // 将更改好的相机参数传递给device端的常量内存
-        cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
-        cudaDeviceSynchronize();
-
         // 断出条件
-        if (loop_count >= 1)
+        // 当仅渲染一帧做测试时只需要将其设为1即可
+        if (loop_count >= 100)
         {
             break;
         }

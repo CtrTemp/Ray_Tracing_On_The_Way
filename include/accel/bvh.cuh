@@ -455,8 +455,6 @@ public:
         return node;
     }
 
-    // hit_record Intersect(const ray &ray) const; // 目前这个函数并没有被定义，，，
-
     // 传入一个树状结构的根节点，返回光线与树中叶子节点obj的交点
     // 实质上是 bvh_tree 的遍历，但不允许用递归算法，必须迭代
     // 注意，所构建的 bvh_tree 中的分支节点均不存在 object 实体，都是抽象化的包围盒，只有叶子节点中存放 prims 实体
@@ -465,53 +463,13 @@ public:
     __device__ hit_record iterativeGetHitPoint(const ray &ray) const
     {
 
-        // bvh_node **bvh0 = new bvh_node *[1000];
-        // a[99] = 0;
-        // malloc(100);
-        // char* ptr = (char*)malloc(size);
-        // bvh_node *node_temp = (bvh_node *)malloc(100);
-        // node_temp[0].bound._max = vec3(4, 4, 4);
-        // node_temp[0].bound._min = vec3(0, 0, 0);
-        // printf("node_temp0 bound max = [%f,%f,%f]",
-        //        node_temp[0].bound.center().e[0],
-        //        node_temp[0].bound.center().e[1],
-        //        node_temp[0].bound.center().e[2]);
-
-        // 总结：这个遍历，不能使用 new 关键字，不能开静态大数组
-        // 还要遍历整个bvh_tree
-        // 这种情况下如何解决使用stack的问题？？？
-
-        // // printf("sh");
-        // bvh_node *node_stack = new bvh_node;
-        // int *a = new int;
-        // int a[100];
-        // for (int i = 0; i < 100; i++)
-        // {
-        //     a[i] = i;
-        // }
-        // 使用 new 的方法，无论是new int 还是 new bvh_node 都会造成大量时间占用
-
-        // 分配数组的方法是可以的，但随着数组分配的越来越大，耗时明显增加，且分配一个非常大的数组时，kernel 启动直接失败！
-        // bvh_node node_arr[30];
-        // int a[400];
-
-        // 2023-04-08
-        // 根据 CUDA documentation 中所描述：当一个SM没有足够的Register资源或Shared Memory资源来处理至少一个Block时
-        // 那么其 kernel 将启动失败，这可能是我的 kernel 启动失败的原因
-        // 现在开始搜索一下当前显卡 RTX 3080 的SM资源情况，并分析当前启动的kernel中的每个block到底占用了多少存储资源
-        // （如果当前分配的block申请占用的存储资源已经超出了一个SM当前所能提供的资源，则这个启动失败是可以接受的）
-        // 测试结果：尝试减小每个block中thread的大小似乎没有作用，说明导致崩溃的并非 SM 中总的Memory限制
-        // 而后转而想到是否是因为每个thread中分配memory超出了某些限制导致程序崩溃！！
-
-        // 2023-04-08
-        // 关于为什么使用new关键字在devie端进行创建使得程序异常缓慢的问题似乎有了解释（malloc同理）：
-        // 这是因为以上的操作将会使在Device端创建一个Global Memory，这是异常缓慢的
-        // 也就是说，你新创建的这个变量，无论它大小如何，都会被放在 global memory 中，而非Register或LoaclMemory
-
-        // printf("a 22 = %d", a[22]);
-        // // 交点记录
         hit_record intersectionRecord;
         intersectionRecord.happened = false;
+
+        // bvh_node node[33];
+        // bvh_node* node[100];
+
+        // return intersectionRecord;
 
         // aabb current_bound = root->bound;
         int dirIsNeg[3] = {
@@ -520,23 +478,22 @@ public:
             int(ray.direction().z() < 0)};
 
         // 初始化节点栈，栈中元素为指向树中节点的指针，这个栈用作 bvh_tree 的构建
-        bvh_node simu_node_stack[12];
+        bvh_node *simu_node_stack[50];
         uint32_t simu_node_ptr = -1; // 初始化栈为空
 
         // // 这个栈只用于存放存在交点的叶子节点
-        bvh_node simu_leaf_node_stack[6];
+        bvh_node *simu_leaf_node_stack[25];
         uint32_t simu_leaf_node_ptr = -1; // 初始化栈为空
 
         // push_stack(simu_node_stack, &simu_node_ptr, root_node);
         simu_node_ptr += 1;
-        simu_node_stack[simu_node_ptr] = *root; // 根节点入栈
+        simu_node_stack[simu_node_ptr] = root; // 根节点入栈
 
         // 如果根节点没有交点，则直接返回
         if (root->bound.IntersectP(ray, ray.inv_dir, dirIsNeg) == false)
         // if (root->bound.IntersectP(ray, ray.inv_dir, dirIsNeg).happened == false)
         {
             // printf("Not Hit!!\n");
-
             intersectionRecord.happened = false;
             return intersectionRecord;
         }
@@ -549,14 +506,14 @@ public:
         {
             // counter++;
             // printf("simu_node_ptr = %d\n", simu_node_ptr);
-            bvh_node current_node = simu_node_stack[simu_node_ptr];
+            bvh_node *current_node = simu_node_stack[simu_node_ptr];
             simu_node_ptr -= 1; // 节点出栈
 
             // 左右子树均为空，叶子节点情况
-            if (current_node.left == nullptr && current_node.right == nullptr)
+            if (current_node->left == nullptr && current_node->right == nullptr)
             {
                 // 直接访问叶子节点中的 object 对象，并将相交信息传递给 intersectionRecord
-                current_node.object->hit(ray, 0.0001, 999999, intersectionRecord);
+                current_node->object->hit(ray, 0.0001, 999999, intersectionRecord);
                 // 如果当前射线和叶子节点中的 object 有交点就入栈
                 if (intersectionRecord.happened == true)
                 {
@@ -565,23 +522,23 @@ public:
                 }
             }
             // 左子树非空
-            if (current_node.left != nullptr)
+            if (current_node->left != nullptr)
             {
-                bool intersectionRecordLeft = current_node.left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                bool intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 if (intersectionRecordLeft == true)
                 {
                     simu_node_ptr += 1;
-                    simu_node_stack[simu_node_ptr] = *(current_node.left); // 左子树跟节点入栈
+                    simu_node_stack[simu_node_ptr] = current_node->left; // 左子树跟节点入栈
                 }
             }
             // 右子树非空
-            if (current_node.left != nullptr)
+            if (current_node->left != nullptr)
             {
-                bool intersectionRecordRight = current_node.right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
+                bool intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
                 if (intersectionRecordRight == true)
                 {
                     simu_node_ptr += 1;
-                    simu_node_stack[simu_node_ptr] = *(current_node.right); // 右子树跟节点入栈
+                    simu_node_stack[simu_node_ptr] = current_node->right; // 右子树跟节点入栈
                 }
             }
         }
@@ -591,7 +548,7 @@ public:
         // return intersectionRecord;
 
         // // 这里可以先free掉节点栈
-        free(simu_node_stack);
+        // free(simu_node_stack);
 
         // 如果整个叶子节点栈为空，说明当前射线和整个树状结构都没有交点，直接返回即可
         if (simu_leaf_node_ptr == -1)
@@ -601,18 +558,17 @@ public:
 
         // 否则遍历叶子节点栈，并找到最近交点
         hit_record nearest_rec;
-        bvh_node first_leaf_node = simu_leaf_node_stack[simu_leaf_node_ptr];
+        bvh_node *first_leaf_node = simu_leaf_node_stack[simu_leaf_node_ptr];
         simu_leaf_node_ptr -= 1; // 首个叶子节点出栈
-        first_leaf_node.object->hit(ray, 0.0001, 999999, nearest_rec);
-        hit_record rec_temp;
+        first_leaf_node->object->hit(ray, 0.0001, 999999, nearest_rec);
 
         while (simu_leaf_node_ptr != -1) // 叶子节点栈非空则遍历整个栈，寻找最近的射线交点
         {
-
+            hit_record rec_temp;
             // printf("simu_leaf_node_ptr = %d\n", simu_leaf_node_ptr);
-            bvh_node leaf_node = simu_leaf_node_stack[simu_leaf_node_ptr];
+            bvh_node *leaf_node = simu_leaf_node_stack[simu_leaf_node_ptr];
             simu_leaf_node_ptr -= 1; // 叶子节点出栈
-            leaf_node.object->hit(ray, 0.0001, 999999, rec_temp);
+            leaf_node->object->hit(ray, 0.0001, 999999, rec_temp);
             if (rec_temp.t < nearest_rec.t) // 若当前叶子节点更近，则进行替换
             {
                 nearest_rec = rec_temp;
@@ -620,227 +576,6 @@ public:
         }
 
         return nearest_rec;
-
-        // // 开始进行遍历
-        // while (simu_node_ptr != -1)
-        // {
-        //     printf("current simu node len = %d\n", simu_node_ptr);
-        //     // 说明没有push进入!!!
-        //     if (simu_node_ptr != 0)
-        //     {
-        //         printf("current simu node len = %d\n", simu_node_ptr);
-        //     }
-        //     bvh_node *current_node = pop_stack(simu_node_stack, &simu_node_ptr);
-
-        //     // printf("whether you poped?\n");
-        //     // printf("current node bound val = [%f,%f,%f]\n",
-        //     //        root_node->bound.center().e[0],
-        //     //        root_node->bound.center().e[1],
-        //     //        root_node->bound.center().e[2]);
-
-        //     // 左右子树均存在的情况
-        //     if (current_node->left != nullptr && current_node->right != nullptr)
-        //     {
-        //         // printf("left and right\n");
-        //         // 这里出了问题！！！ 2023-04-01
-        //         // hit_record intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-        //         // hit_record intersectionRecordLeft = intersectionRecord;
-        //         // hit_record intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-        //         // hit_record intersectionRecordRight = intersectionRecord;
-
-        //         // intersectionRecordLeft.happened = false;
-        //         // intersectionRecordRight.happened = true;
-        //         // printf("left,right = [%d,%d]\n", intersectionRecordLeft.happened, intersectionRecordRight.happened);
-        //         // printf("left,right = [%f,%f]\n\n", intersectionRecordLeft.t, intersectionRecordRight.t);
-
-        //         bool left_Intersect = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-        //         bool right_Intersect = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-        //         // printf("left,right = [%d,%d]\n", left_Intersect, right_Intersect);
-        //         // 左子树包围盒存在交点
-        //         if (left_Intersect)
-        //         {
-        //             printf("push left\n");
-        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
-        //         }
-        //         // 仅右子树包围盒存在交点
-        //         if (right_Intersect)
-        //         {
-        //             printf("push right\n");
-        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->right);
-        //         }
-        //     }
-        //     // 仅左子树存在
-        //     else if (current_node->left != nullptr)
-        //     {
-        //         // hit_record intersectionRecordLeft = current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-        //         if (current_node->left->bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
-        //         {
-        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
-        //         }
-        //     }
-        //     // 仅右子树存在
-        //     else if (current_node->right != nullptr)
-        //     {
-        //         // hit_record intersectionRecordRight = current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg);
-        //         if (current_node->right->bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
-        //         {
-        //             push_stack(simu_node_stack, &simu_node_ptr, current_node->left);
-        //         }
-        //     }
-        //     // 左右子树均空，那么此时访问到的是一个叶子节点
-        //     else
-        //     {
-        //         // printf("leaves node\n");
-        //         // 直接访问节点中的object对象
-        //         // 这里出了问题，因为 object 不一定存在！ 这是你构建的时候存在的一个错误
-        //         // 最底层节点的上层节点虽然有一部分也是叶子节点但没有分配object给它 2023-03-31
-        //         // 并非这个错误！！！目前的构造方法的确保证了每个叶子节点上都有一个object
-        //         // 没有进来？！
-        //         printf("prims normal = [%f,%f,%f]\n", current_node->object->normal.e[0], current_node->object->normal.e[1], current_node->object->normal.e[2]);
-        //         current_node->object->hit(ray, 0.0001, 999999, intersectionRecord);
-        //         if (intersectionRecord.happened == true)
-        //         {
-        //             push_stack(simu_leaf_node_stack, &simu_leaf_node_ptr, current_node);
-        //         }
-        //         printf("left right void end??\n");
-        //         // printf("hit point = [%f,%f,%f]\n",
-        //         //        intersectionRecord.p.e[0],
-        //         //        intersectionRecord.p.e[1],
-        //         //        intersectionRecord.p.e[2]);
-        //         // 断出
-        //         // break;
-        //     }
-        // }
-
-        // // printf("leaf_node len = %d/n", simu_leaf_node_ptr);
-        // // 没有交点
-        // if (simu_leaf_node_ptr == -1)
-        // {
-        //     return intersectionRecord;
-        // }
-
-        // //
-        // hit_record nearest_rec;
-        // bvh_node *first_leaf_node = pop_stack(simu_leaf_node_stack, &simu_leaf_node_ptr);
-        // first_leaf_node->object->hit(ray, 0.0001, 999999, nearest_rec);
-        // // // 对存在交点的叶子节点进行遍历
-        // // while (simu_leaf_node_ptr != -1)
-        // // {
-        // //     /* code */
-        // //     hit_record rec_temp;
-        // //     bvh_node *leaf_node = pop_stack(simu_leaf_node_stack, &simu_leaf_node_ptr);
-        // //     leaf_node->object->hit(ray, 0.0001, 999999, rec_temp);
-        // //     if (rec_temp.t < nearest_rec.t)
-        // //     {
-        // //         nearest_rec = rec_temp;
-        // //     }
-        // // }
-
-        // return nearest_rec;
-    }
-
-    __device__ hit_record getHitpoint(bvh_node *node, const ray &ray) const
-    {
-        hit_record intersectionRecord;
-        intersectionRecord.happened = false;
-
-        // 需要对 bvh_node_tree 进行深度优先遍历
-        aabb current_bound = node->bound;
-        int dirIsNeg[3] = {
-            int(ray.direction().x() < 0),
-            int(ray.direction().y() < 0),
-            int(ray.direction().z() < 0)};
-
-        // 如果有交点, 下一步应该进一步遍历其左右子树
-        // 注意, 射线的direction_inv是在射线初始化的时候通过传入方向向量自动生成的,可以查看其构造函数
-        // 所以我们不必对此进行进一步计算,直接用以下形式传入即可, 但 dirIsNeg 必须自行计算
-        // 2023/01/04 截至点，目前的bug是当前传到这里，如下的判断语句总是false
-        // 验证 ray_inv 是否出现问题
-        // std::cout << "ray_inv = "
-        //           << ray.inv_dir.x() << "; "
-        //           << ray.inv_dir.y() << "; "
-        //           << ray.inv_dir.z() << "; "
-        //           << std::endl;
-        if (current_bound.IntersectP(ray, ray.inv_dir, dirIsNeg))
-        {
-            // std::cout << "bound intersected" << std::endl;
-            // printf("hello?\n");
-
-            // 感觉左右子树要么全空,要么都不空,,,
-            // 如果左右子树为空, 那么说明当前节点中有且只有一个Object, 我们应该针对该Object进行射线求交测试
-            if (node->left == nullptr && node->right == nullptr)
-            {
-                // 这里是与特定多边形面元求交的基本测试, 好在程序框架帮我们集成了这个函数
-                // node->object->hit(ray, std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), intersectionRecord);
-
-                // vital problem !!! do not ! use std::numeric_limits<float>::min()
-                /*
-                    cause the secondary scattered ray may intersect to the surface who generate it,
-                that is to say intersect to itself, which can make the rec.t parameter extremely
-                small but still larger than "std::numeric_limits<float>::max()", which makes the
-                ray iteratively bounce and intersect to itself and return an vec(0,0,0) as black
-                shading point.
-                */
-                //    目前的问题就是，根本没有遍历到叶子节点 2023-03-31
-                // printf("get leaf node intersection\n");
-                node->object->hit(ray, 0.01, 999999, intersectionRecord);
-                // 第一次这里逻辑错误, 少了一个return!!!?
-                // std::cout << "hit something: " << intersectionRecord.happened << std::endl;
-                // std::cout << "hitrec.t = " << intersectionRecord.t << std::endl;
-                // std::cout << "happened ?? = " << intersectionRecord.happened << std::endl;
-                return intersectionRecord;
-            }
-            else
-            {
-                // 这里开始出现 happened 未被赋值的情况！其实最终原因是我们没有给它初始值!!
-                // 就这样一个小问题，困扰你很久，但最后还是在调试过程中发现了这一问题，但最终触发失败的原因还是未知，，
-                // std::cout << "hit tree: " << intersectionRecord.happened << std::endl;
-                hit_record intersectionRecordLeft = getHitpoint(node->left, ray);
-                hit_record intersectionRecordRight = getHitpoint(node->right, ray);
-                if (intersectionRecordLeft.happened == true && intersectionRecordRight.happened == true)
-                {
-                    // std::cout << "both hitted" << std::endl;
-                    // 如果两者都有交点,那么我们应该取更近的一个交点
-                    intersectionRecord = intersectionRecordLeft.t > intersectionRecordRight.t ? intersectionRecordRight : intersectionRecordLeft;
-                    // std::cout << "compared little t = " << intersectionRecord.t << std::endl;
-                    return intersectionRecord;
-                }
-                // 这里在最开始少考虑了一个条件: 当左右叶子节点二者有其一发生相交事件后,也要择机返回一个值
-                // 并且此处应该将 intersectionRecord 的值更新为 左右子节点其中之一
-                else if (intersectionRecordLeft.happened == true)
-                {
-                    // std::cout << "left hitted" << std::endl;
-                    return intersectionRecordLeft;
-                }
-                else if (intersectionRecordRight.happened == true)
-                {
-                    // std::cout << "right hitted" << std::endl;
-                    return intersectionRecordRight;
-                }
-                else
-                {
-                    // std::cout << "bound hitted but missed triangle" << std::endl;
-                    return intersectionRecord;
-                }
-            }
-        }
-        // 如果压根与当前包围盒没有相交, 则将 intersectionRecord 的 happend 置为 false 即可
-        else
-        {
-            intersectionRecord.happened = false;
-            // 其实这步没什么必要, 初始化默认为false
-        }
-
-        // std::cout << "final ret hit rec.t = " << intersectionRecord.t << std::endl;
-        // std::cout << std::endl;
-        // std::cout << std::endl;
-
-        // printf("hit point = [%f,%f,%f]\n",
-        //        intersectionRecord.p.e[0],
-        //        intersectionRecord.p.e[1],
-        //        intersectionRecord.p.e[2]);
-
-        return intersectionRecord;
     }
 
     const int maxPrimsInNode; // 常量只初始化一次, 定义当前BVH节点所能容纳最大三角形面片数
@@ -851,153 +586,4 @@ public:
     size_t prims_size;
 };
 
-// class bvh_node_scene
-// {
-// public:
-//     bvh_node_scene()
-//     {
-//         bound = aabb(); // 包围盒初始化为无限大
-//         left = nullptr;  // 左右子节点均初始化指向空
-//         right = nullptr;
-//         object = nullptr;
-//     }
-
-//     // int splitAxis = 0, firstPrimOffset = 0, ntriangles = 0;
-//     aabb bound;
-//     bvh_node_scene *left;
-//     bvh_node_scene *right;
-//     // node 节点的主体可以是多种多样的
-//     hitable *object;
-// };
-
-// class bvh_tree_scene
-// {
-// public:
-//     bvh_tree_scene() = default;
-//     bvh_tree_scene(std::vector<hitable *> tri_list, int maxPrimsInNode = 1);
-//     bvh_node_scene *recursiveConstructSceneTree(std::vector<hitable *> triangles);
-//     hit_record Intersect(const ray &ray) const;
-//     hit_record getHitpoint(bvh_node_scene *node, const ray &ray) const;
-
-//     const int maxPrimsInNode; // 常量只初始化一次, 定义当前BVH节点所能容纳最大三角形面片数
-//     // 当前BVH加速结构所囊括的三角形面片组
-//     // 这里应该作出改变以适应不同的情况，首先应该适应传入 hitableList 的情况，为世界坐标系中的不同物体构建树状结构
-//     std::vector<hitable *> obj_list;
-//     bvh_node_scene *root;
-// };
-
 #endif
-
-// 选用全新的迭代构建 bvh_tree
-// __device__ bvh_node *iterativeConstructTree(triangle **prim_list)
-// {
-
-//     int *simu_stack = stack_init(prims_size);
-//     uint32_t simu_ptr = -1;
-//     bool *mark_list = mark_list_init(prims_size);
-//     bvh_node *node_list = new bvh_node[prims_size]; // 这个最后是不是可以free掉？？ 不行，坚决不行
-
-//     aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
-//     for (int i = 0; i < prims_size; ++i)
-//         global_bound = Union(global_bound, prim_list[i]->getBound()); // 得到总体包围盒
-
-//     int dim = global_bound.maxExtent();
-//     printf("start to prims sort, dim = %d\n", dim);
-//     printf("access bounds test = %f\n", (*prim_list)->getBound().center().e[0]);
-//     prims_sort_fast(&(prim_list[0]), &(prim_list[prims_size - 1]), dim); // 首次排序出错了！！！
-//     printf("prims sort end\n");
-//     int root_index = prims_size / 2;
-//     mark_list[root_index] = true;
-//     push_stack(simu_stack, &simu_ptr, root_index);
-//     // bound在元素压栈时赋值，之后的主构建循环中也是如此
-//     node_list[root_index].bound = global_bound;
-
-//     // 以上迭代的启动条件设置完毕
-//     // 开启构建循环，当栈不为空时一直执行
-//     printf("ready to jump in main construct bvh_tree loop\n");
-//     while (simu_ptr != -1)
-//     {
-//         int middle_index = pop_stack(simu_stack, &simu_ptr);
-//         printf("current stack size = %d\n", simu_ptr);
-//         // 这里有一个问题，分支节点不应该有object值
-//         node_list[middle_index].object = prim_list[middle_index];
-//         node_list[middle_index].index = middle_index;
-//         // node_list[middle_index].bound = ???
-//         mark_list[middle_index] = true; // 标记为已找到正确位置
-
-//         if (middle_index == 0 || middle_index == prims_size - 1) // 这一定是一个叶子节点了
-//         {
-//             node_list[middle_index].left == nullptr;
-//             node_list[middle_index].right == nullptr;
-//             continue;
-//         }
-
-//         int forward_sort_index = middle_index - 1;
-//         int backward_sort_index = middle_index + 1;
-
-//         /* ############################## 前向序遍历 ##############################*/
-//         while (true)
-//         {
-//             // 遇到第一个 mark 为 true 的则断出，当遍历到 index = 0 的位置也会断出
-//             if (mark_list[forward_sort_index] == true || forward_sort_index <= 0)
-//             {
-//                 break;
-//             }
-//             forward_sort_index--;
-//         }
-
-//         if ((middle_index - forward_sort_index) == 1 && (forward_sort_index != 0)) // 这个节点没有左子树，不必进行 sort 操作
-//         {
-//             node_list[middle_index].left == nullptr;
-//         }
-//         else
-//         {
-//             // 计算左子树当前bound
-//             aabb left_bound = prim_list[forward_sort_index]->getBound(); // 左树列表第一个面元的 bound
-//             for (int i = forward_sort_index; i < middle_index; ++i)
-//                 left_bound = Union(left_bound, prim_list[i]->getBound()); // 得到左子树总体包围盒
-//             int left_dim = left_bound.maxExtent();
-//             // sort 被排序列表中的元素是左闭右闭的
-//             prims_sort_fast(&(prim_list[forward_sort_index]), &(prim_list[middle_index - 1]), left_dim);
-//             int front_sort_size = middle_index - forward_sort_index;
-//             int front_middle = forward_sort_index + front_sort_size / 2;
-//             push_stack(simu_stack, &simu_ptr, front_middle);
-//             // printf("left push %d\n", front_middle + 1);
-//             node_list[front_middle].bound = left_bound;              // 为左子树根节点添加 bound
-//             node_list[middle_index].left = &node_list[front_middle]; // 将左子树根节点链接到当前节点
-//         }
-
-//         /* ############################## 后向序遍历 ##############################*/
-//         while (true)
-//         {
-//             // 遇到第一个 mark 为 true 的则断出，当遍历到 list 末尾也会断出
-//             if (mark_list[backward_sort_index] == true || backward_sort_index >= prims_size - 1)
-//             {
-//                 break;
-//             }
-//             backward_sort_index++;
-//         }
-
-//         if (backward_sort_index - middle_index == 1) // 这个节点没有右子树，不必进行 sort 操作
-//         {
-//             node_list[middle_index].right == nullptr;
-//         }
-//         else
-//         {
-//             // 计算右子树当前bound
-//             aabb right_bound = prim_list[middle_index + 1]->getBound(); // 右树列表第一个面元的 bound
-//             for (int i = middle_index + 1; i < backward_sort_index; ++i)
-//                 right_bound = Union(right_bound, prim_list[i]->getBound()); // 得到右子树总体包围盒
-//             int right_dim = right_bound.maxExtent();
-//             prims_sort_fast(&(prim_list[middle_index + 1]), &(prim_list[backward_sort_index - 1]), right_dim);
-//             int back_sort_size = backward_sort_index - middle_index;
-//             int back_middle = middle_index + back_sort_size / 2;
-//             push_stack(simu_stack, &simu_ptr, back_middle);
-//             printf("right push %d\n", back_middle + 1);
-//             node_list[back_middle].bound = right_bound;              // 为右子树根节点添加 bound
-//             node_list[middle_index].right = &node_list[back_middle]; // 将右子树根节点链接到当前节点
-//         }
-//     }
-
-//     return &(node_list[root_index]);
-// }
