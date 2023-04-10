@@ -19,7 +19,7 @@ public:
         return emit->value(u, v, p);
     }
 
-    __device__ virtual bool hasEmission(void) const { return true; };
+    __device__ virtual bool hasEmission(int void_input) { return true; };
 
     __device__ virtual vec3 computeBRDF(const vec3 wi, const vec3 wo, const hit_record p) { return vec3(0, 0, 0); };
 

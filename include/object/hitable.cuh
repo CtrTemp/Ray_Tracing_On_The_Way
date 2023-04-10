@@ -31,7 +31,7 @@ public:
 
 	__device__ virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const = 0;
 
-	__device__ virtual bool hasEmission(void) const = 0;
+	__device__ virtual bool objHasEmission(void) const = 0;
 
 	// 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
 	__device__ virtual void Sample(hit_record &pos, float &probability, curandStateXORWOW *states) = 0;

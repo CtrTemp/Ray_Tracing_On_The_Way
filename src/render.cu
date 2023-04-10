@@ -116,6 +116,28 @@ __global__ void initialize_device_random(curandStateXORWOW *states, unsigned lon
 // 最后两个参数是需要创建的 models，需要时，应该在host端预先对其进行初始化，并在device端进行空间分配/拷贝
 __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, hitable **list, vertex *vertList, uint32_t *indList, int *vertOffset, int *indOffset, int model_counts)
 {
+
+    // // 使用 new 关键字相当于在全局内存上开辟空间并创建变量
+    // dielectric *glass_aa = new dielectric(1.5);
+    // lambertian *aa = new lambertian(new noise_texture(2.5, rand_state));
+    // // 但这种创建极其耗费时间，故无法使用以下的函数？？？
+    // // 以上的创建只是指明了开辟了一个地址，但似乎并没有为对象实例开辟空间，所以下列的类成员函数根本访问不到？？
+    // // 真的是这个原因么
+    // printf("aa has emission?? %d\n", aa->hasEmission(0));
+
+    // float aa_pdf = aa->pdf(vec3(1, 2, 3), vec3(1, 2, 3), vec3(1, 2, 3));
+    // // 但奇怪的是这个pdf计算函数却可以访问的到
+    // printf("aa_pdf = %f \n", aa_pdf);
+    // // 让我们再来尝试访问一下其他的类成员变量，同样可以访问
+    // printf("aa self tpye = %d\n", glass_aa->self_type);
+    // printf("aa_glass self type = %d\n", glass_aa->self_type);
+    // 尝试使用类成员函数访问其类内变量，发现访问失败，说明无法调用这个函数
+    // printf("glass_aa self type, %d\n",glass_aa->getMaterialType());
+
+    // 经过对比发现了一个很大的bug，不清楚是否为CUDA内部的bug或者一种规范要求，即：
+    // 类内函数应该必须至少传入一个参数，即使我们不使用它，否则它就无法被程序正常寻址，导致错误
+    // 于是我给 hasEmission() 函数加了一个空传参数后就可以访问对应的函数了。。。
+
     // 在设备端创建
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
@@ -125,18 +147,18 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.001);
         material *mental_steel = new mental(vec3(0.99, 0.99, 0.99), 0.001);
         material *glass = new dielectric(1.5);
-        material *light = new diffuse_light(new constant_texture(vec3(6, 6, 6)));
+        material *light = new diffuse_light(new constant_texture(vec3(60, 60, 60)));
         material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
         material *light_green = new diffuse_light(new constant_texture(vec3(0, 70, 0)));
         material *light_blue = new diffuse_light(new constant_texture(vec3(0, 0, 70)));
 
         // 纹理贴图
-        material *image_sky_tex_front = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_FRONT));
-        material *image_sky_tex_back = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_BACK));
-        material *image_sky_tex_left = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_LEFT));
-        material *image_sky_tex_right = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_RIGHT));
-        material *image_sky_tex_up = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_UP));
-        material *image_sky_tex_down = new lambertian(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_DOWN));
+        material *image_sky_tex_front = new diffuse_light(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_FRONT));
+        material *image_sky_tex_back = new diffuse_light(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_BACK));
+        material *image_sky_tex_left = new diffuse_light(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_LEFT));
+        material *image_sky_tex_right = new diffuse_light(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_RIGHT));
+        material *image_sky_tex_up = new diffuse_light(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_UP));
+        material *image_sky_tex_down = new diffuse_light(new image_texture(2048, 2048, 4, image_texture::TextureCategory::SKYBOX_DOWN));
 
         // 如果没有这些语句，将会出现很大问题，后面的世界可以生成，但不能正确运行
         // 将以下的关于纹理贴图的顶点创建注释掉，你将可以复现这个问题
@@ -154,7 +176,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
 
         vertex *skybox_vert_list;
         uint32_t *skybox_ind_list;
-        gen_skybox_vertex_list(&skybox_vert_list, &skybox_ind_list, 200);
+        gen_skybox_vertex_list(&skybox_vert_list, &skybox_ind_list, 20);
         printf("texture Imported done\n");
 
         int obj_index = 0;
@@ -165,11 +187,11 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         list[obj_index++] = new sphere(vec3(2, 2, -4), 2, glass);
         list[obj_index++] = new sphere(vec3(-2, 2, 6), 2, mental_steel);
 
-        list[obj_index++] = new sphere(vec3(0, 15, 0), 2, light_red);
-        list[obj_index++] = new sphere(vec3(10, 15, 10), 2, light);
-        list[obj_index++] = new sphere(vec3(10, 15, -10), 2, light_green);
-        list[obj_index++] = new sphere(vec3(-10, 15, -10), 2, light);
-        list[obj_index++] = new sphere(vec3(-10, 15, 10), 2, light_blue);
+        // list[obj_index++] = new sphere(vec3(0, 15, 0), 2, light);
+        // list[obj_index++] = new sphere(vec3(10, 15, 10), 2, light);
+        // list[obj_index++] = new sphere(vec3(10, 15, -10), 2, light);
+        // list[obj_index++] = new sphere(vec3(-10, 15, -10), 2, light);
+        // list[obj_index++] = new sphere(vec3(-10, 15, 10), 2, light);
 
         // list[obj_index++] = new sphere(vec3(0, 0, 0), 0.7, mental_steel); // zero point reference
         // list[obj_index++] = new triangle(v1_statue, v2_statue, v3_statue, image_statue_tex);
@@ -179,13 +201,14 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         // list[obj_index++] = new sphere(vec3(0, 0, -1), 0.5, diffuse_steelblue);
         // list[obj_index++] = new sphere(vec3(1, 0, -1), 0.5, mental_copper);
         // list[obj_index++] = new sphere(vec3(-1, 0, -1), -0.45, glass);
-        // uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
-        // list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
-        // list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        uint32_t sky_box_ind_list[] = {1, 0, 3, 2, 1, 3};
+
+        list[obj_index++] = new models(skybox_vert_list + 0, sky_box_ind_list, 6, image_sky_tex_front, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 4, sky_box_ind_list, 6, image_sky_tex_back, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 8, sky_box_ind_list, 6, image_sky_tex_left, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 12, sky_box_ind_list, 6, image_sky_tex_right, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 16, sky_box_ind_list, 6, image_sky_tex_up, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(skybox_vert_list + 20, sky_box_ind_list, 6, image_sky_tex_down, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // list[obj_index++] = new models(vertList, indList, 13500, mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         // printf("models count = %d\n", model_counts);
@@ -206,6 +229,8 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], diffuse_steelblue, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
 
         *world = new hitable_list(list, obj_index);
+
+        // printf("list[0] emission = %d\n", (*world)->objHasEmission());
 
         printf("world generate done, there are %d spearate obj in the world\n", (*world)->list_size);
     }
@@ -249,148 +274,143 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
 
     ray current_ray = r;
     vec3 current_attenuation = vec3(1, 1, 1);
-    vec3 current_light_radiance = vec3(0, 0, 0);
+    vec3 current_radiance = vec3(0, 0, 0);
 
-    for (int i = 0; i < depth; i++)
+    // printf("emission test %d\n", world[0]->hasEmission());
+
+    for (int i = 0; i < 5; i++)
     {
 
-        // 如果击中了场景中的某个物体
-        if ((*world)->hit(current_ray, 0.001, 999999, rec))
+        // 如果与场景中的物体没有交点，则直接返回当前的 radiance
+        if (!(*world)->hit(current_ray, 0.001, 999999, rec))
         {
-            // 如果这个物体是发光体
-            if (rec.mat_ptr->hasEmission())
-            {
-                // 则直接返回其发光光强
-                return rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-            }
-            // 如果不发光则应该向整个场景的光源进行采样
-            else
-            {
-
-                vec3 shade_point_coord = rec.p;
-                vec3 shade_point_normal = rec.normal;
-                shade_point_normal.make_unit_vector();
-                double shade_point_distance = rec.t;
-
-                // 第一步：一次/直接光源采样
-                vec3 L_dir(0, 0, 0);
-                float light_pdf = 0.0;
-                hit_record light_point;
-                PRIMARY_CAMERA.sampleLight(light_point, light_pdf, world, rand_state);
-
-                /**
-                 * 	问题发现：2023-02-15晚
-                 *
-                 * 	对于球状光源的采样我们似乎忽视了一些问题，这导致mental表上的高光似乎并不那么明显：
-                 * 这是因为我们在某个球状光源上随机采样时，选择的某个点有可能被自身遮挡从而让我们的着色点错误的
-                 * 忽视该光源，这就是为什么一些应该有高光的地方显得比较暗淡。
-                 * 	解决这个问题我们需要分开讨论：至少现在看来暂时lambertian表面还算正常，所以我们不对其作太多
-                 * 修改。而对于mental表面以及之后的dielectric表面，我们均应允许二次光线打击到光源，从而使得
-                 * L_indir中也包含直接光源的影响，尽管这样做在能量守恒上可能是错误的，但至少可以在现在让我们的
-                 * 渲染结果变得更加真实。
-                 * 	我们来试试看
-                 * */
-
-                vec3 light_point_coord = light_point.p;
-                vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
-                vec3 light_point_normal = light_point.normal;
-                light_point_normal.make_unit_vector();
-
-                double light_point_distance = (light_point_coord - shade_point_coord).length();
-
-                /**
-                 * 	从这里开始，我们对命名以及物理量的正方向进行规范化定义
-                 * 	基本准则就是，以实际物理意义为准：
-                 * 	对于正方向：以实际光线传播方向为准进行定义：从光源发出，最终经过光线在场景中的bounce最终到达
-                 * 人眼/观察点，以该方向为正方向。
-                 * 	对于命名：以计算过程中体现在公式中的命名为准。
-                 * */
-                vec3 shadePoint_to_viewPoint_wo = -r.direction();
-                vec3 directLightSource_to_shadePoint_wi = (shade_point_coord - light_point_coord);
-                shadePoint_to_viewPoint_wo.make_unit_vector();
-                directLightSource_to_shadePoint_wi.make_unit_vector();
-
-                hit_record first_block_point;
-                (*world)->hit(ray(shade_point_coord, -directLightSource_to_shadePoint_wi), 0.001, 999999, first_block_point);
-
-                const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
-                const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
-
-                //
-                vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
-
-                // 第二步：二次/间接光源采样
-                vec3 BRDF_indir;
-
-                float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
-
-                if (parameter <= 0)
-                {
-                    /* code */
-                    parameter = -parameter;
-                }
-
-                if (first_block_point.t - light_point_distance > -0.005)
-                {
-
-                    parameter = parameter < 0 ? -parameter : parameter;
-                    L_dir = light_point_emit * BRDF_dir * parameter;
-                    // current_light_radiance = light_point_emit * BRDF_dir * parameter;
-                    current_light_radiance += L_dir * current_attenuation;
-                }
-
-                vec3 L_indir(0, 0, 0);
-
-                if (PRIMARY_CAMERA.RussianRoulette < random_float_device(rand_state))
-                {
-                    return current_light_radiance;
-                }
-                ray scattered;
-                vec3 attenuation;
-                rec.mat_ptr->scatter(r, rec, attenuation, scattered, rand_state);
-                current_ray = scattered;
-                vec3 secondaryLightSource_to_shadePoint_wi = -scattered.direction();
-                secondaryLightSource_to_shadePoint_wi.make_unit_vector();
-                // ray r_deeper(shade_point_coord, secondaryLightSource_to_shadePoint_wi);
-                hit_record no_emit_obj;
-                bool hitted = (*world)->hit(scattered, 0.0001, 999999, no_emit_obj);
-                float cos_para;
-                float para_indir;
-                // if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
-                if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005)
-                {
-
-                    if (!no_emit_obj.mat_ptr->hasEmission())
-                    {
-                        const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
-
-                        BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
-                        cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
-
-                        // 对于折射光所必要考虑的一步
-                        if (cos_para <= 0)
-                        {
-                            // std::cout << "cou_para = " << cos_para << std::endl;
-                            cos_para = -cos_para;
-                        }
-
-                        para_indir = cos_para / PRIMARY_CAMERA.RussianRoulette / global_pdf;
-
-                        // 这里不支持递归，要进行修改
-                        // L_indir = shading_pixel(depth - 1, scattered, world, rand_state) * BRDF_indir * para_indir;
-                        // L_indir = vec3(0, 0, 0);
-                        current_attenuation = BRDF_indir * para_indir;
-                    }
-                }
-
-                // return L_dir + L_indir;
-            }
+            return current_radiance;
         }
-        else
+        // 如果与场景中的物体有交点，且击中的位点处的材质发光（为一次/直接光源）
+        if (rec.mat_ptr->hasEmission(0))
         {
-            return vec3(0, 0, 0);
+            // 返回当前 radiance 值以及 当前亮度衰减系数与当前光源乘积的加和
+            return current_radiance + current_attenuation * rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+        }
+
+        // 第一步：开始一次/直接光源贡献值计算
+
+        vec3 shade_point_coord = rec.p;
+        vec3 shade_point_normal = rec.normal;
+        shade_point_normal.make_unit_vector();
+        double shade_point_distance = rec.t;
+
+        vec3 L_dir(0, 0, 0);
+        float light_pdf = 0.0;
+        hit_record light_point;
+        PRIMARY_CAMERA.sampleLight(light_point, light_pdf, world, rand_state);
+
+        // printf("light_pdf = %f\n", light_pdf);
+
+        vec3 light_point_coord = light_point.p;
+        vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
+        vec3 light_point_normal = light_point.normal;
+        light_point_normal.make_unit_vector();
+
+        double light_point_distance = (light_point_coord - shade_point_coord).length();
+
+        vec3 shadePoint_to_viewPoint_wo = -current_ray.direction();
+        vec3 directLightSource_to_shadePoint_wi = (shade_point_coord - light_point_coord);
+        shadePoint_to_viewPoint_wo.make_unit_vector();
+        directLightSource_to_shadePoint_wi.make_unit_vector();
+
+        hit_record first_block_point;
+        (*world)->hit(ray(shade_point_coord, -directLightSource_to_shadePoint_wi), 0.001, 999999, first_block_point);
+
+        const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
+        const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
+
+        // 得到一次/直接光源的在当前位点的 BRDF
+        vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+        // 得到一次/直接光源在当前位点的 其他衰减参数
+        float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
+        // parameter = parameter < 0 ? -parameter : parameter;
+        if (parameter < 0)
+        {
+            parameter = -parameter;
+        }
+
+        // printf("light_point_distance = %f\n", light_point_distance);
+        // printf("parameter = %f\n", parameter);
+
+        // 如果采样光源到当前位点的路径没有被其他物体遮挡
+        if (first_block_point.t - light_point_distance > -0.005)
+        {
+
+            L_dir = light_point_emit * BRDF_dir * parameter;
+            current_radiance += (L_dir * current_attenuation);
+        }
+
+        // 第二步：俄罗斯轮盘赌测试，随机断出
+        if (PRIMARY_CAMERA.RussianRoulette < random_float_device(rand_state))
+        {
+            return current_radiance;
+        }
+
+        // 第三步：开始二次/间接光源贡献值计算
+
+        vec3 BRDF_indir;
+        vec3 L_indir(0, 0, 0);
+
+        vec3 attenuation;
+        ray scattered; // 获得散射光线，并将其更新到 current_ray
+
+        // 如果未能成功散射，则直接返回当前 radiance
+        // 这里将 current_ray 换成 r 你就能重现那个glass材质中间有一个亮环的奇怪问题/现象
+        if (!rec.mat_ptr->scatter(current_ray, rec, attenuation, scattered, rand_state))
+        {
+            return current_radiance;
+        }
+
+        vec3 secondaryLightSource_to_shadePoint_wi = -scattered.direction();
+        secondaryLightSource_to_shadePoint_wi.make_unit_vector();
+        hit_record no_emit_obj;
+        bool hitted = (*world)->hit(scattered, 0.0001, 999999, no_emit_obj);
+        float cos_para;
+        float para_indir;
+
+        // 如果二次光线与场景中的物体有交点
+        if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005)
+        {
+            // 且该物体不发光（不是一次/直接光源）
+            if (!no_emit_obj.mat_ptr->hasEmission(0))
+            {
+
+                // 首先应该将 scattered 散射光线更新到 current_ray
+                current_ray = scattered;
+
+                const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+                // 得到二次/间接光源的在当前位点的 BRDF
+                BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+                cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+
+                // 对于折射光所必要考虑的一步
+                cos_para = cos_para < 0 ? -cos_para : cos_para;
+                // if (cos_para < 0)
+                // {
+                //     cos_para = -cos_para;
+                // }
+
+                // 得到一次/直接光源在当前位点的 其他衰减参数
+                para_indir = cos_para / PRIMARY_CAMERA.RussianRoulette / global_pdf;
+
+                // 这里不支持递归，要进行修改
+                // L_indir = shading_pixel(depth - 1, scattered, world, rand_state) * BRDF_indir * para_indir;
+                // L_indir = vec3(0, 0, 0);
+                current_attenuation *= (BRDF_indir * para_indir * attenuation);
+
+                // printf("current attenuation = [%f,%f,%f]", BRDF_indir.e[0], BRDF_indir.e[1], BRDF_indir.e[2]);
+            }
         }
     }
+
+    // 因 depth 过大而断出，直接返回其当前 radiance 😃
+    return current_radiance;
 
     // hit_record rec;
     // ray cur_ray = r;
@@ -406,7 +426,7 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
     //             cur_attenuation *= attenuation;
     //             cur_ray = scattered;
     //         }
-    //         else if (rec.mat_ptr->hasEmission())
+    //         else if (rec.mat_ptr->hasEmission(0))
     //         {
     //             return rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
     //         }
@@ -460,6 +480,7 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, cura
     col[1] = sqrt(col[1]);
     col[2] = sqrt(col[2]);
 
+    col = color_unit_normalization(col,1);
     frame_buffer[global_index] = col;
 }
 
@@ -548,7 +569,7 @@ __host__ void init_and_render(void)
     primaryCamera.frame_width = FRAME_WIDTH;
     primaryCamera.frame_height = FRAME_HEIGHT;
 
-    primaryCamera.spp = 100;
+    primaryCamera.spp = 10;
     camera *cpu_camera = new camera(primaryCamera);
     int camera_size = sizeof(camera);
     cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
@@ -604,7 +625,7 @@ __host__ void init_and_render(void)
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess)
         {
-            printf("CUDA Error: %s\n", cudaGetErrorString(err));
+            printf("CUDA Error when running cuda shading_unit: %s\n", cudaGetErrorString(err));
             // Possibly: exit(-1) if program cannot continue....
         }
         cudaEventRecord(stop); // device端 计时结束
@@ -657,9 +678,153 @@ __host__ static void write_file(std::string file_path, vec3 *frame_buffer)
             const int global_index = row * FRAME_WIDTH + col;
             vec3 pixelVal = frame_buffer[global_index];
             int ir = int(255.99 * pixelVal[0]);
+            if (ir < 0)
+                ir = 0;
             int ig = int(255.99 * pixelVal[1]);
+            if (ig < 0)
+                ig = 255;
             int ib = int(255.99 * pixelVal[2]);
+            if (ib < 0)
+                ib = 0;
             OutputImage << ir << " " << ig << " " << ib << "\n";
         }
     }
 }
+
+// // 如果击中了场景中的某个物体
+// if ((*world)->hit(current_ray, 0.001, 999999, rec))
+// {
+//     // 如果这个物体是发光体
+//     if (rec.mat_ptr->hasEmission())
+//     {
+//         // 则直接返回其发光光强
+//         return rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+//     }
+//     // 如果不发光则应该向整个场景的光源进行采样
+//     else
+//     {
+
+//         vec3 shade_point_coord = rec.p;
+//         vec3 shade_point_normal = rec.normal;
+//         shade_point_normal.make_unit_vector();
+//         double shade_point_distance = rec.t;
+
+//         // 第一步：一次/直接光源采样
+//         vec3 L_dir(0, 0, 0);
+//         float light_pdf = 0.0;
+//         hit_record light_point;
+//         PRIMARY_CAMERA.sampleLight(light_point, light_pdf, world, rand_state);
+
+//         /**
+//          * 	问题发现：2023-02-15晚
+//          *
+//          * 	对于球状光源的采样我们似乎忽视了一些问题，这导致mental表上的高光似乎并不那么明显：
+//          * 这是因为我们在某个球状光源上随机采样时，选择的某个点有可能被自身遮挡从而让我们的着色点错误的
+//          * 忽视该光源，这就是为什么一些应该有高光的地方显得比较暗淡。
+//          * 	解决这个问题我们需要分开讨论：至少现在看来暂时lambertian表面还算正常，所以我们不对其作太多
+//          * 修改。而对于mental表面以及之后的dielectric表面，我们均应允许二次光线打击到光源，从而使得
+//          * L_indir中也包含直接光源的影响，尽管这样做在能量守恒上可能是错误的，但至少可以在现在让我们的
+//          * 渲染结果变得更加真实。
+//          * 	我们来试试看
+//          * */
+
+//         vec3 light_point_coord = light_point.p;
+//         vec3 light_point_emit = light_point.mat_ptr->emitted(light_point.u, light_point.v, light_point.p);
+//         vec3 light_point_normal = light_point.normal;
+//         light_point_normal.make_unit_vector();
+
+//         double light_point_distance = (light_point_coord - shade_point_coord).length();
+
+//         /**
+//          * 	从这里开始，我们对命名以及物理量的正方向进行规范化定义
+//          * 	基本准则就是，以实际物理意义为准：
+//          * 	对于正方向：以实际光线传播方向为准进行定义：从光源发出，最终经过光线在场景中的bounce最终到达
+//          * 人眼/观察点，以该方向为正方向。
+//          * 	对于命名：以计算过程中体现在公式中的命名为准。
+//          * */
+//         vec3 shadePoint_to_viewPoint_wo = -r.direction();
+//         vec3 directLightSource_to_shadePoint_wi = (shade_point_coord - light_point_coord);
+//         shadePoint_to_viewPoint_wo.make_unit_vector();
+//         directLightSource_to_shadePoint_wi.make_unit_vector();
+
+//         hit_record first_block_point;
+//         (*world)->hit(ray(shade_point_coord, -directLightSource_to_shadePoint_wi), 0.001, 999999, first_block_point);
+
+//         const float cos_theta_shadePoint = dot(shade_point_normal, -directLightSource_to_shadePoint_wi);
+//         const float cos_theta_lightPoint = dot(light_point_normal, directLightSource_to_shadePoint_wi);
+
+//         //
+//         vec3 BRDF_dir = rec.mat_ptr->computeBRDF(directLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+
+//         float parameter = cos_theta_lightPoint * cos_theta_shadePoint / pow(light_point_distance, 2) / light_pdf;
+
+//         if (parameter <= 0)
+//         {
+//             /* code */
+//             parameter = -parameter;
+//         }
+
+//         if (first_block_point.t - light_point_distance > -0.005)
+//         {
+
+//             parameter = parameter < 0 ? -parameter : parameter;
+//             L_dir = light_point_emit * BRDF_dir * parameter;
+//             // current_light_radiance = light_point_emit * BRDF_dir * parameter;
+//             current_light_radiance += L_dir * current_attenuation;
+//         }
+
+//         // 第二步：俄罗斯轮盘赌测试，随机断出
+//         if (PRIMARY_CAMERA.RussianRoulette < random_float_device(rand_state))
+//         {
+//             return current_light_radiance;
+//         }
+
+//         // 第三步：二次/间接光源采样
+//         vec3 BRDF_indir;
+//         vec3 L_indir(0, 0, 0);
+
+//         ray scattered;
+//         vec3 attenuation;
+//         rec.mat_ptr->scatter(r, rec, attenuation, scattered, rand_state);
+//         current_ray = scattered;
+//         vec3 secondaryLightSource_to_shadePoint_wi = -scattered.direction();
+//         secondaryLightSource_to_shadePoint_wi.make_unit_vector();
+//         // ray r_deeper(shade_point_coord, secondaryLightSource_to_shadePoint_wi);
+//         hit_record no_emit_obj;
+//         bool hitted = (*world)->hit(scattered, 0.0001, 999999, no_emit_obj);
+//         float cos_para;
+//         float para_indir;
+//         // if (no_emit_obj.happened && hitted && !no_emit_obj.mat_ptr->hasEmission())
+//         if (no_emit_obj.happened && hitted && no_emit_obj.t >= 0.005)
+//         {
+
+//             if (!no_emit_obj.mat_ptr->hasEmission())
+//             {
+//                 const float global_pdf = rec.mat_ptr->pdf(-shadePoint_to_viewPoint_wo, -secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+
+//                 BRDF_indir = rec.mat_ptr->computeBRDF(secondaryLightSource_to_shadePoint_wi, shadePoint_to_viewPoint_wo, rec);
+//                 cos_para = dot(-secondaryLightSource_to_shadePoint_wi, shade_point_normal);
+
+//                 // 对于折射光所必要考虑的一步
+//                 if (cos_para <= 0)
+//                 {
+//                     // std::cout << "cou_para = " << cos_para << std::endl;
+//                     cos_para = -cos_para;
+//                 }
+
+//                 para_indir = cos_para / PRIMARY_CAMERA.RussianRoulette / global_pdf;
+
+//                 // 这里不支持递归，要进行修改
+//                 // L_indir = shading_pixel(depth - 1, scattered, world, rand_state) * BRDF_indir * para_indir;
+//                 // L_indir = vec3(0, 0, 0);
+//                 current_attenuation = BRDF_indir * para_indir;
+//             }
+//         }
+
+//         // return L_dir + L_indir;
+//     }
+// }
+// else
+// {
+//     return vec3(0, 0, 0);
+// }

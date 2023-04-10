@@ -44,11 +44,17 @@ public:
         // 如果不发生全反射现象
         if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
         {
+            // 我现在就让他全反射 OKK 没问题测试通过
+            // reflect_prob = 1.0;
+            // 现在测试全折射
+            // reflect_prob = 0.0;
             reflect_prob = schlick(cosine, ref_idx); // 应该是由菲涅尔公式近似计算出的反射光线强度
         }                                            // 其实是（转化成）反射光占总光线之比，在抗锯齿章节我们将一个像素点由多（100）条射线表示
         else
         {
             reflect_prob = 1.0; // 如果全反射，则反射光占比为100%
+            // 现在测试全折射，出现了之前发现的问题，中间有一个亮圈！其余部分黑的
+            // reflect_prob = 0.0;
         }
 
         // 在发生折射的情况下，每次也只生成一条光线，要么折射光，要么反射光，二者占比满足折射/反射的光能分配
@@ -65,7 +71,7 @@ public:
         return true;
     }
     __device__ virtual vec3 emitted(float u, float v, const vec3 &p) const { return vec3(0, 0, 0); };
-    __device__ virtual bool hasEmission(void) const { return false; };
+    __device__ virtual bool hasEmission(int void_input) { return false; };
 
     // BRDF 计算函数
     __device__ virtual vec3 computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p)

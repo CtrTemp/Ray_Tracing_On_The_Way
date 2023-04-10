@@ -39,48 +39,46 @@ public:
      * 这是一个优化方面，后期进行改变
      */
 
-    __host__ __device__ models() = default;
+    __device__ models() = default;
     // 第一种方式通过传入一个面元列表来构建
-    __device__ models(triangle **tris, int n, HitMethod m, PrimType p)
+    __host__ __device__ models(triangle **tris, int n, HitMethod m, PrimType p)
     {
         model_eimssion = false;
         list_size = n;
         method = m;
         type = p;
         tri_list = tris;
-        emit_tri_list = new triangle *[list_size]; // 将可能的发光体列表大小预设为总基元列表大小（可能稍微有些大，后期再做优化吧）
 
-        int emit_tri_list_count = 0;
-        for (int i = 0; i < list_size; i++)
-        {
-            // 如果是自发光基元，则应该将其倒入发光基元列表
-            if (tris[i]->objHasEmission())
-            {
-                // emit_tri_list[emit_tri_list_count] = new triangle;
-                emit_tri_list[emit_tri_list_count] = tris[i];
-                emit_tri_list_count++;
-            }
-        }
-        emit_prims_size = emit_tri_list_count;
-        if (emit_tri_list_count >= 1)
-        {
-            model_eimssion = true;
-        }
-        if (m == HitMethod::BVH_TREE)
-        {
-            // tree = new bvh_tree(tri_list, 1, list_size);
-        }
-        else
-        {
-            tree = nullptr;
-        }
+        // int emit_tri_list_count = 0;
+        // // for (int i = 0; i < list_size; i++)
+        // // {
+        // //     // 如果是自发光基元，则应该将其倒入发光基元列表
+        // //     if (tris[i]->hasEmission())
+        // //     {
+        // //         emit_tri_list[emit_tri_list_count] = new triangle;
+        // //         emit_tri_list[emit_tri_list_count] = tris[i];
+        // //         emit_tri_list_count++;
+        // //     }
+        // // }
+        // emit_prims_size = emit_tri_list_count;
+        // if (emit_tri_list_count >= 1)
+        // {
+        //     model_eimssion = true;
+        // }
+        // if (m == HitMethod::BVH_TREE)
+        // {
+        //     // tree = new bvh_tree(tri_list, 1, list_size);
+        // }
+        // else
+        // {
+        //     tree = nullptr;
+        // }
         // bounding_box(0, 0, bounds);
     }
     // 第二种方式通过传入顶点数组以及索引数组来构建
     __device__ models(vertex *vertList, uint32_t *indList, uint32_t ind_len, material *mat, HitMethod m, PrimType p)
     {
-        model_eimssion = mat->hasEmission(0); // 为啥这句执行会报错？！
-        // printf("has emmission ? %d\n", mat->hasEmission());
+        model_eimssion = mat->hasEmission();
         // model_eimssion = false;
         method = m;
         type = p;
@@ -90,8 +88,8 @@ public:
         if (p == PrimType::TRIANGLE)
         {
             tri_list = new triangle *[list_size];
-            emit_tri_list = new triangle *[list_size]; // 将可能的发光体列表大小预设为总基元列表大小（可能稍微有些大，后期再做优化吧）
-            int emit_tri_list_count = 0;
+            // int emit_tri_list_count = 0;
+
             for (int i = 0; i < list_size; i += 1)
             {
                 // printf("print index = [%d,%d,%d]\n", indList[i * 3 + 0], indList[i * 3 + 1], indList[i * 3 + 2]);
@@ -100,14 +98,14 @@ public:
                     vertList,
                     mat);
                 tri_list[i] = tir_unit;
-                if (model_eimssion)
-                {
-                    // emit_tri_list[emit_tri_list_count] = new triangle;
-                    emit_tri_list[emit_tri_list_count] = tir_unit;
-                    emit_tri_list_count++;
-                }
+                // if (model_eimssion)
+                // {
+                //     emit_tri_list[emit_tri_list_count] = new triangle;
+                //     emit_tri_list[emit_tri_list_count] = tir_unit;
+                //     emit_tri_list_count++;
+                // }
             }
-            emit_prims_size = emit_tri_list_count;
+            // emit_prims_size = emit_tri_list_count;
         }
         else if (p == PrimType::QUADRANGLE)
         {
@@ -278,7 +276,7 @@ public:
 
     // // 这里我们将模型视为一个整体，要么整体发光，要么都不发光，不存在内嵌有部分发光的情况
     // virtual bool hasEmission(void) const { return false; };
-    __device__ virtual bool objHasEmission(void) const { return model_eimssion; };
+    __device__ virtual bool hasEmission(void) const { return model_eimssion; };
 
     // 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率
     __device__ virtual void Sample(hit_record &pos, float &probability, curandStateXORWOW *states)
@@ -286,7 +284,6 @@ public:
         const int rand_index = (int)(random_float_device(states) * emit_prims_size);
 
         emit_tri_list[rand_index]->Sample(pos, probability, states);
-        // printf("sample probility = %f\n", probability);
         // printf("目前一般情况下不会执行到这个函数，看到我说明你的程序出错了\n");
         // printf("目前执行的是 models 的采样函数\n");
     }
@@ -301,8 +298,6 @@ public:
         }
         // printf("目前一般情况下不会执行到这个函数，看到我说明你的程序出错了\n");
         // printf("目前执行的是 models 的面积获取函数\n");
-
-        // printf("model area = %f\n", ret_area);
 
         return ret_area;
     }

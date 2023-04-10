@@ -31,7 +31,7 @@ public:
         // 返回false说明散射光线与原法线成钝角，直观上理解：此时散射光线射入了object内部，即为光线被吸收
     }
     __device__ virtual vec3 emitted(float u, float v, const vec3 &p) const { return vec3(0, 0, 0); };
-    __device__ virtual bool hasEmission(void) const { return false; };
+    __device__ virtual bool hasEmission(int void_input) { return false; };
 
     // BRDF 计算函数
     __device__ virtual vec3 computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p)

@@ -100,7 +100,7 @@ public:
 		float emit_area_sum = 0;
 		for (uint32_t k = 0; k < (*world)->list_size; k++)
 		{
-			if ((*world)->list[k]->hasEmission())
+			if ((*world)->list[k]->objHasEmission())
 			{
 				emit_area_sum += (*world)->list[k]->getArea();
 				// std::cout << "get an emission" << std::endl;
@@ -108,11 +108,13 @@ public:
 			// std::cout << "k = " << k << std::endl;
 		}
 
+		// printf("total emit_area = %f\n", emit_area_sum);
+
 		// 2023/02/06
 		// 现在问题已经很明确了：没有光源或者只有一个光源的情况都不适用！！！你的系统无法兼容这种情况
 		if (emit_area_sum == 0)
 		{
-			printf("there is no light source in this scene! please check your world construction！\n");
+			// printf("there is no light source in this scene! please check your world construction！\n");
 		}
 
 		// std::cout << "total area = " << emit_area_sum << std::endl;
@@ -122,13 +124,14 @@ public:
 		emit_area_sum = 0;
 		for (uint32_t k = 0; k < (*world)->list_size; k++)
 		{
-			if ((*world)->list[k]->hasEmission())
+			if ((*world)->list[k]->objHasEmission())
 			{
 				emit_area_sum += (*world)->list[k]->getArea();
 				if (p <= emit_area_sum)
 				{
 					// std::cout << "current kk = " << k << std::endl;
 					(*world)->list[k]->Sample(pos, pdf, rand_state);
+					// printf("pdf = %f\n", pdf);
 					break;
 				}
 			}

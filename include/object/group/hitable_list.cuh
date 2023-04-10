@@ -42,7 +42,7 @@ public:
 		return hit_anything;
 	}
 
-	__device__ virtual bool hasEmission(void) const
+	__device__ virtual bool objHasEmission(void) const
 	{
 		return false;
 	}

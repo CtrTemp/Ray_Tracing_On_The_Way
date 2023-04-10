@@ -55,9 +55,9 @@ public:
 		return false;
 	}
 
-	__device__ virtual bool hasEmission(void) const
+	__device__ virtual bool objHasEmission(void) const
 	{
-		return mat_ptr->hasEmission();
+		return mat_ptr->hasEmission(0);
 	}
 
 	// 采样函数，对某个可求交物体，给出它表面上的一个特定坐标，并且给定取样到这个坐标的概率

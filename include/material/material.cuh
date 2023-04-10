@@ -29,7 +29,9 @@ public:
 	__device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandStateXORWOW_t *rand_state) const = 0;
 	// 发光参数(一次/直接光源参数): 如果是发光体材质, 还应具有发光参数, 传入
 	__device__ virtual vec3 emitted(float u, float v, const vec3 &p) const = 0;
-	__device__ virtual bool hasEmission(void) const = 0;
+	__device__ virtual bool hasEmission(int void_input) = 0;
+
+	// __device__ virtual bool void_func() { return false; }
 
 	// BRDF 计算函数，为纯虚函数，每个继承类必须提供实现
 	__device__ virtual vec3 computeBRDF(const vec3 light_in_dir_wi, const vec3 light_in_dir_wo, const hit_record p) = 0;
