@@ -20,7 +20,7 @@
 #define FRAME_WIDTH 1080
 #define FRAME_HEIGHT 720
 
-#define BOUNCE_DEPTH 50
+#define BOUNCE_DEPTH 5
 
 typedef struct
 {
@@ -180,13 +180,13 @@ __host__ static camera *createCamera(cameraCreateInfo camInfo)
 // __host__ static void modifyCamera(camera *cam, cameraCreateInfo camInfo, size_t frame_counts)
 __host__ static camera *modifyCamera(cameraCreateInfo camInfo, size_t frame_counts)
 {
-	int frame_yaw_period = 100;	 // 圆周 偏航角(yaw) 周期
-	int frame_pitch_period = 50; // 圆周 俯仰角(pitch) 周期
+	int frame_yaw_period = 400;	 // 圆周 偏航角(yaw) 周期
+	int frame_pitch_period = 100; // 圆周 俯仰角(pitch) 周期
 	float cam_yaw_range = 3;
-	float cam_pitch_range = 3;
+	float cam_pitch_range = 0.5;
 	float x_coord = cam_yaw_range * sin(frame_counts * 2 * M_PI / frame_yaw_period);
 	float z_coord = cam_yaw_range * cos(frame_counts * 2 * M_PI / frame_yaw_period);
-	float y_coord = cam_pitch_range * sin(frame_counts * 2 * M_PI / frame_pitch_period);
+	float y_coord = camInfo.lookfrom.e[1]+ cam_pitch_range * sin(frame_counts * 2 * M_PI / frame_pitch_period);
 
 	camInfo.lookfrom = vec3(x_coord, y_coord, z_coord);
 

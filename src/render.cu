@@ -4,6 +4,8 @@
 // 写图像文件
 __host__ static void write_file(std::string file_path, vec3 *frame_buffer);
 
+__host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host);
+
 /* #################################### 纹理贴图初始化 #################################### */
 __host__ static void import_tex()
 {
@@ -146,7 +148,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         material *diffuse_steelblue = new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5)));
         material *mental_copper = new mental(vec3(0.8, 0.6, 0.2), 0.001);
         material *mental_steel = new mental(vec3(0.99, 0.99, 0.99), 0.001);
-        material *mental_ground = new mental(vec3(0.99, 0.99, 0.99), 0.02);
+        material *mental_ground = new mental(vec3(0.99, 0.99, 0.99), 0.01);
         material *glass = new dielectric(1.5);
         material *light = new diffuse_light(new constant_texture(vec3(60, 60, 60)));
         material *light_red = new diffuse_light(new constant_texture(vec3(70, 0, 0)));
@@ -187,8 +189,8 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         list[obj_index++] = new sphere(vec3(0, -1000.5, 0), 1000, mental_ground); // ground
 
         // list[obj_index++] = new sphere(vec3(0, 0.5, 0), 0.25, noise);
-        // list[obj_index++] = new sphere(vec3(1, 0.5, -2), 0.25, glass);
-        // list[obj_index++] = new sphere(vec3(-1, 0.5, 3), 0.25, mental_steel);
+        // list[obj_index++] = new sphere(vec3(0.75, 0.5, -0.75), 0.25, glass);
+        // list[obj_index++] = new sphere(vec3(-0.75, 0.5, 0.75), 0.25, mental_steel);
 
         //  list[obj_index++] = new sphere(vec3(0, 2, 0), 2, noise);
         // list[obj_index++] = new sphere(vec3(2, 2, -4), 2, glass);
@@ -227,13 +229,13 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         // }
         int models_index = 0;
         // 无加速结构构造 Object
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // BVH_Tree 加速结构
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_steel, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        models_index++;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        models_index++;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], noise, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // models_index++;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // models_index++;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
 
         *world = new hitable_list(list, obj_index);
 
@@ -586,9 +588,11 @@ __host__ void init_and_render(void)
     /* ##################################### 摄像机初始化 ##################################### */
     cameraCreateInfo primaryCamera{};
     // primaryCamera.lookfrom = vec3(3, 2, 4);
-    primaryCamera.lookfrom = vec3(2.5, 1, 2.5);
+    primaryCamera.lookfrom = vec3(0, 1, 3);
+    // primaryCamera.lookfrom = vec3(2.5, 1, 2.5);
     // primaryCamera.lookfrom = vec3(20, 15, 20);
-    primaryCamera.lookat = vec3(0.5, 0, 0.5);
+    primaryCamera.lookat = vec3(0, 0, 0);
+    // primaryCamera.lookat = vec3(0.5, 0, 0.5);
     primaryCamera.up_dir = vec3(0, 1, 0);
     primaryCamera.fov = 40;
     primaryCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
@@ -667,22 +671,33 @@ __host__ void init_and_render(void)
         std::cout << "This is " << loop_count << " frame, current render loop cost = " << time_cost << "ms" << std::endl;
 
         // 数据拷贝 & 本地写文件
-        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
-        write_file(path, frame_buffer_host);
+        // cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        // std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
+        // write_file(path, frame_buffer_host);
 
-        // // 在 host 端更改相机参数
-        // cpu_camera = modifyCamera(primaryCamera, loop_count);
-        // // 将更改好的相机参数传递给device端的常量内存
-        // cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
-        // cudaDeviceSynchronize();
+        // 数据拷贝 & 图片流输出
+        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        cv::namedWindow("Image Flow");
+        // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
+        showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host);
+
+        if (cv::waitKey(1) == 27)
+        {
+            break;
+        }
+
+        // 在 host 端更改相机参数
+        cpu_camera = modifyCamera(primaryCamera, loop_count);
+        // 将更改好的相机参数传递给device端的常量内存
+        cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+        cudaDeviceSynchronize();
 
         // 断出条件
         // 当仅渲染一帧做测试时只需要将其设为1即可
-        if (loop_count >= 1)
+        if (loop_count >= 400)
         {
-            // loop_count = 0;
-            break;
+            loop_count = 0;
+            // break;
         }
     }
 
@@ -721,4 +736,34 @@ __host__ static void write_file(std::string file_path, vec3 *frame_buffer)
             OutputImage << ir << " " << ig << " " << ib << "\n";
         }
     }
+}
+
+__host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host)
+{
+
+    cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3);
+
+    for (int row = 0; row < FRAME_HEIGHT; row++)
+    {
+        for (int col = 0; col < FRAME_WIDTH; col++)
+        {
+            const int global_index = row * FRAME_WIDTH + col;
+            vec3 pixelVal = frame_buffer_host[global_index];
+            int ir = int(255.99 * pixelVal[0]);
+            if (ir < 0)
+                ir = 0;
+            int ig = int(255.99 * pixelVal[1]);
+            if (ig < 0)
+                ig = 255;
+            int ib = int(255.99 * pixelVal[2]);
+            if (ib < 0)
+                ib = 0;
+
+            img.at<unsigned char>(row, col * 3 + 0) = ib;
+            img.at<unsigned char>(row, col * 3 + 1) = ig;
+            img.at<unsigned char>(row, col * 3 + 2) = ir;
+        }
+    }
+
+    cv::imshow("Image Flow", img);
 }
