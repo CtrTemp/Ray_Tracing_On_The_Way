@@ -235,42 +235,56 @@ __device__ static bvh_node **node_stack_init(uint32_t len)
     return ret_node_stack;
 }
 
+/* ########################## BVH with SHA Related Function ########################## */
+/**
+ *  这里再思考一下，是否应该是先做一个快速排序更划算？？？
+ *  目前方法的复杂度是 n^2 快速排序后再分割的复杂度是n*nlogn？？？ 再思考一下
+ *  思考结束：不需要做快排，partition只需要保证分割点左右的列表的大小在分割点两侧即可，不需要保证分割后
+ * 分割点两侧的序列内部有序。所以算法的复杂度应该是O(n)，过一遍即可。同时也可以在这一遍的过程中计算两边的
+ * 包围盒。
+ * */
+__device__ static void generate_space_cut_strategy(aabb current_bound, int dim, int list_len, float *dim_cut_point_list)
+{
+    float gap = current_bound.Diagonal().e[dim] / (list_len + 1);
+    float offset = current_bound.min().e[dim];
+    for (int i = 1; i <= list_len; i++)
+    {
+        dim_cut_point_list[i - 1] = offset + gap * i;
+    }
+}
+
 class bvh_tree
 {
 public:
     __device__ bvh_tree() = default;
     __device__ bvh_tree(triangle **prim_list, int maxPrims, size_t list_size) : prims_size(list_size), maxPrimsInNode(maxPrims)
     {
-        // time_t start, stop;
-        // time(&start);
-        // if (prim_list.empty())
-        //     return;
         printf("bvh construct function\n");
 
-        // 递归构造 : 传入总体的片元列表(当前网格的所有多边形面片列表)
-        // root = recursiveConstructTree(prim_list, prims_size);
+        // 迭代构造 BVH Tree : 传入总体的片元列表(当前网格的所有多边形面片列表)
         root = iterativeConstructTree(prim_list);
 
         printf("bvh tree constructed done");
-
-        // time(&stop);
-
-        // 计算构造这棵树的耗时
-        // double diff = difftime(stop, start);
-        // int hrs = (int)diff / 3600;
-        // int mins = ((int)diff / 60) - (hrs * 60);
-        // int secs = (int)diff - (hrs * 3600) - (mins * 60);
-
-        // 打印构造二叉树的耗时
-        // printf("\rBVH Generation complete: \nTime Taken: %i hrs, %i mins, %i secs\n\n", hrs, mins, secs);
-
-        // std::cout << "max prims in nodes = " << maxPrimsInNode << std::endl;
     }
 
     // 选用全新的迭代构建 bvh_tree
+    /**
+     *  2023-04-13
+     *  现在我们要引入一种构建更优质树的方法，即 BVH with SAH
+     *  修改的点在于，之前我们的划分策略是对当前的节点内的面元列表进行排序，而后取最中间的节点作为分割点划分左右子树
+     * 也即“节点数平均”法，当然还有另外的“空间平均”划分方法。但总体来说这两种方法在“左右子树存在较大空间重叠”的情况
+     * 下的表现均不好，这是由于当左右子树存在大量重叠的时候，在遍历过程中，射线就不可避免的要对这两颗子树均进行相交测
+     * 试，大大增加了树的遍历计算次数。可悲的是，以上两种方法完全“随机”，不考虑左右子树是否重叠的影响，也就无从避免
+     * 这种左右子树包围盒存在大量重叠的情况。
+     *  目前需要做的就是在每次划分的过程中，可以不进行排序，取而代之的是沿着当前节点包围盒的最长轴，给出n-1个划分策略
+     * （假设当前节点内共有n个面元），在这里我们就选择在包围盒之间等距切分，否则仍要进行排序，计算开销过于巨大。而后，
+     * 对于每一个划分策略使用评估函数对其进行评估，评估函数得到代价最小的划分即为最优划分。
+     *  对于评估函数：对于当前划分策略，得到了两个子树面元列表，当二者重叠最小时，我们认为其达到了最优。具体的评估
+     * 方法是测算两个子树面元列表的包围盒面积分别与其中面元数量之积，这个值越大，说明二者更有可能被同一条射线同时击中，
+     * 且遍历代价越大。我们求解的问题是求这个最小值。
+     * */
     __device__ bvh_node *iterativeConstructTree(triangle **prim_list)
     {
-
         // 初始化数字索引栈，栈中的元素值将是要排序列表的索引，这个栈用作快速排序
         int *simu_stack = stack_init(prims_size);
         // 初始化节点栈，栈中元素为指向树中节点的指针，这个栈用作 bvh_tree 的构建
@@ -291,14 +305,14 @@ public:
         while (simu_ptr != -1)
         {
 
-            // 第一步 pop 得到当前要排序的部分
+            // 第一步 pop 得到当前要划分的部分
             int left_index = pop_stack(simu_stack, &simu_ptr);
             int right_index = pop_stack(simu_stack, &simu_ptr);
 
             // pop 得到当前节点
             bvh_node *current_node = pop_stack(simu_node_stack, &simu_node_ptr);
 
-            // 第二步 获取当前的包围盒，并
+            // 第二步 获取当前的包围盒
             aabb global_bound = prim_list[left_index]->getBound();
             for (int i = left_index; i <= right_index; ++i)
                 global_bound = Union(global_bound, prim_list[i]->getBound()); // 得到总体包围盒
@@ -315,7 +329,19 @@ public:
             {
                 // 得到当前包围盒的最大跨度轴，并根据最大轴跨度进行排序
                 int dim = global_bound.maxExtent();
-                prims_sort_fast(&(prim_list[left_index]), &(prim_list[right_index]), dim);
+                // prims_sort_fast(&(prim_list[left_index]), &(prim_list[right_index]), dim);
+                // 从这里开始使用 BVH with SAH 的方法，不进行排序，而是沿着当前轴进行等距切分
+                // 根据这些切分点，划分出对应个数的划分策略
+                // 最开始的一步是根据当前最长轴，按照空间等分的策略给出按最长轴的n-1个切分点（假设当前节点中共有n个面元）
+                int current_prim_size = right_index - left_index + 1; // 注意这个其实比实际列表长度小1
+                float *cut_point_list = new float[current_prim_size - 1];
+                generate_space_cut_strategy(global_bound, dim, current_prim_size, cut_point_list);
+                for (int i = 0; i < current_prim_size; i++)
+                {
+                    printf("%f  ", cut_point_list[i]);
+                }
+                printf("done please break current_prim_size = %d\n", current_prim_size);
+                break;
 
                 // 第三步 给出当前部分的 middle_index
                 int middle_index = left_index + (right_index - left_index) / 2;
@@ -339,139 +365,16 @@ public:
             }
         }
 
-        // 这里简单做一个深度测试
-        int depth_counter = 0;
-        bvh_node **current_node = &root_node;
-        while ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
-        {
-            current_node = &((*current_node)->left);
-            depth_counter++;
-        }
-
-        printf("bvh node tree left depth = %d\n", depth_counter);
-
-        depth_counter = 0;
-        current_node = &root_node;
-        while ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
-        {
-            current_node = &((*current_node)->right);
-            depth_counter++;
-        }
-
-        printf("bvh node tree right depth = %d\n", depth_counter);
-
-        /**
-         *  验证结果是，左边到11层，右边到10层，由于我们创建的 bvh_tree 是一棵完全二叉树，
-         * 所以可以推断其叶子节点包含的面元应该在1024～2048之间。
-         *  事实的确如此，我们的 bunny 面元为1500片
-         * */
-
         return root_node;
     }
-    // CUDA 中不允许函数递归
-    __device__ bvh_node *recursiveConstructTree(triangle **prim_list, size_t current_size)
-    {
-        // bvh_root_node 创建根节点
-        bvh_node *node = new bvh_node();
 
-        // 通过归并, 将得到一个包围住当前多边形片元列表的一个大包围盒
-        // aabb bounds; // 这种创建方式绝对有问题！你默认构建了一个无穷大的包围盒，于是以下做merge一直是无穷大
-        aabb global_bound = prim_list[0]->getBound(); // 正确做法是传入一个当前第一个三角形的bounds
-
-        for (int i = 0; i < current_size; ++i)
-            global_bound = Union(global_bound, prim_list[i]->getBound());
-
-        printf("recursive Construct Tree \n");
-
-        // 最终递归返回情况01: 我们已经递归到了树的叶子节点,当前列表中只有一个元素了
-        if (current_size == 1)
-        {
-            printf("current size = 1\n");
-            // 那么我们创建这个叶子节点, 并将其左右子树指针置为空
-            node->bound = prim_list[0]->getBound();
-            node->object = prim_list[0];
-            node->left = nullptr;
-            node->right = nullptr;
-            return node;
-        }
-
-        // 情况02: 叶子节点的上一层, 当前节点中有两个多边形片元, 刚好够劈开成两半
-        else if (current_size == 2)
-        {
-            printf("current size = 2\n");
-            for (int i = 0; i < current_size; i++)
-            {
-                printf("watch its list val [%f,%f,%f]\n",
-                       prim_list[i]->vertices->position.e[0],
-                       prim_list[i]->vertices->position.e[1],
-                       prim_list[i]->vertices->position.e[2]);
-            }
-            // // 那么, 为当前节点的左右孩子节点分别分配指针, 传入这两个元素(构造叶子节点)
-            node->left = recursiveConstructTree(prim_list, 1);
-            // node->right = recursiveConstructTree(&prim_list[1], 1);
-            // // 当前节点的包围盒为下属两个叶子节点的包围盒的并集
-            // node->bound = Union(node->left->bound, node->right->bound);
-            // return node;
-        }
-
-        // // 情况03: 最为广泛出现的一种情形, 当前节点包括3个及以上的多边形面片,
-        // // 这里将体现我们的 bvh_node_tree 的划分准则
-        // else
-        // {
-        //     aabb centroidBounds; // 理解为 "质心包围盒"
-
-        //     // 首先 for 循环得到当前节点的整体包围盒
-        //     for (int i = 0; i < current_size; ++i)
-        //         centroidBounds = Union(centroidBounds, prim_list[i]->getBound().center());
-
-        //     // 得到当前最大跨幅的坐标轴(包围盒哪个维度横跨尺度最大)
-        //     int dim = centroidBounds.maxExtent();
-
-        //     // 自定义排序算法
-        //     prims_sort(&prim_list[0], &prim_list[current_size], dim);
-
-        //     // 给出三个迭代器/指针, 用于左右子树的范围划分
-        //     triangle **beginning = &prim_list[0];
-        //     triangle **middling = prim_list + current_size / 2;
-        //     triangle **ending = &prim_list[current_size];
-
-        //     // // 分配左右子树的范围
-        //     // auto leftshapes = std::vector<triangle *>(beginning, middling);
-        //     // auto rightshapes = std::vector<triangle *>(middling, ending);
-
-        //     // 这里的指针失效了？！！！！！！
-        //     // 这一步校验的意义何在?
-        //     // assert(current_size == (leftshapes.size() + rightshapes.size()));
-
-        //     // 分配左右子树 （思考在3个子节点时候的情况）
-        //     node->left = recursiveConstructTree(beginning, current_size / 2 + current_size % 2);
-        //     node->right = recursiveConstructTree(middling, current_size / 2);
-
-        //     // 当前节点的包围盒是左右子树包围盒的并集
-        //     node->bound = Union(node->left->bound, node->right->bound);
-        // }
-
-        // 最终返回 bvh_node_tree 的根节点
-        return node;
-    }
-
-    // 传入一个树状结构的根节点，返回光线与树中叶子节点obj的交点
-    // 实质上是 bvh_tree 的遍历，但不允许用递归算法，必须迭代
-    // 注意，所构建的 bvh_tree 中的分支节点均不存在 object 实体，都是抽象化的包围盒，只有叶子节点中存放 prims 实体
-    // 必须借助栈的方式进行查找遍历，才能保证不会丢失 prims 2023-04-01-noon
-    // 当前函数不允许使用 new 关键字进行内存分配！
+    // 迭代方式，遍历寻找最近的射线与树的交点
     __device__ hit_record iterativeGetHitPoint(const ray &ray) const
     {
 
         hit_record intersectionRecord;
         intersectionRecord.happened = false;
 
-        // bvh_node node[33];
-        // bvh_node* node[100];
-
-        // return intersectionRecord;
-
-        // aabb current_bound = root->bound;
         int dirIsNeg[3] = {
             int(ray.direction().x() < 0),
             int(ray.direction().y() < 0),
@@ -543,13 +446,6 @@ public:
             }
         }
 
-        // printf("loop counter = %d\n", counter);
-
-        // return intersectionRecord;
-
-        // // 这里可以先free掉节点栈
-        // free(simu_node_stack);
-
         // 如果整个叶子节点栈为空，说明当前射线和整个树状结构都没有交点，直接返回即可
         if (simu_leaf_node_ptr == -1)
         {
@@ -578,12 +474,31 @@ public:
         return nearest_rec;
     }
 
-    const int maxPrimsInNode; // 常量只初始化一次, 定义当前BVH节点所能容纳最大三角形面片数
-    // 当前BVH加速结构所囊括的三角形面片组
-    // 这里应该作出改变以适应不同的情况，首先应该适应传入 hitableList 的情况，为世界坐标系中的不同物体构建树状结构
+    const int maxPrimsInNode; // 常量只初始化一次, 定义当前BVH节点所能容纳最大三角形面片数（现在没用到）
     triangle **triangles;
     bvh_node *root;
     size_t prims_size;
 };
 
 #endif
+
+// // 这里简单做一个深度测试
+// int depth_counter = 0;
+// bvh_node **current_node = &root_node;
+// while ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
+// {
+//     current_node = &((*current_node)->left);
+//     depth_counter++;
+// }
+
+// printf("bvh node tree left depth = %d\n", depth_counter);
+
+// depth_counter = 0;
+// current_node = &root_node;
+// while ((*current_node)->left != nullptr && (*current_node)->right != nullptr)
+// {
+//     current_node = &((*current_node)->right);
+//     depth_counter++;
+// }
+
+// printf("bvh node tree right depth = %d\n", depth_counter);

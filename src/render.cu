@@ -694,10 +694,10 @@ __host__ void init_and_render(void)
 
         // 断出条件
         // 当仅渲染一帧做测试时只需要将其设为1即可
-        if (loop_count >= 400)
+        if (loop_count >= 1)
         {
             loop_count = 0;
-            // break;
+            break;
         }
     }
 
