@@ -144,6 +144,18 @@ public:
         // return intersectPoint;
     }
 
+    __device__ float get_Area(void)
+    {
+        vec3 extent = _max - _min;
+        float x_range = extent.e[0];
+        float y_range = extent.e[1];
+        float z_range = extent.e[2];
+        float Area_xoy = x_range * y_range;
+        float Area_xoz = x_range * z_range;
+        float Area_yoz = y_range * z_range;
+        return 2 * (Area_xoy + Area_xoz + Area_yoz);
+    }
+
     // 包围盒的两个顶点
     vec3 _min;
     vec3 _max;
@@ -166,6 +178,11 @@ __device__ inline aabb Union(const aabb &b, const vec3 &p)
     ret.min() = Min(b.min(), p);
     ret.max() = Max(b.max(), p);
     return ret;
+}
+
+// 从大包围盒中将小包围盒移除，并得到新的包围盒
+__device__ inline aabb Remove(const aabb &source, const aabb part)
+{
 }
 
 #endif

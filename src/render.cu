@@ -671,9 +671,9 @@ __host__ void init_and_render(void)
         std::cout << "This is " << loop_count << " frame, current render loop cost = " << time_cost << "ms" << std::endl;
 
         // 数据拷贝 & 本地写文件
-        // cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        // std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
-        // write_file(path, frame_buffer_host);
+        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
+        write_file(path, frame_buffer_host);
 
         // 数据拷贝 & 图片流输出
         cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
@@ -694,10 +694,10 @@ __host__ void init_and_render(void)
 
         // 断出条件
         // 当仅渲染一帧做测试时只需要将其设为1即可
-        if (loop_count >= 1)
+        if (loop_count >= 400)
         {
             loop_count = 0;
-            break;
+            // break;
         }
     }
 

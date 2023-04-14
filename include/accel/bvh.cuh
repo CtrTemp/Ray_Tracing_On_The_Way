@@ -247,10 +247,53 @@ __device__ static void generate_space_cut_strategy(aabb current_bound, int dim, 
 {
     float gap = current_bound.Diagonal().e[dim] / (list_len + 1);
     float offset = current_bound.min().e[dim];
-    for (int i = 1; i <= list_len; i++)
+    for (int i = 1; i < list_len; i++)
     {
         dim_cut_point_list[i - 1] = offset + gap * i;
     }
+}
+
+__device__ static void get_optimal_partition(float *score, int dim, triangle **list_begin, triangle **list_end, int *middle_index)
+{
+    // 策略数刚好为三角形面元总数-1
+    int strategy_size = list_end - list_begin;
+    // printf("current strategy_size = %d  ", strategy_size);
+    // 用于存储预计算得到的左右两侧的划分 bounds
+    aabb *left_bound_strategy = new aabb[strategy_size];
+    aabb *right_bound_strategy = new aabb[strategy_size];
+
+    int left_prims_count = 0;
+    int right_prims_count = 0;
+    triangle **iter = list_begin;
+
+    // 预计算左右两侧 bounds 序列
+    for (size_t i = 0; i < strategy_size; i++)
+    {
+        if (i == 0)
+        {
+            left_bound_strategy[i] = (*list_begin)->getBound();
+            // left_bound_strategy[i] = (*list_begin)->bounds;
+            right_bound_strategy[strategy_size - i - 1] = (*list_end)->getBound();
+        }
+        else
+        {
+            left_bound_strategy[i] = Union(left_bound_strategy[i - 1], (*(list_begin + i))->getBound());
+            right_bound_strategy[strategy_size - i - 1] = Union(right_bound_strategy[strategy_size - i], (*(list_end - i - 1))->getBound());
+        }
+    }
+
+    // n 个列表中的面元元素总共会有 n-1 个分割策略
+    for (size_t i = 1; i <= strategy_size; i++)
+    {
+        float current_score = left_bound_strategy[i - 1].get_Area() * i + right_bound_strategy[i - 1].get_Area() * (strategy_size - i + 1);
+        if (current_score < *score)
+        {
+            *middle_index = i - 1;
+            *score = current_score;
+        }
+        // printf("position:[%d] final_score = %f\n", i, current_score);
+    }
+    // printf("final_position = %d, final_score = %f\n", *middle_index, *score);
 }
 
 class bvh_tree
@@ -309,6 +352,8 @@ public:
             int left_index = pop_stack(simu_stack, &simu_ptr);
             int right_index = pop_stack(simu_stack, &simu_ptr);
 
+            // printf("pop index = [%d, %d]\n", left_index, right_index);
+
             // pop 得到当前节点
             bvh_node *current_node = pop_stack(simu_node_stack, &simu_node_ptr);
 
@@ -329,22 +374,26 @@ public:
             {
                 // 得到当前包围盒的最大跨度轴，并根据最大轴跨度进行排序
                 int dim = global_bound.maxExtent();
-                // prims_sort_fast(&(prim_list[left_index]), &(prim_list[right_index]), dim);
+                prims_sort_fast(&(prim_list[left_index]), &(prim_list[right_index]), dim);
                 // 从这里开始使用 BVH with SAH 的方法，不进行排序，而是沿着当前轴进行等距切分
                 // 根据这些切分点，划分出对应个数的划分策略
                 // 最开始的一步是根据当前最长轴，按照空间等分的策略给出按最长轴的n-1个切分点（假设当前节点中共有n个面元）
                 int current_prim_size = right_index - left_index + 1; // 注意这个其实比实际列表长度小1
-                float *cut_point_list = new float[current_prim_size - 1];
-                generate_space_cut_strategy(global_bound, dim, current_prim_size, cut_point_list);
-                for (int i = 0; i < current_prim_size; i++)
-                {
-                    printf("%f  ", cut_point_list[i]);
-                }
-                printf("done please break current_prim_size = %d\n", current_prim_size);
-                break;
 
-                // 第三步 给出当前部分的 middle_index
-                int middle_index = left_index + (right_index - left_index) / 2;
+                int middle_index;
+
+                // Naive BVH
+                middle_index = left_index + (right_index - left_index) / 2;
+
+                // printf("NAIVE middle index = %d\n", middle_index);
+
+                // // BVH with SAH
+                // float score = 99999; // 我们期望得到的是一个最小值，所以预先定义一个较大的值作为初始化
+                // // 预定义当前部分的 middle_index
+                // get_optimal_partition(&score, dim, &(prim_list[left_index]), &(prim_list[right_index]), &middle_index);
+                // middle_index += left_index;
+
+                // printf("SAH middle index = %d\n", middle_index);
 
                 int middleLeft_index_next_round = middle_index;
                 int middleRight_index_next_round = middle_index + 1;

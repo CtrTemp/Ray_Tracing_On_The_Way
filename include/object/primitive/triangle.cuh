@@ -72,7 +72,7 @@ public:
 
         mat_ptr = mat;
         // 获取当前三角形的包围盒，并将其传入成员变量
-        // bounding_box(0, 0, bounds);
+        bounding_box(0, 0, bounds);
 
         // 在这里计算一下三角形面积
         float a = edges[0].length();
@@ -105,7 +105,7 @@ public:
 
         mat_ptr = mat;
         // 获取当前三角形的包围盒，并将其传入成员变量
-        // bounding_box(0, 0, bounds);
+        bounding_box(0, 0, bounds);
 
         // 在这里计算一下三角形面积
         float a = edges[0].length();
