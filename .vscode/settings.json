@@ -71,6 +71,7 @@
         "queue": "cpp",
         "stack": "cpp",
         "__bit_reference": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "complex": "cpp"
     }
 }

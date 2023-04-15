@@ -324,7 +324,7 @@ public:
 __host__ static void import_obj_from_file(vertex **vertList_host, int **vertex_offset, uint32_t **indList_host, int **ind_offset, std::vector<std::string> models_paths)
 {
 
-    // // // 暂时写死，之后要通过参数传入的
+    // // 暂时写死，之后要通过参数传入的
     // std::vector<std::string> models_paths;
     // models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
     // models_paths.push_back("../Models/bunny/bunny_low_resolution.obj");
@@ -399,9 +399,9 @@ __host__ static void import_obj_from_file(vertex **vertList_host, int **vertex_o
         // }
         // for (int i = 0; i < 15; i += 3)
         // {
-        //     std::cout << attrib.vertices[i + 0] << ","
-        //               << attrib.vertices[i + 1] << ","
-        //               << attrib.vertices[i + 2] << "," << std::endl;
+        //     std::cout << attrib.normals[i + 0] << ","
+        //               << attrib.normals[i + 1] << ","
+        //               << attrib.normals[i + 2] << "," << std::endl;
         // }
 
         int ind_offset_local = (*ind_offset)[model_ind];
@@ -429,10 +429,16 @@ __host__ static void import_obj_from_file(vertex **vertList_host, int **vertex_o
             for (int i = 0; i < vert_len_local; i++)
             {
                 vertex vert{};
+                // 这里的 vertex 只对顶点的位置进行了初始化，但没有对其法向量初始化
                 vert.position = {
                     attrib.vertices[i * 3 + 0],
                     attrib.vertices[i * 3 + 1],
                     attrib.vertices[i * 3 + 2]};
+                // 2023-04-15 为了在面内对顶点插值，这里必须引入对顶点法向量的初始化
+                vert.normal = {
+                    attrib.normals[i * 3 + 0],
+                    attrib.normals[i * 3 + 1],
+                    attrib.normals[i * 3 + 2]};
                 (*vertList_host)[vert_offset_local + i] = vert;
             }
         }

@@ -17,10 +17,14 @@
 #include "object/hitable.cuh"
 #include "object/group/hitable_list.cuh"
 
-#define FRAME_WIDTH 1080
+// 1280 720
+// 1920 1080
+// 3840 2160
+
+#define FRAME_WIDTH 1280
 #define FRAME_HEIGHT 720
 
-#define BOUNCE_DEPTH 5
+#define BOUNCE_DEPTH 50
 
 typedef struct
 {

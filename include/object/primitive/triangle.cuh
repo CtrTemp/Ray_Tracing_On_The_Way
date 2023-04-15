@@ -171,13 +171,26 @@ public:
             // std::cout << "sss" << std::endl;
             rec.t = t;
             rec.p = current_point;
-            rec.normal = normal;
+            // 2023-04-14 深夜 startup
+            // 这里的 normal 应该为三个顶点的normal的均值，我们要做一个插值处理
+            // 首先一步就是在读取Obj文件的时候初始化三角形的顶点法向量
+            // rec.normal = normal;
             rec.mat_ptr = mat_ptr;
             /*
                 这里要补充记录 uv 值，从三角形的三个顶点出发，获取三个顶点的uv值，最终插值得到当前点的uv值
             */
             float alpha, beta, gamma;
+            // 2023-04-14 深夜 如果没有使用texture mapping 其实这个计算质心坐标也无关紧要，这里也是一个优化点
             getBarycentricCoord(current_point, vertices[0].position, vertices[1].position, vertices[2].position, &alpha, &beta, &gamma);
+
+            // // 暂时写一个，看看效率是不是会有优化？？ 结果是基本上没有优化，，，， 说明渲染的时间大头还是在射线求交，，，2023-04-15 凌晨
+            // if (mat_ptr->getMaterialType() == material::SelfMaterialType::LIGHT)
+            // {
+            //     getBarycentricCoord(current_point, vertices[0].position, vertices[1].position, vertices[2].position, &alpha, &beta, &gamma);
+            // }
+
+            // 2023-04-15 将三角形面打击位点的法向量替换为顶点法向量的质心插值
+            rec.normal = alpha * vertices[0].normal + beta * vertices[1].normal + gamma * vertices[2].normal;
 
             float u_temp = vertices[0].tex_coord[0] * alpha + vertices[1].tex_coord[0] * beta + vertices[2].tex_coord[0] * gamma;
             float v_temp = vertices[0].tex_coord[1] * alpha + vertices[1].tex_coord[1] * beta + vertices[2].tex_coord[1] * gamma;

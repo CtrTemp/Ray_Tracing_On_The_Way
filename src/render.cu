@@ -232,10 +232,10 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // BVH_Tree 加速结构
         list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        // models_index++;
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        // models_index++;
-        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        models_index++;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        models_index++;
+        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], noise, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
 
         *world = new hitable_list(list, obj_index);
 
@@ -588,8 +588,8 @@ __host__ void init_and_render(void)
     /* ##################################### 摄像机初始化 ##################################### */
     cameraCreateInfo primaryCamera{};
     // primaryCamera.lookfrom = vec3(3, 2, 4);
-    primaryCamera.lookfrom = vec3(0, 1, 3);
-    // primaryCamera.lookfrom = vec3(2.5, 1, 2.5);
+    // primaryCamera.lookfrom = vec3(0, 1, 3);
+    primaryCamera.lookfrom = vec3(2.5, 1, 2.5);
     // primaryCamera.lookfrom = vec3(20, 15, 20);
     primaryCamera.lookat = vec3(0, 0, 0);
     // primaryCamera.lookat = vec3(0.5, 0, 0.5);
@@ -604,7 +604,7 @@ __host__ void init_and_render(void)
     primaryCamera.frame_width = FRAME_WIDTH;
     primaryCamera.frame_height = FRAME_HEIGHT;
 
-    primaryCamera.spp = 1;
+    primaryCamera.spp = 10;
     camera *cpu_camera = new camera(primaryCamera);
     int camera_size = sizeof(camera);
     cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
@@ -675,29 +675,29 @@ __host__ void init_and_render(void)
         std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
         write_file(path, frame_buffer_host);
 
-        // 数据拷贝 & 图片流输出
-        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        cv::namedWindow("Image Flow");
-        // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
-        showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host);
+        // // 数据拷贝 & 图片流输出
+        // cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        // cv::namedWindow("Image Flow");
+        // // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
+        // showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host);
 
-        if (cv::waitKey(1) == 27)
-        {
-            break;
-        }
+        // if (cv::waitKey(1) == 27)
+        // {
+        //     break;
+        // }
 
-        // 在 host 端更改相机参数
-        cpu_camera = modifyCamera(primaryCamera, loop_count);
-        // 将更改好的相机参数传递给device端的常量内存
-        cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
-        cudaDeviceSynchronize();
+        // // 在 host 端更改相机参数
+        // cpu_camera = modifyCamera(primaryCamera, loop_count);
+        // // 将更改好的相机参数传递给device端的常量内存
+        // cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+        // cudaDeviceSynchronize();
 
         // 断出条件
         // 当仅渲染一帧做测试时只需要将其设为1即可
-        if (loop_count >= 400)
+        if (loop_count >= 1)
         {
             loop_count = 0;
-            // break;
+            break;
         }
     }
 
