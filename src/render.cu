@@ -439,21 +439,24 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
     {
         if ((*world)->hit(cur_ray, 0.001f, 999999, rec))
         {
-            ray scattered;
-            vec3 attenuation;
-            if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
-            {
-                cur_attenuation *= attenuation;
-                cur_ray = scattered;
-            }
-            else if (rec.mat_ptr->hasEmission(0))
-            {
-                return cur_attenuation * rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-            }
-            else
-            {
-                return vec3(0.0, 0.0, 0.0);
-            }
+            // ray scattered;
+            // vec3 attenuation;
+            // if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
+            // {
+            //     cur_attenuation *= attenuation;
+            //     cur_ray = scattered;
+            // }
+            // else if (rec.mat_ptr->hasEmission(0))
+            // {
+            //     return cur_attenuation * rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+            // }
+            // else
+            // {
+            //     return vec3(0.0, 0.0, 0.0);
+            // }
+
+            // 以下 depth buffer
+            return rec.t * vec3(1, 1, 1);
         }
         else
         {
@@ -604,7 +607,7 @@ __host__ void init_and_render(void)
     primaryCamera.frame_width = FRAME_WIDTH;
     primaryCamera.frame_height = FRAME_HEIGHT;
 
-    primaryCamera.spp = 10;
+    primaryCamera.spp = 1;
     camera *cpu_camera = new camera(primaryCamera);
     int camera_size = sizeof(camera);
     cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
@@ -642,13 +645,19 @@ __host__ void init_and_render(void)
      *
      * */
 
-    // 初始化帧缓存
-    vec3 *frame_buffer_device;
+    // 设备端 帧缓存 内存分配
+    vec3 *frame_buffer_device; // 帧缓存
+    vec3 *depth_buffer_device; // 深度缓存
     int size = FRAME_WIDTH * FRAME_HEIGHT * sizeof(vec3);
     cudaMalloc((void **)&frame_buffer_device, size);
-    size_t loop_count = 0;
-    // 主机开辟帧缓存
+    cudaMalloc((void **)&depth_buffer_device, size);
+
+    // 主机端 帧缓存 内存分配
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
+    vec3 *depth_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
+
+    size_t loop_count = 350;
+
     while (++loop_count)
     {
 
@@ -686,15 +695,15 @@ __host__ void init_and_render(void)
         //     break;
         // }
 
-        // // 在 host 端更改相机参数
-        // cpu_camera = modifyCamera(primaryCamera, loop_count);
-        // // 将更改好的相机参数传递给device端的常量内存
-        // cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
-        // cudaDeviceSynchronize();
+        // 在 host 端更改相机参数
+        cpu_camera = modifyCamera(primaryCamera, loop_count);
+        // 将更改好的相机参数传递给device端的常量内存
+        cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
+        cudaDeviceSynchronize();
 
         // 断出条件
         // 当仅渲染一帧做测试时只需要将其设为1即可
-        if (loop_count >= 1)
+        if (loop_count >= 400)
         {
             loop_count = 0;
             break;
