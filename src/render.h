@@ -1,8 +1,6 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-
-
 #include "camera/camera.cuh"
 #include "object/geometry/sphere.cuh"
 #include "object/primitive/triangle.cuh"
@@ -13,13 +11,13 @@
 #include "material/diffuse_light.cuh"
 #include "texture/perlin.cuh"
 
+#include "output/output.cuh"
+
 #include <sys/time.h>
 
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
-
-
 
 /* ##################################### 随机数初始化 ##################################### */
 // __host__ curandStateXORWOW_t *init_rand(int block_size_width, int block_size_height);
