@@ -16,6 +16,7 @@ endif(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
 #添加项目自身的库和依赖
 aux_source_directory(src SRC_LIST)#添加src目录下的所有源文件
+aux_source_directory(src/server SRC_LIST)#添加src/server目录下的所有源文件
 # aux_source_directory(src/camera SRC_LIST)
 # aux_source_directory(src/material SRC_LIST)
 # aux_source_directory(src/object SRC_LIST)
@@ -44,7 +45,7 @@ include_directories(./include ./src
 #编译列表
 CUDA_ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
 
-target_link_libraries(${PROJECT_NAME} libglfw.so GL
+target_link_libraries(${PROJECT_NAME} libglfw.so GL libjsoncpp.so libprotobuf.a pthread base64
 
 opencv_calib3d
 opencv_core

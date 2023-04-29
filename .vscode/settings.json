@@ -72,6 +72,7 @@
         "stack": "cpp",
         "__bit_reference": "cpp",
         "ios": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "*.ipp": "cpp"
     }
 }

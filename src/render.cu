@@ -1,10 +1,19 @@
 #include "render.h"
 #define CUDA_LAUNCH_BLOCKING
 
+// 测试CPU多线程访问全局变量，简单单体变量
+int global_variable = 0;
+// 测试CPU多线程访问全局变量，队列容器
+std::queue<int> global_queue;
+// frame_buffer pool
+std::queue<vec3 *> frame_buffer_pool;
+
 // 写图像文件
 __host__ static void write_file(std::string file_path, vec3 *frame_buffer);
-
-__host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host);
+// 图片流输出到本地
+__host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host);
+// 图片流向前端发送
+// __host__ static void broadcastFrameToClient(int width, int height, broadcast_server b_server);
 
 /* #################################### 纹理贴图初始化 #################################### */
 __host__ static void import_tex()
@@ -232,10 +241,10 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // BVH_Tree 加速结构
         list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        models_index++;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
-        models_index++;
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], noise, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // models_index++;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // models_index++;
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], noise, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
 
         *world = new hitable_list(list, obj_index);
 
@@ -439,24 +448,24 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
     {
         if ((*world)->hit(cur_ray, 0.001f, 999999, rec))
         {
-            // ray scattered;
-            // vec3 attenuation;
-            // if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
-            // {
-            //     cur_attenuation *= attenuation;
-            //     cur_ray = scattered;
-            // }
-            // else if (rec.mat_ptr->hasEmission(0))
-            // {
-            //     return cur_attenuation * rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-            // }
-            // else
-            // {
-            //     return vec3(0.0, 0.0, 0.0);
-            // }
+            ray scattered;
+            vec3 attenuation;
+            if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
+            {
+                cur_attenuation *= attenuation;
+                cur_ray = scattered;
+            }
+            else if (rec.mat_ptr->hasEmission(0))
+            {
+                return cur_attenuation * rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+            }
+            else
+            {
+                return vec3(0.0, 0.0, 0.0);
+            }
 
-            // 以下 depth buffer
-            return rec.t * vec3(1, 1, 1);
+            // // 以下 depth buffer
+            // return rec.t * vec3(1, 1, 1);
         }
         else
         {
@@ -656,10 +665,13 @@ __host__ void init_and_render(void)
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
     vec3 *depth_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
 
-    size_t loop_count = 350;
+    size_t loop_count = 0;
 
     while (++loop_count)
     {
+
+        global_variable++;
+        global_queue.push(loop_count);
 
         // 首先使用当前参数进行渲染当前帧
         cudaEventRecord(start); // device端 开始计时
@@ -679,21 +691,27 @@ __host__ void init_and_render(void)
         cudaEventElapsedTime(&time_cost, start, stop); // 计算用时，单位为ms
         std::cout << "This is " << loop_count << " frame, current render loop cost = " << time_cost << "ms" << std::endl;
 
-        // 数据拷贝 & 本地写文件
-        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
-        write_file(path, frame_buffer_host);
-
-        // // 数据拷贝 & 图片流输出
+        // // 数据拷贝 & 本地写文件
         // cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        // cv::namedWindow("Image Flow");
-        // // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
-        // showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host);
+        // std::string path = "../PicFlow/frame" + std::to_string(loop_count) + ".ppm";
+        // write_file(path, frame_buffer_host);
 
-        // if (cv::waitKey(1) == 27)
-        // {
-        //     break;
-        // }
+        // 数据拷贝 & 图片流输出
+        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        cv::namedWindow("Image Flow");
+        // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
+        showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host);
+        if (cv::waitKey(1) == 27)
+        {
+            break;
+        }
+
+        // 2023-04-29 加入
+        // 将数据拷贝到缓冲池，注意当pop时一定记得free对应的内存，queue不会自动帮你释放
+        vec3 *queue_buffer_unit = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
+        cudaMemcpy(queue_buffer_unit, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        frame_buffer_pool.push(queue_buffer_unit);
+
 
         // 在 host 端更改相机参数
         cpu_camera = modifyCamera(primaryCamera, loop_count);
@@ -706,7 +724,7 @@ __host__ void init_and_render(void)
         if (loop_count >= 400)
         {
             loop_count = 0;
-            break;
+            // break;
         }
     }
 
@@ -747,7 +765,7 @@ __host__ static void write_file(std::string file_path, vec3 *frame_buffer)
     }
 }
 
-__host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host)
+__host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host)
 {
 
     cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3);
@@ -775,4 +793,8 @@ __host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_hos
     }
 
     cv::imshow("Image Flow", img);
+}
+
+__host__ static void broadcastFrameToClient(int width, int height)
+{
 }

@@ -14,6 +14,7 @@
 #include "output/output.cuh"
 
 #include <sys/time.h>
+#include <queue>
 
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
@@ -39,5 +40,14 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable **world, curandSt
 
 // 留给 main 函数的接口
 extern "C" __host__ void init_and_render(void);
+extern "C" __host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host);
+
+// 暴露的全局变量
+extern int global_variable;
+extern std::queue<int> global_queue;
+extern std::queue<vec3 *> frame_buffer_pool;
+
+// 其他程序接口
+
 
 #endif
