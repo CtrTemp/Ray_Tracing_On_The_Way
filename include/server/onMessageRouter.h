@@ -22,8 +22,8 @@
 #define FRAME_WIDTH 1280
 #define FRAME_HEIGHT 720
 
-#define CURRENT_PORT 9002
-// #define CURRENT_PORT 9003
+// #define CURRENT_PORT 9002
+#define CURRENT_PORT 9003
 
 static std::string rand_str(const int len) /*参数为字符串的长度*/
 {

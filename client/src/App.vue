@@ -1,7 +1,8 @@
 <template>
   <div class="root-container">
     <div class="img-container">
-      <img :src=balls_url alt="" class="basic_img img_balls">
+      <canvas id="myCanvas"></canvas>
+      <!-- <img :src=balls_url alt="" class="basic_img img_balls"> -->
       <!-- <img :src=bunnies_url alt="" class="basic_img img_bunnies"> -->
     </div>
 
@@ -12,6 +13,7 @@
 
 import { useStore } from 'vuex';
 import { balls_url, bunnies_url } from "@/assets/static_url"
+import { onMounted } from 'vue';
 
 // import { proto } from "./proto/test_pack"
 
@@ -25,6 +27,47 @@ const store = useStore();
 
 
 const ws = store.state.ws;
+
+
+
+
+
+
+
+
+
+
+onMounted(() => {
+  // canvas 画静态图
+  let canvas = document.getElementById("myCanvas");
+
+
+  // 获取到屏幕倒是是几倍屏。
+  let getPixelRatio = function (context) {
+    var backingStore = context.backingStorePixelRatio ||
+      context.webkitBackingStorePixelRatio ||
+      context.mozBackingStorePixelRatio ||
+      context.msBackingStorePixelRatio ||
+      context.oBackingStorePixelRatio ||
+      context.backingStorePixelRatio || 1;
+    return (window.devicePixelRatio || 1) / backingStore;
+  };
+  // 得到缩放倍率
+  const pixelRatio = getPixelRatio(canvas);
+  // 设置canvas的真实宽高
+  canvas.width = pixelRatio * canvas.offsetWidth; // 想当于 2 * 375 = 750 
+  canvas.height = pixelRatio * canvas.offsetHeight;
+
+
+  // console.log("canvas = ", canvas);
+  let ctx = canvas.getContext("2d");
+  let img = new Image();
+  img.src = balls_url;
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 640, 360);
+  }
+})
+
 
 
 // 发送消息停掉后台
@@ -85,14 +128,42 @@ ws.onmessage = function (evt) {
 
   // 将显示的图像进行替换
   const url_str = "data:image/jpg;base64," + json_data_pack.url;
-  document.getElementsByClassName("img_balls")[0].setAttribute("src", url_str);
+  // document.getElementsByClassName("img_balls")[0].setAttribute("src", url_str);
+  const img = new Image();
+  img.src = url_str;
 
 
-  const last_time = store.state.get_time;
-  let myDate = new Date();
-  store.state.get_time = myDate.getSeconds() * 1000 + myDate.getMilliseconds();
+  img.onload = () => {
+    let canvas = document.getElementById("myCanvas");
 
-  console.log("time cost between two frame = ", store.state.get_time - last_time);
+  // 获取到屏幕倒是是几倍屏。
+  let getPixelRatio = function (context) {
+    var backingStore = context.backingStorePixelRatio ||
+      context.webkitBackingStorePixelRatio ||
+      context.mozBackingStorePixelRatio ||
+      context.msBackingStorePixelRatio ||
+      context.oBackingStorePixelRatio ||
+      context.backingStorePixelRatio || 1;
+    return (window.devicePixelRatio || 1) / backingStore;
+  };
+  // 得到缩放倍率
+  const pixelRatio = getPixelRatio(canvas);
+  // 设置canvas的真实宽高
+  canvas.width = pixelRatio * canvas.offsetWidth; // 想当于 2 * 375 = 750 
+  canvas.height = pixelRatio * canvas.offsetHeight;
+
+    let ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+
+    const last_time = store.state.get_time;
+    let myDate = new Date();
+    store.state.get_time = myDate.getSeconds() * 1000 + myDate.getMilliseconds();
+
+    console.log("time cost between two frame = ", store.state.get_time - last_time);
+  }
+
+
 
   // 这里好像收到的是一个空的blob
 
@@ -210,13 +281,22 @@ const self_encode_and_decode_test = function () {
   flex-direction: row;
 
   justify-content: center;
+  align-items: center;
 
   gap: 10vw;
 
 }
 
+#myCanvas {
+  width: 1280px;
+  height: 720px;
+
+  /* border: 3px solid #d3d3d3; */
+}
+
 .basic_img {
-  width: 90%;
+  width: 640px;
+  height: 360px;
   /* height: 100px; */
 }
 </style>

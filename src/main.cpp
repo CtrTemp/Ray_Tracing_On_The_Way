@@ -135,19 +135,19 @@ int main(void)
 {
 
 	// 首个线程开启服务器，并进行特定端口的监听
-	// std::thread server_boost_thread(server_startup);
+	std::thread server_boost_thread(server_startup);
 	std::thread render_thread(init_and_render);
 
 	// // 这里应该单开一个线程用于管理 output_flow
 	// std::thread frame_pool_management(access_global_variable);
 
 	// 这里应该单开一个线程用于向前端传送数据
-	// std::thread server_send_frame_to_client(send_img_pack_to_client);
+	std::thread server_send_frame_to_client(send_img_pack_to_client);
 
-	// server_boost_thread.join();
+	server_boost_thread.join();
 	render_thread.join();
 	// frame_pool_management.join();
-	// server_send_frame_to_client.join();
+	server_send_frame_to_client.join();
 
 	// std::vector<int> i;
 	// i.push_back(1);

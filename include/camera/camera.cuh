@@ -24,7 +24,7 @@
 #define FRAME_WIDTH 1280
 #define FRAME_HEIGHT 720
 
-#define BOUNCE_DEPTH 8
+#define BOUNCE_DEPTH 5
 
 typedef struct
 {

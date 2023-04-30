@@ -9,8 +9,8 @@ const store = createStore({
     actions: {
     },
     state: {
-        ws: new WebSocket('ws://localhost:9002'),
-        // ws: new WebSocket('ws://localhost:9003'),
+        // ws: new WebSocket('ws://localhost:9002'),
+        ws: new WebSocket('ws://localhost:9003'),
         request_time: 0,
         get_time: 0
     },

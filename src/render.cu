@@ -197,9 +197,9 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
 
         list[obj_index++] = new sphere(vec3(0, -1000.5, 0), 1000, mental_ground); // ground
 
-        // list[obj_index++] = new sphere(vec3(0, 0.5, 0), 0.25, noise);
-        // list[obj_index++] = new sphere(vec3(0.75, 0.5, -0.75), 0.25, glass);
-        // list[obj_index++] = new sphere(vec3(-0.75, 0.5, 0.75), 0.25, mental_steel);
+        list[obj_index++] = new sphere(vec3(0, 0.5, 0), 0.25, noise);
+        list[obj_index++] = new sphere(vec3(0.75, 0.5, -0.75), 0.25, glass);
+        list[obj_index++] = new sphere(vec3(-0.75, 0.5, 0.75), 0.25, mental_steel);
 
         //  list[obj_index++] = new sphere(vec3(0, 2, 0), 2, noise);
         // list[obj_index++] = new sphere(vec3(2, 2, -4), 2, glass);
@@ -240,7 +240,7 @@ __global__ void gen_world(curandStateXORWOW *rand_state, hitable_list **world, h
         // 无加速结构构造 Object
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::NAIVE, models::PrimType::TRIANGLE);
         // BVH_Tree 加速结构
-        list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
+        // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], mental_copper, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
         // models_index++;
         // list[obj_index++] = new models(&(vertList[vertOffset[models_index]]), &(indList[indOffset[models_index]]), indOffset[models_index + 1] - indOffset[models_index + 0], glass, models::HitMethod::BVH_TREE, models::PrimType::TRIANGLE);
         // models_index++;
