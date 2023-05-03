@@ -1,12 +1,26 @@
 #include "render.h"
 #define CUDA_LAUNCH_BLOCKING
 
+/**
+ *  2023-05-03 TODOs:
+ *
+ *  思考应该传一个什么可视化信息到前端？
+ *  1、fps/time 这两个都是帧间信息，可以被认为是同一个对象/变量
+ *  2、实际上我们想知道渲染用时各部分占比
+ *  3、所以除了每帧的渲染用时，还应该记录数据编码解码用时，数据传输用时，帧延迟（？），总用时
+ *  4、暂时先记录这些数据项进行展示～
+ * */
+
 // 测试CPU多线程访问全局变量，简单单体变量
 int global_variable = 0;
 // 测试CPU多线程访问全局变量，队列容器
 std::queue<int> global_queue;
 // frame_buffer pool
 std::queue<vec3 *> frame_buffer_pool;
+// render_time_cost pool
+std::queue<float> render_time_cost_pool;
+// // encode_time_cost pool
+// std::queue<float> encode_time_cost_pool;
 
 // 写图像文件
 __host__ static void write_file(std::string file_path, vec3 *frame_buffer);
@@ -712,6 +726,9 @@ __host__ void init_and_render(void)
         cudaMemcpy(queue_buffer_unit, frame_buffer_device, size, cudaMemcpyDeviceToHost);
         frame_buffer_pool.push(queue_buffer_unit);
 
+        // 2023-05-03 加入
+        // 将一些相关的时耗数据记录到缓冲区（注意，时耗统一以ms为记录单位）
+        render_time_cost_pool.push(time_cost);
 
         // 在 host 端更改相机参数
         cpu_camera = modifyCamera(primaryCamera, loop_count);

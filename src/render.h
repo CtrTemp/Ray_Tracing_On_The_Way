@@ -46,6 +46,8 @@ extern "C" __host__ void showFrameFlow(int width, int height, vec3 *frame_buffer
 extern int global_variable;
 extern std::queue<int> global_queue;
 extern std::queue<vec3 *> frame_buffer_pool;
+extern std::queue<float> render_time_cost_pool;
+// extern std::queue<float> encode_time_cost_pool;
 
 // 其他程序接口
 

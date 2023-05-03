@@ -73,6 +73,9 @@
         "__bit_reference": "cpp",
         "ios": "cpp",
         "complex": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "coroutine": "cpp",
+        "unordered_set": "cpp",
+        "any": "cpp"
     }
 }

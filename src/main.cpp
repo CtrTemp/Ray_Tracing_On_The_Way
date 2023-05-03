@@ -57,7 +57,7 @@ void send_img_pack_to_client()
 {
 
 	cv::Mat img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3);
-	clock_t start, end;
+	clock_t start, encode_end, end;
 
 	while (true)
 	{
@@ -109,7 +109,17 @@ void send_img_pack_to_client()
 		// 写入一般数据
 		json_obj["url"] = img_data;
 
+		encode_end = clock();
+		float encode_time_cost = 1000 * double(encode_end - start) / CLOCKS_PER_SEC;
+		float current_frame_render_time_cost = render_time_cost_pool.front();
+
+		json_obj["rCost"] = current_frame_render_time_cost;
+		json_obj["eCost"] = encode_time_cost;
+
+
+
 		std::string json_str = jsonWrite.write(json_obj);
+
 
 		// 加入这两句后便不会默认打印发送的消息
 		b_server.m_server.clear_access_channels(websocketpp::log::alevel::all);
@@ -122,9 +132,11 @@ void send_img_pack_to_client()
 			b_server.m_server.send(it, json_str, sCode);
 		}
 
-		frame_buffer_pool.pop();
 		// 在此处手动释放内存，因为pop操作并不会自动帮忙释放
+		frame_buffer_pool.pop();
 		delete[] frame_buffer;
+		render_time_cost_pool.pop();
+		// delete &current_frame_render_time_cost;
 
 		end = clock();
 		std::cout << "send to clint loop time = " << 1000 * double(end - start) / CLOCKS_PER_SEC << "ms" << std::endl;

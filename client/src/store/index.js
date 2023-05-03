@@ -1,4 +1,5 @@
 import { createStore, useStore, mapState } from "vuex";
+import footerPannel from "./footerPannel.js"
 
 
 const store = createStore({
@@ -12,8 +13,12 @@ const store = createStore({
         // ws: new WebSocket('ws://localhost:9002'),
         ws: new WebSocket('ws://localhost:9003'),
         request_time: 0,
-        get_time: 0
+        get_time: 0,
+        total_time_cost: 0
     },
+    modules: {
+        footerPannel_Related: footerPannel,
+    }
 })
 
 
