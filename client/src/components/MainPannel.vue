@@ -135,10 +135,12 @@ ws.onmessage = function (evt) {
             tCost: store.state.get_time - last_time,
             currentTime: store.state.total_time_cost
         }
-        const commit_str = "footerPannel_Related/updateTimeCostArr";
-        store.commit(commit_str, update_pack);
+        const footer_pannel_commit_str = "footerPannel_Related/updateTimeCostArr";
+        store.commit(footer_pannel_commit_str, update_pack);
+        const sider_pannel_commit_str = "siderPannel_Related/updateTimeCostArr";
+        store.commit(sider_pannel_commit_str, update_pack);
 
-        // console.log("time cost between two frame = ", store.state.get_time - last_time);
+        // console.log("time cost between two frames = ", store.state.get_time - last_time);
     }
 
 }

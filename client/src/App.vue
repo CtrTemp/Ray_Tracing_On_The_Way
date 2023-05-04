@@ -3,6 +3,8 @@
 
     <MainPannel />
 
+    <SiderPannel />
+
     <FooterPannel />
 
 
@@ -13,16 +15,25 @@
 
 import MainPannel from "@/components/MainPannel.vue"
 import FooterPannel from "@/components/FooterPannel.vue"
+import SiderPannel from "@/components/SiderPannel.vue";
 
-// import { proto } from "./proto/test_pack"
+import { computed } from "vue";
 
-// const proto = require("./proto/test_pack");
+import { provide } from "vue";
 
-// console.log("proto = ", proto);
+const color_map = computed(() => {
+  const ret_map = {
+    rCost: "yellowgreen",
+    eCost: "pink",
+    dCost: "steelblue",
+    tCost: "white"
+  }
 
-// import * as proto from "@/proto/message_pb"
+  return ret_map;
+})
 
 
+provide("color_map", color_map);
 
 
 </script>
