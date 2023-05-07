@@ -140,25 +140,25 @@ const render_init = function (data_arr) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .attr("d", () => linePath(data_arr[0].arr))
         .attr("fill", "none")
-        .attr("stroke-width", "0.5vh")
+        .attr("stroke-width", "0.25vh")
         .attr("stroke", color_map[0]);
     svg.append("path").attr("class", "eCurve")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .attr("d", () => linePath(data_arr[1].arr))
         .attr("fill", "none")
-        .attr("stroke-width", "0.5vh")
+        .attr("stroke-width", "0.25vh")
         .attr("stroke", color_map[1]);
     svg.append("path").attr("class", "dCurve")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .attr("d", () => linePath(data_arr[2].arr))
         .attr("fill", "none")
-        .attr("stroke-width", "0.5vh")
+        .attr("stroke-width", "0.25vh")
         .attr("stroke", color_map[2]);
     svg.append("path").attr("class", "tCurve")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .attr("d", () => linePath(data_arr[3].arr))
         .attr("fill", "none")
-        .attr("stroke-width", "0.5vh")
+        .attr("stroke-width", "0.25vh")
         .attr("stroke", color_map[3]);
 
 }
