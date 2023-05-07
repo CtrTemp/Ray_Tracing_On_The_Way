@@ -36,5 +36,7 @@ const otherCostData = store.state.siderPannel_Related.otherCost;
     flex-direction: column;
 
     /* gap: 5px; */
+
+    background-color: rgba(0, 0, 0, 0.25);
 }
 </style>

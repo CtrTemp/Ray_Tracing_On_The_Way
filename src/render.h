@@ -20,6 +20,8 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
+#include "unistd.h"
+
 /* ##################################### 随机数初始化 ##################################### */
 // __host__ curandStateXORWOW_t *init_rand(int block_size_width, int block_size_height);
 __global__ void initialize_device_random(curandStateXORWOW_t *states, unsigned long long seed, size_t size);
@@ -46,10 +48,12 @@ extern "C" __host__ void showFrameFlow(int width, int height, vec3 *frame_buffer
 extern int global_variable;
 extern std::queue<int> global_queue;
 extern std::queue<vec3 *> frame_buffer_pool;
+extern std::queue<vec3 *> depth_buffer_pool;
 extern std::queue<float> render_time_cost_pool;
 // extern std::queue<float> encode_time_cost_pool;
 
 // 其他程序接口
+extern bool auto_render_and_send_control;
 
 
 #endif

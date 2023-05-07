@@ -17,15 +17,19 @@ int global_variable = 0;
 std::queue<int> global_queue;
 // frame_buffer pool
 std::queue<vec3 *> frame_buffer_pool;
+// depth_buffer pool
+std::queue<vec3 *> depth_buffer_pool;
 // render_time_cost pool
 std::queue<float> render_time_cost_pool;
 // // encode_time_cost pool
 // std::queue<float> encode_time_cost_pool;
 
+bool auto_render_and_send_control = true;
+
 // 写图像文件
 __host__ static void write_file(std::string file_path, vec3 *frame_buffer);
 // 图片流输出到本地
-__host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host);
+__host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host, std::string window);
 // 图片流向前端发送
 // __host__ static void broadcastFrameToClient(int width, int height, broadcast_server b_server);
 
@@ -299,7 +303,7 @@ __device__ ray get_ray_device(float s, float t, curandStateXORWOW *rand_state)
     // return ray(origin, upper_left_conner + u * horizontal + v * vertical - origin);
 }
 
-__device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, curandStateXORWOW *rand_state)
+__device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, curandStateXORWOW *rand_state, float *depth_val)
 {
 
     // // 任务2023-04-09：着色函数改为直接光源采样 Render Equation is true
@@ -433,20 +437,12 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
 
     //             // 对于折射光所必要考虑的一步
     //             cos_para = cos_para < 0 ? -cos_para : cos_para;
-    //             // if (cos_para < 0)
-    //             // {
-    //             //     cos_para = -cos_para;
-    //             // }
 
     //             // 得到一次/直接光源在当前位点的 其他衰减参数
     //             para_indir = cos_para / PRIMARY_CAMERA.RussianRoulette / global_pdf;
 
-    //             // 这里不支持递归，要进行修改
-    //             // L_indir = shading_pixel(depth - 1, scattered, world, rand_state) * BRDF_indir * para_indir;
-    //             // L_indir = vec3(0, 0, 0);
     //             current_attenuation *= (BRDF_indir * para_indir * attenuation);
 
-    //             // printf("current attenuation = [%f,%f,%f]", BRDF_indir.e[0], BRDF_indir.e[1], BRDF_indir.e[2]);
     //         }
     //     }
     // }
@@ -462,6 +458,13 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
     {
         if ((*world)->hit(cur_ray, 0.001f, 999999, rec))
         {
+            // 以下 depth buffer 仅在第一次生效
+            if (i == 0)
+            {
+                *depth_val = rec.t;
+                // return rec.t * vec3(1, 1, 1);
+            }
+
             ray scattered;
             vec3 attenuation;
             if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, rand_state))
@@ -477,13 +480,9 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
             {
                 return vec3(0.0, 0.0, 0.0);
             }
-
-            // // 以下 depth buffer
-            // return rec.t * vec3(1, 1, 1);
         }
         else
         {
-
             return cur_attenuation * vec3(0.1, 0.1, 0.1); // 默认环境光
 
             // vec3 unit_direction = unit_vector(cur_ray.direction());
@@ -495,7 +494,7 @@ __device__ vec3 shading_pixel(int depth, const ray &r, hitable_list **world, cur
     return cur_attenuation * vec3(0.1, 0.1, 0.1);
 }
 
-__global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, curandStateXORWOW *rand_state)
+__global__ void cuda_shading_unit(vec3 *frame_buffer, vec3 *depth_buffer, hitable_list **world, curandStateXORWOW *rand_state)
 {
     int row_index = blockDim.y * blockIdx.y + threadIdx.y; // 当前线程所在行索引
     int col_index = blockDim.x * blockIdx.x + threadIdx.x; // 当前线程所在列索引
@@ -511,18 +510,9 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, cura
     curandStateXORWOW local_rand_state = rand_state[global_index];
 
     vec3 col(0, 0, 0);
+    float depth_val;
+    vec3 depth_vec;
 
-    /**
-     *  2023-04-11
-     *  我们发现程序的效率不尽如人意，尽管在十分简单的场景下，做到实时（30+fps）也十分困难。
-     *  现在，我们从这里出发，查看到底是哪里占用了太多的时间，导致程序的效率低下
-     * */
-
-    /**
-     *  首先，我们注释掉以下的关键计算部分，停止向场景内投射射线，查看计算用时。
-     *  如果只是取消掉向场景投射，取消像素值计算部分，则用时为0.19ms
-     *  取消像素的归一化以及计算等操作，这个用时将减少到0.055ms
-     * */
     // random_float_device(&local_rand_state);
     for (int s = 0; s < PRIMARY_CAMERA.spp; s++)
     {
@@ -530,18 +520,25 @@ __global__ void cuda_shading_unit(vec3 *frame_buffer, hitable_list **world, cura
         float v = float(row_index + random_float_device(&local_rand_state)) / float(FRAME_HEIGHT);
 
         ray kernal_ray = get_ray_device(u, v, &local_rand_state);
-        col += shading_pixel(BOUNCE_DEPTH, kernal_ray, world, &local_rand_state);
+        col += shading_pixel(BOUNCE_DEPTH, kernal_ray, world, &local_rand_state, &depth_val);
     }
     rand_state[global_index] = local_rand_state;
     col /= float(PRIMARY_CAMERA.spp);
     col[0] = sqrt(col[0]);
     col[1] = sqrt(col[1]);
     col[2] = sqrt(col[2]);
-
     col = color_unit_normalization(col, 1);
-    frame_buffer[global_index] = col;
-}
 
+    if (depth_val > 1)
+    {
+        depth_val = 0.999;
+    }
+    depth_vec = vec3(depth_val, depth_val, depth_val);
+
+    frame_buffer[global_index] = col;
+    depth_vec = vec3(depth_val, depth_val, depth_val);
+    depth_buffer[global_index] = depth_vec;
+}
 /* ##################################### main 函数入口 ##################################### */
 
 __host__ void init_and_render(void)
@@ -675,14 +672,26 @@ __host__ void init_and_render(void)
     cudaMalloc((void **)&frame_buffer_device, size);
     cudaMalloc((void **)&depth_buffer_device, size);
 
+    // cv::namedWindow("Image Buffer"); // 图片窗口
+    // cv::namedWindow("Depth Buffer"); // 深度图窗口
+
     // 主机端 帧缓存 内存分配
     vec3 *frame_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
     vec3 *depth_buffer_host = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
 
     size_t loop_count = 0;
 
-    while (++loop_count)
+    while (true)
     {
+
+        // 如果当前处于 "暂停渲染阶段"，则跳过后面的步骤，进行短时间“休眠”
+        if (auto_render_and_send_control)
+        {
+            usleep(3000); // sleep 3ms
+            continue;
+        }
+
+        loop_count++;
 
         global_variable++;
         global_queue.push(loop_count);
@@ -691,7 +700,8 @@ __host__ void init_and_render(void)
         cudaEventRecord(start); // device端 开始计时
         // 真正占用时间的渲染口
         // cuda_shading_unit<<<dim3(64, 32), dim3(8, 8)>>>(frame_buffer_device, world_device, states);
-        cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
+        cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, depth_buffer_device, world_device, states);
+        // cuda_shading_unit<<<dimGrid, dimBlock>>>(frame_buffer_device, world_device, states);
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess)
         {
@@ -711,20 +721,28 @@ __host__ void init_and_render(void)
         // write_file(path, frame_buffer_host);
 
         // 数据拷贝 & 图片流输出
-        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        cv::namedWindow("Image Flow");
-        // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
-        showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host);
+        // 数据拷贝 & 图片流输出
+        cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost); // 渲染着色结果
+        cudaMemcpy(depth_buffer_host, depth_buffer_device, size, cudaMemcpyDeviceToHost); // 深度图
+        // // 一直执行这个循环，并将图像给到OpenCV创建的 window，直到按下 Esc 键推出
+        // showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_host, "Image Buffer");
+        // showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, depth_buffer_host, "Depth Buffer");
+
         if (cv::waitKey(1) == 27)
         {
             break;
         }
 
-        // 2023-04-29 加入
+        // 2023-04-29 加入 framebuffer
         // 将数据拷贝到缓冲池，注意当pop时一定记得free对应的内存，queue不会自动帮你释放
-        vec3 *queue_buffer_unit = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
-        cudaMemcpy(queue_buffer_unit, frame_buffer_device, size, cudaMemcpyDeviceToHost);
-        frame_buffer_pool.push(queue_buffer_unit);
+        // 2023-05-07 加入 depthbuffer
+        // 将数据拷贝到缓冲池，注意当pop时一定记得free对应的内存，queue不会自动帮你释放
+        vec3 *queue_frame_buffer_unit = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
+        cudaMemcpy(queue_frame_buffer_unit, frame_buffer_device, size, cudaMemcpyDeviceToHost);
+        vec3 *queue_depth_buffer_unit = new vec3[FRAME_WIDTH * FRAME_HEIGHT];
+        cudaMemcpy(queue_depth_buffer_unit, depth_buffer_device, size, cudaMemcpyDeviceToHost);
+        frame_buffer_pool.push(queue_frame_buffer_unit);
+        depth_buffer_pool.push(queue_depth_buffer_unit);
 
         // 2023-05-03 加入
         // 将一些相关的时耗数据记录到缓冲区（注意，时耗统一以ms为记录单位）
@@ -782,7 +800,8 @@ __host__ static void write_file(std::string file_path, vec3 *frame_buffer)
     }
 }
 
-__host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host)
+
+__host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host, std::string window)
 {
 
     cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC3);
@@ -809,9 +828,5 @@ __host__ void showFrameFlow(int width, int height, vec3 *frame_buffer_host)
         }
     }
 
-    cv::imshow("Image Flow", img);
-}
-
-__host__ static void broadcastFrameToClient(int width, int height)
-{
+    cv::imshow(window, img);
 }

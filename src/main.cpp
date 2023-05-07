@@ -56,7 +56,8 @@ void access_global_variable()
 void send_img_pack_to_client()
 {
 
-	cv::Mat img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3);
+	cv::Mat frame_img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3);
+	cv::Mat depth_img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3);
 	clock_t start, encode_end, end;
 
 	while (true)
@@ -69,10 +70,9 @@ void send_img_pack_to_client()
 		{
 			continue;
 		}
-		printf("current frame buffer pool depth = %ld\n", frame_buffer_pool.size());
-		// 显示当前帧
-		// cv::namedWindow("Image Flow");
-		// showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_pool.front());
+		printf("current frame buffer pool depth = %ld\n", depth_buffer_pool.size());
+
+		// 编码当前帧 frame buffer
 		vec3 *frame_buffer = frame_buffer_pool.front();
 
 		for (int row = 0; row < FRAME_HEIGHT; row++)
@@ -91,23 +91,60 @@ void send_img_pack_to_client()
 				if (ib < 0)
 					ib = 0;
 
-				img.at<unsigned char>(row, col * 3 + 0) = ib;
-				img.at<unsigned char>(row, col * 3 + 1) = ig;
-				img.at<unsigned char>(row, col * 3 + 2) = ir;
+				frame_img.at<unsigned char>(row, col * 3 + 0) = ib;
+				frame_img.at<unsigned char>(row, col * 3 + 1) = ig;
+				frame_img.at<unsigned char>(row, col * 3 + 2) = ir;
 			}
 		}
 
-		std::vector<uchar> buf;
-		cv::imencode(".jpg", img, buf);
+		// 编码当前帧 depth buffer
+		vec3 *depth_buffer = depth_buffer_pool.front();
+
+		for (int row = 0; row < FRAME_HEIGHT; row++)
+		{
+			for (int col = 0; col < FRAME_WIDTH; col++)
+			{
+				const int global_index = row * FRAME_WIDTH + col;
+				vec3 pixelVal = depth_buffer[global_index];
+				int ir = int(255.99 * pixelVal[0]);
+				if (ir < 0)
+					ir = 0;
+				if (ir >= 255)
+					ir = 255;
+				int ig = int(255.99 * pixelVal[1]);
+				if (ig < 0)
+					ig = 255;
+				if (ig >= 255)
+					ig = 255;
+				int ib = int(255.99 * pixelVal[2]);
+				if (ib < 0)
+					ib = 0;
+				if (ib >= 255)
+					ib = 255;
+
+				depth_img.at<unsigned char>(row, col * 3 + 0) = ib;
+				depth_img.at<unsigned char>(row, col * 3 + 1) = ig;
+				depth_img.at<unsigned char>(row, col * 3 + 2) = ir;
+			}
+		}
+
+		std::vector<uchar> frame_encoded_buf;
+		cv::imencode(".jpg", frame_img, frame_encoded_buf);
 		// uchar *enc_msg = reinterpret_cast<unsigned char*>(buf.data());
-		std::string img_data = base64_encode(buf.data(), buf.size(), false);
+		std::string frame_img_data = base64_encode(frame_encoded_buf.data(), frame_encoded_buf.size(), false);
+
+		std::vector<uchar> depth_encoded_buf;
+		cv::imencode(".jpg", depth_img, depth_encoded_buf);
+		// uchar *enc_msg = reinterpret_cast<unsigned char*>(buf.data());
+		std::string depth_img_data = base64_encode(depth_encoded_buf.data(), depth_encoded_buf.size(), false);
 
 		// 以下使用 JSON 数据格式进行信息传递
 		Json::FastWriter jsonWrite;
 		Json::Value json_obj;
 
 		// 写入一般数据
-		json_obj["url"] = img_data;
+		json_obj["frame_url"] = frame_img_data;
+		json_obj["depth_url"] = depth_img_data;
 
 		encode_end = clock();
 		float encode_time_cost = 1000 * double(encode_end - start) / CLOCKS_PER_SEC;
@@ -116,10 +153,7 @@ void send_img_pack_to_client()
 		json_obj["rCost"] = current_frame_render_time_cost;
 		json_obj["eCost"] = encode_time_cost;
 
-
-
 		std::string json_str = jsonWrite.write(json_obj);
-
 
 		// 加入这两句后便不会默认打印发送的消息
 		b_server.m_server.clear_access_channels(websocketpp::log::alevel::all);
@@ -135,6 +169,8 @@ void send_img_pack_to_client()
 		// 在此处手动释放内存，因为pop操作并不会自动帮忙释放
 		frame_buffer_pool.pop();
 		delete[] frame_buffer;
+		depth_buffer_pool.pop();
+		delete[] depth_buffer;
 		render_time_cost_pool.pop();
 		// delete &current_frame_render_time_cost;
 
@@ -145,6 +181,9 @@ void send_img_pack_to_client()
 
 int main(void)
 {
+
+	auto_render_and_send_control = true; // 表示在最开始的阶段不进入循环，等待前端发来的命令允许开启渲染进程
+	b_server.pause_control = &auto_render_and_send_control;
 
 	// 首个线程开启服务器，并进行特定端口的监听
 	std::thread server_boost_thread(server_startup);

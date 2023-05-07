@@ -1,7 +1,8 @@
 <template>
     <div class="main-pannel-container">
         <div class="img-container">
-            <canvas id="myCanvas"></canvas>
+            <canvas id="primiaryCanvas"></canvas>
+            <canvas id="secondaryCanvas"></canvas>
             <!-- <img :src=balls_url alt="" class="basic_img img_balls"> -->
             <!-- <img :src=bunnies_url alt="" class="basic_img img_bunnies"> -->
         </div>
@@ -26,12 +27,10 @@ const ws = store.state.ws;
 
 // 用于添加 placeholder
 onMounted(() => {
+
     // canvas 画静态图
-    let canvas = document.getElementById("myCanvas");
-    // let canvas_root_container = document.getElementsByClassName("img-container")[0];
-    // console.log("canvas_root_container size = ", canvas_root_container.clientHeight)
-    // canvas.width = "1000";
-    // canvas.height = "500";
+    let primiaryCanvas = document.getElementById("primiaryCanvas");
+    let secondaryCanvas = document.getElementById("secondaryCanvas");
 
 
     // 获取到屏幕倒是是几倍屏。
@@ -45,19 +44,30 @@ onMounted(() => {
         return (window.devicePixelRatio || 1) / backingStore;
     };
     // 得到缩放倍率
-    const pixelRatio = getPixelRatio(canvas);
+    const pixelRatio = getPixelRatio(primiaryCanvas);
     // 设置canvas的真实宽高
-    canvas.width = pixelRatio * canvas.offsetWidth; // 想当于 2 * 375 = 750 
-    canvas.height = pixelRatio * canvas.offsetHeight;
+    primiaryCanvas.width = pixelRatio * primiaryCanvas.offsetWidth;
+    primiaryCanvas.height = pixelRatio * primiaryCanvas.offsetHeight;
 
 
-    // console.log("canvas = ", canvas);
-    let ctx = canvas.getContext("2d");
-    let img = new Image();
-    img.src = balls_url;
-    img.onload = () => {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    secondaryCanvas.width = pixelRatio * secondaryCanvas.offsetWidth;
+    secondaryCanvas.height = pixelRatio * secondaryCanvas.offsetHeight;
+
+
+    let p_ctx = primiaryCanvas.getContext("2d");
+    let primiary_img = new Image();
+    primiary_img.src = bunnies_url;
+    primiary_img.onload = () => {
+        p_ctx.drawImage(primiary_img, 0, 0, primiaryCanvas.width, primiaryCanvas.height);
     }
+
+    let s_ctx = secondaryCanvas.getContext("2d");
+    let secondary_img = new Image();
+    secondary_img.src = balls_url;
+    secondary_img.onload = () => {
+        s_ctx.drawImage(secondary_img, 0, 0, secondaryCanvas.width, secondaryCanvas.height);
+    }
+
 })
 
 
@@ -81,7 +91,8 @@ ws.onmessage = function (evt) {
     let timer1 = new Date();
     const time1 = timer1.getMinutes() * 60000 + timer1.getSeconds() * 1000 + timer1.getMilliseconds();
     const json_data_pack = JSON.parse(evt.data);
-    // console.log("json_data_pack from server = ", json_data_pack);
+    // console.log("json_data_pack from server = ", json_data_pack.frame_url);
+    // console.log("json_data_pack from server = ", json_data_pack.depth_url);
 
     let timer2 = new Date();
     const time2 = timer2.getMinutes() * 60000 + timer2.getSeconds() * 1000 + timer2.getMilliseconds();
@@ -89,15 +100,20 @@ ws.onmessage = function (evt) {
     const decode_time_cost = time2 - time1;
 
     // 将显示的图像进行替换
-    const url_str = "data:image/jpg;base64," + json_data_pack.url;
-    // document.getElementsByClassName("img_balls")[0].setAttribute("src", url_str);
-    const img = new Image();
-    img.src = url_str;
+    const frame_url_str = "data:image/jpg;base64," + json_data_pack.frame_url;
+    const frame_img = new Image();
+    frame_img.src = frame_url_str;
+
+
+    // 将显示的图像进行替换
+    const depth_url_str = "data:image/jpg;base64," + json_data_pack.depth_url;
+    const depth_img = new Image();
+    depth_img.src = depth_url_str;
 
 
 
-    img.onload = () => {
-        let canvas = document.getElementById("myCanvas");
+    frame_img.onload = () => {
+        let canvas = document.getElementById("primiaryCanvas");
 
         // 获取到屏幕倒是是几倍屏。
         let getPixelRatio = function (context) {
@@ -116,7 +132,7 @@ ws.onmessage = function (evt) {
         canvas.height = pixelRatio * canvas.offsetHeight;
 
         let ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(frame_img, 0, 0, canvas.width, canvas.height);
 
 
         const last_time = store.state.get_time;
@@ -140,7 +156,29 @@ ws.onmessage = function (evt) {
         const sider_pannel_commit_str = "siderPannel_Related/updateTimeCostArr";
         store.commit(sider_pannel_commit_str, update_pack);
 
-        // console.log("time cost between two frames = ", store.state.get_time - last_time);
+    }
+
+    depth_img.onload = () => {
+        let canvas = document.getElementById("secondaryCanvas");
+
+        // 获取到屏幕倒是是几倍屏。
+        let getPixelRatio = function (context) {
+            var backingStore = context.backingStorePixelRatio ||
+                context.webkitBackingStorePixelRatio ||
+                context.mozBackingStorePixelRatio ||
+                context.msBackingStorePixelRatio ||
+                context.oBackingStorePixelRatio ||
+                context.backingStorePixelRatio || 1;
+            return (window.devicePixelRatio || 1) / backingStore;
+        };
+        // 得到缩放倍率
+        const pixelRatio = getPixelRatio(canvas);
+        // 设置canvas的真实宽高
+        canvas.width = pixelRatio * canvas.offsetWidth; // 想当于 2 * 375 = 750 
+        canvas.height = pixelRatio * canvas.offsetHeight;
+
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(depth_img, 0, 0, canvas.width, canvas.height);
     }
 
 }
@@ -177,12 +215,25 @@ ws.onmessage = function (evt) {
 }
 
 
-#myCanvas {
+#primiaryCanvas {
+    position: absolute;
+    top: 0%;
+    left: 0%;
     width: 100%;
     height: 100%;
 
     /* border: 3px solid yellowgreen; */
     box-sizing: border-box;
+}
+
+#secondaryCanvas {
+    position: absolute;
+
+    top: 52.5%;
+    left: 80%;
+
+    width: 20%;
+    height: 22.5%;
 }
 
 .basic_img {

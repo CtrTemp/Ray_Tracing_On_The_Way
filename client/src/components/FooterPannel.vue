@@ -63,7 +63,7 @@ const render_init = function (data_arr) {
 
     // Add title
     svg.append("text")
-        .text("Render Loop Time Cost")
+        .text("Render Loop Time Cost / ms")
         .attr("text-anchor", "start")
         .attr("font-size", "3vh")
         .attr("x", margin.left)
@@ -96,7 +96,10 @@ const render_init = function (data_arr) {
         .call(g => g.select(".domain").remove())
         .call(g => g.selectAll(".tick line").clone()
             .attr("x2", width - margin.left - margin.right)
-            .attr("stroke-opacity", 0.5))
+            .attr("stroke", "white")
+            .attr("stroke-dasharray", "5,10")
+            // .attr("stroke-dashoffset", 5)
+            .attr("stroke-opacity", 0.35))
 
     gxAxis.selectAll('.tick text').attr('font-size', '1.5vh').attr("fill", "white");
     gyAxis.selectAll('.tick text').attr('font-size', '1.5vh').attr("fill", "white");
@@ -240,7 +243,35 @@ const update_line = function (data_arr) {
 
 // 挂载完成后进行初始化
 onMounted(() => {
-    render_init(timeCostArr);
+
+    const arr_temp = [
+        {
+            name: "rCurve",
+            arr: []
+        },
+        {
+            name: "eCurve",
+            arr: []
+        },
+        {
+            name: "dCurve",
+            arr: []
+        },
+        {
+            name: "tCurve",
+            arr: []
+        },
+    ];
+    const arr_len = 300;
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < arr_len; j++) {
+            arr_temp[i].arr.push({
+                time: j * store.state.footerPannel_Related.maxAxisScale / arr_len,
+                cost: Math.random() * 10 + 20 * (i + 1)
+            })
+        }
+    }
+    render_init(arr_temp);
 })
 
 // 每当数据有更新立，即进行刷新显示
@@ -270,6 +301,7 @@ watch(() => store.state.footerPannel_Related.timeCostArr, () => {
 
     /* border: red solid 3px; */
     box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.25);
 
 }
 
@@ -278,8 +310,5 @@ watch(() => store.state.footerPannel_Related.timeCostArr, () => {
     height: 100%;
     /* border: 3px yellowgreen solid; */
     box-sizing: border-box;
-
-    background-color: black;
-    opacity: 40%;
 }
 </style>

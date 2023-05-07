@@ -21,7 +21,11 @@ import "animate.css"
 // 注: 使用过程中在组件中直接引入即可
 import nanoid from 'nanoid'
 
+// 引入饿了么团队开发的ui组件库 element-ui
+import ElementPlus from "element-plus"
+import "element-plus/dist/index.css"
 
 const app = createApp(App)
     .use(store)
+    .use(ElementPlus)
     .mount('#app');

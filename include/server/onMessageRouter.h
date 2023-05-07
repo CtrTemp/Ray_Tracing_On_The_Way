@@ -18,12 +18,11 @@
 // base64 用于图片编码
 #include "base64.h"
 
-
 #define FRAME_WIDTH 1280
 #define FRAME_HEIGHT 720
 
-// #define CURRENT_PORT 9002
-#define CURRENT_PORT 9003
+#define CURRENT_PORT 9002
+// #define CURRENT_PORT 9003
 
 static std::string rand_str(const int len) /*参数为字符串的长度*/
 {
@@ -116,6 +115,11 @@ public:
         {
             std::cout << "'get_json' branch not supported" << std::endl;
         }
+        // 控制全局 render loop 的暂停
+        else if (cmd_str == "pause_begin")
+        {
+            *pause_control = parsed_json_obj["value"].asString() == "pause";
+        }
         else if (cmd_str == "get_frame_pack")
         {
 
@@ -190,7 +194,14 @@ public:
 
     server m_server;
     con_list m_connections;
+
+    bool *pause_control;
 };
+
+// static void flip_pause_and_begin(bool *control_val)
+// {
+//     *control_val = !(*control_val);
+// }
 
 #endif
 

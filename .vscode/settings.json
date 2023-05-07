@@ -76,6 +76,13 @@
         "*.ipp": "cpp",
         "coroutine": "cpp",
         "unordered_set": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "csignal": "cpp",
+        "list": "cpp",
+        "source_location": "cpp",
+        "future": "cpp",
+        "shared_mutex": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp"
     }
 }

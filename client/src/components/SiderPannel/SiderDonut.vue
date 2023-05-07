@@ -287,8 +287,6 @@ watch(() => props.donutDeps, () => {
     /* border: 3px yellowgreen solid; */
     box-sizing: border-box;
 
-    background-color: black;
-    opacity: 40%;
 }
 
 
