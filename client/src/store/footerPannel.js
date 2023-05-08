@@ -11,25 +11,25 @@ export default {
             // console.log("you've committed updateTimeCostArr!!!", update_pack);
             state.timeCostArr[0].arr.push({
                 cost: update_pack.rCost,
-                time: update_pack.currentTime
+                time: update_pack.runningTime
             });
             state.timeCostArr[1].arr.push({
                 cost: update_pack.eCost,
-                time: update_pack.currentTime
+                time: update_pack.runningTime
             });
             state.timeCostArr[2].arr.push({
                 cost: update_pack.dCost,
-                time: update_pack.currentTime
+                time: update_pack.runningTime
             });
             state.timeCostArr[3].arr.push({
                 cost: update_pack.tCost,
-                time: update_pack.currentTime
+                time: update_pack.runningTime
             });
 
             // 同时也要对 axisRange 进行更新
-            if (update_pack.currentTime > state.axisRange[1]) {
-                state.axisRange[1] = update_pack.currentTime;
-                state.axisRange[0] = update_pack.currentTime - state.maxAxisScale;
+            if (update_pack.runningTime > state.axisRange[1]) {
+                state.axisRange[1] = update_pack.runningTime;
+                state.axisRange[0] = update_pack.runningTime - state.maxAxisScale;
             }
             // console.log("state.timeCostArr[0].arr.length = ", state.axisRange[0], state.axisRange[1])
 

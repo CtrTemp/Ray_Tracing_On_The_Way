@@ -56,8 +56,8 @@ void access_global_variable()
 void send_img_pack_to_client()
 {
 
-	cv::Mat frame_img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3);
-	cv::Mat depth_img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3);
+	cv::Mat frame_img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3); // 渲染结果
+	cv::Mat depth_img = cv::Mat(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3); // 深度图
 	clock_t start, encode_end, end;
 
 	while (true)

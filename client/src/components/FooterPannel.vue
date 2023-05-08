@@ -13,6 +13,7 @@ import { inject } from "vue";
 import { useStore } from "vuex";
 
 import * as d3 from "d3"
+import { upperCase } from "lodash";
 
 const store = useStore();
 
@@ -93,7 +94,7 @@ const render_init = function (data_arr) {
         .attr("class", "yAxis")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .call(yAxis)
-        .call(g => g.select(".domain").remove())
+        // .call(g => g.select(".domain").remove())
         .call(g => g.selectAll(".tick line").clone()
             .attr("x2", width - margin.left - margin.right)
             .attr("stroke", "white")
@@ -103,6 +104,13 @@ const render_init = function (data_arr) {
 
     gxAxis.selectAll('.tick text').attr('font-size', '1.5vh').attr("fill", "white");
     gyAxis.selectAll('.tick text').attr('font-size', '1.5vh').attr("fill", "white");
+
+    gxAxis.selectAll("line").attr("stroke", "white");
+    gxAxis.selectAll(".domain").attr("stroke", "white").attr("opacity", 0.4);
+    gyAxis.selectAll("line").attr("stroke", "white");
+    gyAxis.selectAll(".domain").attr("stroke", "white").attr("opacity", 0.4);
+
+
 
 
     // 初始化折线图
@@ -160,6 +168,99 @@ const render_init = function (data_arr) {
         .attr("fill", "none")
         .attr("stroke-width", "0.25vh")
         .attr("stroke", color_map[3]);
+
+    // hover line
+    let hover_line = svg.append("line")
+        .attr("id", "hover_line")
+        .attr("stroke", "yellow")
+        .attr("stroke-width", "0.25vh")
+        .attr("y1", yScale(0))
+        .attr("y2", yScale.range()[1])
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    let hover_point_r = svg.append("circle")
+        .attr("id", "hover_point_r")
+        .attr("r", "0.5vh")
+        .attr("fill", "gold")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    let hover_point_e = svg.append("circle")
+        .attr("id", "hover_point_e")
+        .attr("r", "0.5vh")
+        .attr("fill", "gold")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    let hover_point_d = svg.append("circle")
+        .attr("id", "hover_point_d")
+        .attr("r", "0.5vh")
+        .attr("fill", "gold")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    let hover_point_t = svg.append("circle")
+        .attr("id", "hover_point_t")
+        .attr("r", "0.5vh")
+        .attr("fill", "gold")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    // hover line interaction
+    svg.on("mousemove", function (a, b, c) {
+        // demo 运行阶段应该屏蔽掉 hover
+        if (!store.state.controlBar_Related.pause) {
+            return;
+        }
+        var location = d3.pointer(a);
+
+        let x1 = location[0] - margin.left;
+        if (x1 < 0) {
+            x1 = 0;
+        }
+        if (x1 > width - margin.left - margin.right) {
+            x1 = width - margin.left - margin.right;
+        }
+        // var y1 = location[1]
+
+        // console.log(`[${x1},${y1}]`, width);
+
+        var bisectLeft = d3.bisector(function (d) { return d.time; }).left;
+        var idx = bisectLeft(timeCostArr[0].arr, xScale.invert(x1));
+
+
+        if (idx >= timeCostArr[0].arr.length) { return; }
+
+        var datum = timeCostArr[0].arr[idx];
+        var time = datum.time;
+
+
+
+        hover_line
+            .attr("x1", xScale(time))
+            .attr("x2", xScale(time));
+
+        var r_cost = timeCostArr[0].arr[idx].cost;
+        var e_cost = timeCostArr[1].arr[idx].cost;
+        var d_cost = timeCostArr[2].arr[idx].cost;
+        var t_cost = timeCostArr[3].arr[idx].cost;
+
+
+        hover_point_r.attr("cx", xScale(time)).attr("cy", yScale(r_cost));
+        hover_point_e.attr("cx", xScale(time)).attr("cy", yScale(e_cost));
+        hover_point_d.attr("cx", xScale(time)).attr("cy", yScale(d_cost));
+        hover_point_t.attr("cx", xScale(time)).attr("cy", yScale(t_cost));
+
+        // hover 后要同时更新 Cost 相关信息，以便更新同区域内的 Dount-Chart
+        const update_pack = {
+            rCost: timeCostArr[0].arr[idx].cost,
+            eCost: timeCostArr[1].arr[idx].cost,
+            dCost: timeCostArr[2].arr[idx].cost,
+            tCost: timeCostArr[3].arr[idx].cost,
+        }
+
+        const updateCostStr = "siderPannel_Related/updateTimeCostArr";
+        store.commit(updateCostStr, update_pack);
+
+    })
 
 }
 
@@ -240,6 +341,48 @@ const update_line = function (data_arr) {
 
 }
 
+const update_hover_line = function (data_arr) {
+    const update_data_pack = [
+        { name: "rCost", value: 0 },
+        { name: "eCost", value: 0 },
+        { name: "dCost", value: 0 },
+        { name: "tCost", value: 0 },
+    ];
+    for (let i = 0; i < data_arr.length; i++) {
+        const arr_length = data_arr[i].arr.length;
+        update_data_pack[i].value = data_arr[i].arr[arr_length - 1].cost;
+    }
+
+    // console.log("update_data_pack = ", update_data_pack);
+    // const commit_str = "siderPannel_Related/updateTimeCostArr";
+    // store.commit(commit_str, update_data_pack);
+
+    // 对 hover_line 的显示进行更新
+    // var bisectLeft = d3.bisector(function (d) { return d.time; }).left;
+    // var idx = bisectLeft(data_arr[0].arr, xScale.invert(x1));
+
+
+    // if (idx >= data_arr[0].arr.length) { return; }
+
+    var time = data_arr[0].arr[data_arr[0].arr.length - 1].time;
+
+    d3.select("#hover_line")
+        .attr("x1", xScale(time))
+        .attr("x2", xScale(time));
+
+    var r_cost = update_data_pack[0].value;
+    var e_cost = update_data_pack[1].value;
+    var d_cost = update_data_pack[2].value;
+    var t_cost = update_data_pack[3].value;
+
+
+    d3.select("#hover_point_r").attr("cx", xScale(time)).attr("cy", yScale(r_cost));
+    d3.select("#hover_point_e").attr("cx", xScale(time)).attr("cy", yScale(e_cost));
+    d3.select("#hover_point_d").attr("cx", xScale(time)).attr("cy", yScale(d_cost));
+    d3.select("#hover_point_t").attr("cx", xScale(time)).attr("cy", yScale(t_cost));
+
+
+}
 
 // 挂载完成后进行初始化
 onMounted(() => {
@@ -280,6 +423,7 @@ watch(() => store.state.footerPannel_Related.timeCostArr, () => {
     const start = timer1.getMinutes() * 60000 + timer1.getSeconds() * 1000 + timer1.getMilliseconds();
     update_line(timeCostArr);
     update_axis(store.state.footerPannel_Related.axisRange, timeCostArr);
+    update_hover_line(timeCostArr);
     let timer2 = new Date();
     const end = timer2.getMinutes() * 60000 + timer2.getSeconds() * 1000 + timer2.getMilliseconds();
 

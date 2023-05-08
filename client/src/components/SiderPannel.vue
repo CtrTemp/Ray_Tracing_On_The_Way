@@ -3,12 +3,16 @@
         <div class="donut-container"></div>
         <SiderDount :donutDeps="renderCostData" :classIdx="1" />
         <SiderDount :donutDeps="otherCostData" :classIdx="2" />
+        <SiderBarChart />
     </div>
 </template>
  
 <script setup>
 
 import SiderDount from "@/components/SiderPannel/SiderDonut.vue"
+import SiderBarChart from "@/components/SiderPannel/SiderBarChart.vue";
+
+
 import { reactive, ref } from "vue";
 import { computed, watch } from "vue";
 import { useStore } from "vuex";

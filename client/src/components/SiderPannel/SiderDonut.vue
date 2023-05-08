@@ -113,7 +113,8 @@ const render_init = function (data_arr) {
     sections
         .append("path")
         .attr("d", arc)
-        .attr("fill", (d, i) => color_map[i]).transition().delay(function (d, i) { return i * 800 }).duration(800)
+        .attr("fill", (d, i) => color_map[i])
+        .transition().delay(function (d, i) { return i * 800 }).duration(800)
     // 暂时先不要显示文字
     // .call(showToolTip); 
 
@@ -279,6 +280,7 @@ watch(() => props.donutDeps, () => {
     width: 100%;
     height: 35%;
     /* border: 3px rebeccapurple solid; */
+    box-sizing: border-box;
 }
 
 .donut-svg {
