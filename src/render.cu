@@ -24,7 +24,12 @@ std::queue<float> render_time_cost_pool;
 // // encode_time_cost pool
 // std::queue<float> encode_time_cost_pool;
 
+// 全局 demo 运行控制变量
 bool auto_render_and_send_control = true;
+
+// 全局摄像机控制变量
+float deltaTheta = 0;
+float deltaPhi = 0;
 
 // 写图像文件
 __host__ static void write_file(std::string file_path, vec3 *frame_buffer);
@@ -619,7 +624,7 @@ __host__ void init_and_render(void)
     primaryCamera.up_dir = vec3(0, 1, 0);
     primaryCamera.fov = 40;
     primaryCamera.aspect = float(FRAME_WIDTH) / float(FRAME_HEIGHT);
-    primaryCamera.focus_dist = 10.0; // 这里是焦距
+    primaryCamera.focus_dist = 10.0; // 这里是焦距（其实应该是屏幕平面与视点的距离）
     primaryCamera.aperture = 1;
     primaryCamera.t0 = 0.0;
     primaryCamera.t1 = 1.0;
@@ -691,7 +696,8 @@ __host__ void init_and_render(void)
             continue;
         }
 
-        loop_count++;
+        // 调试模式下 暂时停止转动
+        // loop_count++;
 
         global_variable++;
         global_queue.push(loop_count);
@@ -713,7 +719,7 @@ __host__ void init_and_render(void)
         cudaEventSynchronize(stop); // 计时同步
 
         cudaEventElapsedTime(&time_cost, start, stop); // 计算用时，单位为ms
-        std::cout << "This is " << loop_count << " frame, current render loop cost = " << time_cost << "ms" << std::endl;
+        // std::cout << "This is " << loop_count << " frame, current render loop cost = " << time_cost << "ms" << std::endl;
 
         // // 数据拷贝 & 本地写文件
         // cudaMemcpy(frame_buffer_host, frame_buffer_device, size, cudaMemcpyDeviceToHost);
@@ -749,7 +755,9 @@ __host__ void init_and_render(void)
         render_time_cost_pool.push(time_cost);
 
         // 在 host 端更改相机参数
-        cpu_camera = modifyCamera(primaryCamera, loop_count);
+        // cpu_camera = modifyCamera(primaryCamera, loop_count);
+        // 二次更改旋转角
+        cpu_camera = rotateCamera(primaryCamera, cpu_camera, deltaTheta, deltaPhi);
         // 将更改好的相机参数传递给device端的常量内存
         cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
         cudaDeviceSynchronize();
@@ -799,7 +807,6 @@ __host__ static void write_file(std::string file_path, vec3 *frame_buffer)
         }
     }
 }
-
 
 __host__ static void showFrameFlow(int width, int height, vec3 *frame_buffer_host, std::string window)
 {

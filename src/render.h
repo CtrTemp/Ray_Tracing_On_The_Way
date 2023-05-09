@@ -54,6 +54,7 @@ extern std::queue<float> render_time_cost_pool;
 
 // 其他程序接口
 extern bool auto_render_and_send_control;
-
+extern float deltaTheta;
+extern float deltaPhi;
 
 #endif

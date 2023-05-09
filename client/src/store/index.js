@@ -2,6 +2,7 @@ import { createStore, useStore, mapState } from "vuex";
 import footerPannel from "./footerPannel.js"
 import siderPannel from "./siderPannel.js";
 import controlBar from "./controlBar.js";
+import mainPannel from "./mainPannel.js"
 
 
 const store = createStore({
@@ -33,6 +34,7 @@ const store = createStore({
         footerPannel_Related: footerPannel,
         siderPannel_Related: siderPannel,
         controlBar_Related: controlBar,
+        mainPannel_Related: mainPannel,
     }
 })
 

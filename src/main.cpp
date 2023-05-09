@@ -42,7 +42,7 @@ void access_global_variable()
 		{
 			continue;
 		}
-		printf("current frame buffer pool depth = %ld\n", frame_buffer_pool.size());
+		// printf("current frame buffer pool depth = %ld\n", frame_buffer_pool.size());
 		// 显示当前帧
 		// cv::namedWindow("Image Flow");
 		// showFrameFlow(FRAME_WIDTH, FRAME_HEIGHT, frame_buffer_pool.front());
@@ -70,7 +70,7 @@ void send_img_pack_to_client()
 		{
 			continue;
 		}
-		printf("current frame buffer pool depth = %ld\n", depth_buffer_pool.size());
+		// printf("current frame buffer pool depth = %ld\n", depth_buffer_pool.size());
 
 		// 编码当前帧 frame buffer
 		vec3 *frame_buffer = frame_buffer_pool.front();
@@ -175,7 +175,7 @@ void send_img_pack_to_client()
 		// delete &current_frame_render_time_cost;
 
 		end = clock();
-		std::cout << "send to clint loop time = " << 1000 * double(end - start) / CLOCKS_PER_SEC << "ms" << std::endl;
+		// std::cout << "send to clint loop time = " << 1000 * double(end - start) / CLOCKS_PER_SEC << "ms" << std::endl;
 	}
 }
 
@@ -184,6 +184,8 @@ int main(void)
 
 	auto_render_and_send_control = true; // 表示在最开始的阶段不进入循环，等待前端发来的命令允许开启渲染进程
 	b_server.pause_control = &auto_render_and_send_control;
+	b_server.deltaTheta = &deltaTheta;
+	b_server.deltaPhi = &deltaPhi;
 
 	// 首个线程开启服务器，并进行特定端口的监听
 	std::thread server_boost_thread(server_startup);

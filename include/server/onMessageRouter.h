@@ -120,6 +120,15 @@ public:
         {
             *pause_control = parsed_json_obj["value"].asString() == "pause";
         }
+        // 前端鼠标交互控制，支持drag/zoom/scale/rotate等变换
+        else if (cmd_str == "trackball_control")
+        {
+            // 在这里更新相机参数
+            // std::cout << parsed_json_obj["deltaTheta"].asFloat() << std::endl;
+            // std::cout << parsed_json_obj["deltaPhi"].asFloat() << std::endl;
+            *deltaTheta = parsed_json_obj["deltaTheta"].asFloat();
+            *deltaPhi = parsed_json_obj["deltaPhi"].asFloat();
+        }
         else if (cmd_str == "get_frame_pack")
         {
 
@@ -196,6 +205,8 @@ public:
     con_list m_connections;
 
     bool *pause_control;
+    float *deltaTheta;
+    float *deltaPhi;
 };
 
 // static void flip_pause_and_begin(bool *control_val)

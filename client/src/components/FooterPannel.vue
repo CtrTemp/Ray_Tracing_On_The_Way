@@ -181,26 +181,30 @@ const render_init = function (data_arr) {
     let hover_point_r = svg.append("circle")
         .attr("id", "hover_point_r")
         .attr("r", "0.5vh")
-        .attr("fill", "gold")
+        .attr("stroke", "gold")
+        .attr("stroke-width", "0.25vh")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
     let hover_point_e = svg.append("circle")
         .attr("id", "hover_point_e")
         .attr("r", "0.5vh")
-        .attr("fill", "gold")
+        .attr("stroke", "gold")
+        .attr("stroke-width", "0.25vh")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     let hover_point_d = svg.append("circle")
         .attr("id", "hover_point_d")
         .attr("r", "0.5vh")
-        .attr("fill", "gold")
+        .attr("stroke", "gold")
+        .attr("stroke-width", "0.25vh")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     let hover_point_t = svg.append("circle")
         .attr("id", "hover_point_t")
         .attr("r", "0.5vh")
-        .attr("fill", "gold")
+        .attr("stroke", "gold")
+        .attr("stroke-width", "0.25vh")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
@@ -259,6 +263,8 @@ const render_init = function (data_arr) {
 
         const updateCostStr = "siderPannel_Related/updateTimeCostArr";
         store.commit(updateCostStr, update_pack);
+        const updateCurrentFrameStr = "footerPannel_Related/updateCurrentFrame";
+        store.commit(updateCurrentFrameStr, idx);
 
     })
 

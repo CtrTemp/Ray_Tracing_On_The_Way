@@ -51,6 +51,9 @@ export default {
             // console.log("state.timeCostArr[0].arr.length = ", state.timeCostArr[0].arr.length)
 
 
+        },
+        updateCurrentFrame(state, currentFrameIdx) {
+            state.currentFrame = currentFrameIdx;
         }
     },
     state() {
@@ -83,7 +86,8 @@ export default {
                     name: "tCurve",
                     arr: []
                 },
-            ]
+            ],
+            currentFrame: 0, // 游标，指示当前显示帧的位置
         }
     },
     getters: {}

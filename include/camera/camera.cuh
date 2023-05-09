@@ -212,6 +212,27 @@ __host__ static camera *modifyCamera(cameraCreateInfo camInfo, size_t frame_coun
 	// cam->v = cross(cam->w, cam->u);
 }
 
+__host__ static camera *rotateCamera(cameraCreateInfo camInfo, camera *cam, float deltaTheta, float deltaPhi)
+{
+
+	// std::cout << deltaTheta << ", " << deltaPhi << std::endl;
+	// 对于 rotate 来讲，lookfrom 不会更改， 更改的是 lookat
+	// 其实应该直接更改camera的 w 这个向量
+
+	// 第一步得到观测点向观测方向发射射线与单位球的交点
+	vec3 w = cam->w; // view_ray direction
+	vec3 u = cam->u; // camera plane horizontal direction vec
+	vec3 v = cam->v; // camera plane vertical direction vec
+	vec3 unit_lookat_point = cam->origin + w;
+
+	// 方向角变换（第一步我们仅做方向角方面的更改）
+	vec3 new_w = w * cos(deltaTheta) + cam->v * sin(deltaTheta);
+	vec3 new_lookat = cam->origin + new_w;
+	camInfo.lookat = new_lookat;
+
+	return new camera(camInfo);
+}
+
 #endif // !1
 
 /*
