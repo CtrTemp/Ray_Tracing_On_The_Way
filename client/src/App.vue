@@ -9,6 +9,8 @@
 
     <FooterPannel />
 
+    <RenderOptionMenu />
+
 
   </div>
 </template>
@@ -19,6 +21,7 @@ import MainPannel from "@/components/MainPannel.vue"
 import FooterPannel from "@/components/FooterPannel.vue"
 import SiderPannel from "@/components/SiderPannel.vue";
 import ControlBar from "@/components/ControlBar.vue";
+import RenderOptionMenu from "@/components/RenderOptionMenu.vue";
 
 import { computed } from "vue";
 

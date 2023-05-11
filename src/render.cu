@@ -697,7 +697,7 @@ __host__ void init_and_render(void)
         }
 
         // 调试模式下 暂时停止转动
-        // loop_count++;
+        loop_count++;
 
         global_variable++;
         global_queue.push(loop_count);
@@ -755,9 +755,9 @@ __host__ void init_and_render(void)
         render_time_cost_pool.push(time_cost);
 
         // 在 host 端更改相机参数
-        // cpu_camera = modifyCamera(primaryCamera, loop_count);
+        cpu_camera = modifyCamera(primaryCamera, loop_count);
         // 二次更改旋转角
-        cpu_camera = rotateCamera(primaryCamera, cpu_camera, deltaTheta, deltaPhi);
+        // cpu_camera = rotateCamera(primaryCamera, cpu_camera, deltaTheta, deltaPhi);
         // 将更改好的相机参数传递给device端的常量内存
         cudaMemcpyToSymbol(PRIMARY_CAMERA, cpu_camera, camera_size);
         cudaDeviceSynchronize();

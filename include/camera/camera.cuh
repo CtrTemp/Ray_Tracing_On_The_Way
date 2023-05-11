@@ -226,7 +226,10 @@ __host__ static camera *rotateCamera(cameraCreateInfo camInfo, camera *cam, floa
 	vec3 unit_lookat_point = cam->origin + w;
 
 	// 方向角变换（第一步我们仅做方向角方面的更改）
-	vec3 new_w = w * cos(deltaTheta) + cam->v * sin(deltaTheta);
+	vec3 new_w = w * cos(-deltaPhi) + cam->u * sin(-deltaPhi);
+	// 第二步，对极角方面进行更改
+	new_w = w * cos(-deltaTheta) + cam->v * sin(-deltaTheta);
+
 	vec3 new_lookat = cam->origin + new_w;
 	camInfo.lookat = new_lookat;
 

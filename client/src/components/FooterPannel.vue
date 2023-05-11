@@ -1,7 +1,33 @@
 <template>
-    <div class="footer-svg-container">
-        <svg class="footer-pannel-svg">
-        </svg>
+    <div class="footer-pannel-container">
+
+
+
+        <transition class="thumbnail-animation" enter-active-class="animate__animated animate__slideInUp"
+            leave-active-class="animate__animated animate__slideOutDown">
+            <div class="footer-pannel" v-show="(show_flip) % 2">
+
+                <svg class="footer-pannel-svg">
+                </svg>
+                <div @click="show_flip++" class="menu-hide">
+                    <div>•</div>
+                    <div>•</div>
+                    <div>•</div>
+                </div>
+
+            </div>
+        </transition>
+
+
+
+        <transition class="thumbnail-animation animate__delay-1s" enter-active-class="animate__animated ">
+            <div @click="show_flip++" v-show="(show_flip + 1) % 2" class="menu-show animate__fadeIn">
+                <div>•</div>
+                <div>•</div>
+                <div>•</div>
+            </div>
+        </transition>
+
     </div>
 </template>
  
@@ -16,6 +42,9 @@ import * as d3 from "d3"
 import { upperCase } from "lodash";
 
 const store = useStore();
+
+
+let show_flip = ref(1);
 
 const color_map = Object.values(inject("color_map").value);
 
@@ -440,7 +469,7 @@ watch(() => store.state.footerPannel_Related.timeCostArr, () => {
 </script>
  
 <style scoped>
-.footer-svg-container {
+.footer-pannel-container {
 
     position: absolute;
 
@@ -451,14 +480,104 @@ watch(() => store.state.footerPannel_Related.timeCostArr, () => {
 
     /* border: red solid 3px; */
     box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.25);
 
 }
 
+.footer-pannel {
+
+    position: absolute;
+
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+
+
+    /* border: yellowgreen solid 3px; */
+    box-sizing: border-box;
+
+    background-color: rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+
+}
+
+
+
 .footer-pannel-svg {
+    position: absolute;
     width: 100%;
     height: 100%;
     /* border: 3px yellowgreen solid; */
     box-sizing: border-box;
+}
+
+
+.menu-show {
+
+    position: absolute;
+
+    cursor: pointer;
+
+    bottom: 0%;
+    left: 45%;
+    width: 10%;
+    height: 10%;
+
+    /* border: 2px steelblue solid; */
+    box-sizing: border-box;
+    border-radius: 3px;
+
+    background-color: rgba(0, 0, 0, 0.5);
+
+    font-size: 1.5vw;
+    color: aliceblue;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    gap: 1vw;
+
+}
+
+
+
+.menu-hide {
+
+    position: absolute;
+
+    cursor: pointer;
+
+    top: 0%;
+    left: 45%;
+    width: 10%;
+    height: 10%;
+
+    /* border: 2px steelblue solid; */
+    box-sizing: border-box;
+    border-radius: 3px;
+
+    background-color: rgba(0, 0, 0, 0.25);
+
+    font-size: 1.5vw;
+    color: aliceblue;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    gap: 1vw;
+}
+
+
+.menu-animation {
+    --animate-duration: 500ms;
+}
+
+.thumbnail-animation {
+    --animate-duration: 500ms;
 }
 </style>

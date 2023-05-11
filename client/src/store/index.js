@@ -3,7 +3,7 @@ import footerPannel from "./footerPannel.js"
 import siderPannel from "./siderPannel.js";
 import controlBar from "./controlBar.js";
 import mainPannel from "./mainPannel.js"
-
+import siderMenu from "./siderMenu.js"
 
 const store = createStore({
 
@@ -35,6 +35,7 @@ const store = createStore({
         siderPannel_Related: siderPannel,
         controlBar_Related: controlBar,
         mainPannel_Related: mainPannel,
+        siderMenu_Related: siderMenu,
     }
 })
 

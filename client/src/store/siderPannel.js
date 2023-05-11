@@ -22,21 +22,21 @@ export default {
     state() {
         return {
             renderCost: {
-                title: "renderCost",
+                title: "RenderCost",
                 arr: [
-                    { name: "rCost", value: 3 },
-                    { name: "eCost", value: 2 },
+                    { name: "rCost", value: 1 },
+                    { name: "eCost", value: 1 },
                     { name: "dCost", value: 1 },
-                    { name: "tCost", value: 7 },
+                    { name: "tCost", value: 1 },
                 ]
             },
             otherCost: {
-                title: "otherCost",
+                title: "OtherCost",
                 arr: [
-                    { name: "rCost", value: 4 },
-                    { name: "eCost", value: 3 },
+                    { name: "rCost", value: 1 },
+                    { name: "eCost", value: 1 },
                     { name: "dCost", value: 1 },
-                    { name: "tCost", value: 9 },
+                    { name: "tCost", value: 1 },
                 ]
             },
         }

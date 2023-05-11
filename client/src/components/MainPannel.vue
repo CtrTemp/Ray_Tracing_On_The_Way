@@ -6,15 +6,12 @@
             <!-- <img :src=balls_url alt="" class="basic_img img_balls"> -->
             <!-- <img :src=bunnies_url alt="" class="basic_img img_bunnies"> -->
         </div>
-        <div class="canvas-aux-pannel">
+        <!-- <div class="canvas-aux-pannel">
             <div class="mouse-pos-bar">
                 <div>x = {{ store.state.mainPannel_Related.mouseX.toFixed(3) }}</div>
                 <div>y = {{ store.state.mainPannel_Related.mouseY.toFixed(3) }}</div>
             </div>
             <div class="sphere-angle-bar">
-                <!-- <div>pitch({{ store.state.mainPannel_Related.pitch }})</div>
-                <div>roll({{ store.state.mainPannel_Related.roll }})</div>
-                <div>yaw({{ store.state.mainPannel_Related.yaw }})</div> -->
                 <div>theta({{ store.state.mainPannel_Related.theta.toFixed(3) }})</div>
                 <div>phi({{ store.state.mainPannel_Related.phi.toFixed(3) }})</div>
             </div>
@@ -22,7 +19,7 @@
                 <div>d_Theta({{ store.state.mainPannel_Related.deltaTheta.toFixed(2) }})</div>
                 <div>d_Phi({{ store.state.mainPannel_Related.deltaPhi.toFixed(2) }})</div>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
  
@@ -434,7 +431,7 @@ ws.onmessage = function (evt) {
     height: 40%;
 
     background-color: rgba(0, 0, 0, 0.25);
-    border: aquamarine solid 3px;
+    /* border: aquamarine solid 3px; */
     box-sizing: border-box;
 
     color: aliceblue;
@@ -451,7 +448,7 @@ ws.onmessage = function (evt) {
 .mouse-pos-bar {
     width: 100%;
 
-    border: gold solid 2px;
+    /* border: gold solid 2px; */
     box-sizing: border-box;
 
     display: flex;
@@ -466,7 +463,7 @@ ws.onmessage = function (evt) {
 
     width: 100%;
 
-    border: gold solid 2px;
+    /* border: gold solid 2px; */
     box-sizing: border-box;
 
     display: flex;
